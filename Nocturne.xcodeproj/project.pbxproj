@@ -32,6 +32,12 @@
 		10AC574E8ABD15AB22190D57 /* Nocturne/App/AppIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02B6B373835CAAA78174B882 /* Nocturne/App/AppIntents.swift */; };
 		A38F968096DAB93D9E4EC532 /* Nocturne/App/AudioEffects.swift in Sources */ = {isa = PBXBuildFile; fileRef = 152612EC5D62A85448DC369B /* Nocturne/App/AudioEffects.swift */; };
 		8EC0F1632945AD905D04ABB4 /* Nocturne/App/EqualizerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD7729DE46A3696169A1A255 /* Nocturne/App/EqualizerView.swift */; };
+		BDEE8310D9AFC01D83686B9E /* NowPlayingSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50820B4A82DCF7B45C60DE2B /* NowPlayingSnapshot.swift */; };
+		4770F704DE92F6622D6A27F2 /* WidgetIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDC6CBE205B46EE8D1D63DF6 /* WidgetIntents.swift */; };
+		CDFAACE3C280C2577BB1C25B /* NowPlayingSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50820B4A82DCF7B45C60DE2B /* NowPlayingSnapshot.swift */; };
+		2F50D00DF5F9B5537DED6A7C /* WidgetIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDC6CBE205B46EE8D1D63DF6 /* WidgetIntents.swift */; };
+		8C168313618BE0F9D2048A61 /* NocturneWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = B72DE0D24B2E2CB64D92A750 /* NocturneWidget.swift */; };
+		43E3EF56C042396FD4E8DC78 /* NocturneWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 1CF7607B608A7E6324CD10BC /* NocturneWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -42,7 +48,28 @@
 			remoteGlobalIDString = 34A04005BCAF206EEC990BD9;
 			remoteInfo = Nocturne;
 		};
+		B3C80E9AFF93FD96D173A822 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 244210E48437B6556980A702 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AD2495FA014F867A9B1AF0BE;
+			remoteInfo = NocturneWidget;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		A6F7E985A046EA658708A416 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				43E3EF56C042396FD4E8DC78 /* NocturneWidget.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		2418496CC408A0325E95B016 /* Nocturne/App/PlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/PlayerView.swift; sourceTree = SOURCE_ROOT; };
@@ -72,10 +99,24 @@
 		02B6B373835CAAA78174B882 /* Nocturne/App/AppIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/AppIntents.swift; sourceTree = SOURCE_ROOT; };
 		152612EC5D62A85448DC369B /* Nocturne/App/AudioEffects.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/AudioEffects.swift; sourceTree = SOURCE_ROOT; };
 		DD7729DE46A3696169A1A255 /* Nocturne/App/EqualizerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/EqualizerView.swift; sourceTree = SOURCE_ROOT; };
+		50820B4A82DCF7B45C60DE2B /* Nocturne/Shared/NowPlayingSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/Shared/NowPlayingSnapshot.swift; sourceTree = SOURCE_ROOT; };
+		CDC6CBE205B46EE8D1D63DF6 /* Nocturne/Shared/WidgetIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/Shared/WidgetIntents.swift; sourceTree = SOURCE_ROOT; };
+		B72DE0D24B2E2CB64D92A750 /* NocturneWidget/NocturneWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NocturneWidget/NocturneWidget.swift; sourceTree = SOURCE_ROOT; };
+		28E3DC2AB6E1A9F88569D147 /* NocturneWidget/Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = NocturneWidget/Info.plist; sourceTree = SOURCE_ROOT; };
+		A69F14E58C5F2365A36462CA /* NocturneWidget/NocturneWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NocturneWidget/NocturneWidget.entitlements; sourceTree = SOURCE_ROOT; };
+		831E54FF662C3D2A826AE8B4 /* Nocturne/Resources/Nocturne.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Nocturne/Resources/Nocturne.entitlements; sourceTree = SOURCE_ROOT; };
+		1CF7607B608A7E6324CD10BC /* NocturneWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = NocturneWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		E2AA269EB967A8853A258BFA /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9A8ED7911312D6446CF593A6 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -88,6 +129,7 @@
 		0A3E27B8CA818264D75C8D81 /* Products */ = {
 			isa = PBXGroup;
 			children = (
+				1CF7607B608A7E6324CD10BC /* NocturneWidget.appex */,
 				A172CEDCAE47474B615C54D5 /* Nocturne.app */,
 				E7F08BCC397888750F5CB9BD /* NocturneUITests.xctest */,
 			);
@@ -97,6 +139,12 @@
 		0D6E4079E36703EBD37C0072 = {
 			isa = PBXGroup;
 			children = (
+				831E54FF662C3D2A826AE8B4 /* aent */,
+				A69F14E58C5F2365A36462CA /* went */,
+				28E3DC2AB6E1A9F88569D147 /* wplist */,
+				B72DE0D24B2E2CB64D92A750 /* wsrc */,
+				CDC6CBE205B46EE8D1D63DF6 /* wint */,
+				50820B4A82DCF7B45C60DE2B /* snap */,
 				DD7729DE46A3696169A1A255 /* Nocturne/App/EqualizerView.swift */,
 				152612EC5D62A85448DC369B /* Nocturne/App/AudioEffects.swift */,
 				02B6B373835CAAA78174B882 /* Nocturne/App/AppIntents.swift */,
@@ -133,6 +181,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 1B672BF3DA427763BF644BE3 /* Build configuration list for PBXNativeTarget "Nocturne" */;
 			buildPhases = (
+				A6F7E985A046EA658708A416 /* Embed Foundation Extensions */,
 				878A52FC5FF6A57D50B7B870 /* Sources */,
 				E2AA269EB967A8853A258BFA /* Frameworks */,
 				41D311A605520FC7B8B9A980 /* Resources */,
@@ -140,6 +189,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				799BF84D660E2975470DCC79 /* PBXTargetDependency */,
 			);
 			name = Nocturne;
 			productName = Nocturne;
@@ -161,6 +211,23 @@
 			productName = NocturneUITests;
 			productReference = E7F08BCC397888750F5CB9BD /* NocturneUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		AD2495FA014F867A9B1AF0BE /* NocturneWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A73DF215AC10D78B0B6E997F /* Build configuration list for PBXNativeTarget "NocturneWidget" */;
+			buildPhases = (
+				559E0FA594D9F59FC97F153B /* Sources */,
+				9A8ED7911312D6446CF593A6 /* Frameworks */,
+				87581270837E1F460525ACAF /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = NocturneWidget;
+			productName = NocturneWidget;
+			productReference = 1CF7607B608A7E6324CD10BC /* NocturneWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -184,6 +251,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
+				AD2495FA014F867A9B1AF0BE /* NocturneWidget */,
 				34A04005BCAF206EEC990BD9 /* Nocturne */,
 				E5B4A42C1A9B11F842B19C64 /* NocturneUITests */,
 			);
@@ -196,6 +264,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				B55E7C0A11C0A55E7C0A11C0 /* Nocturne/Resources/Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		87581270837E1F460525ACAF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -214,6 +289,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4770F704DE92F6622D6A27F2 /* WidgetIntents.swift in Sources */,
+				BDEE8310D9AFC01D83686B9E /* NowPlayingSnapshot.swift in Sources */,
 				8EC0F1632945AD905D04ABB4 /* Nocturne/App/EqualizerView.swift in Sources */,
 				A38F968096DAB93D9E4EC532 /* Nocturne/App/AudioEffects.swift in Sources */,
 				10AC574E8ABD15AB22190D57 /* Nocturne/App/AppIntents.swift in Sources */,
@@ -240,6 +317,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		559E0FA594D9F59FC97F153B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CDFAACE3C280C2577BB1C25B /* NowPlayingSnapshot.swift in Sources */,
+				2F50D00DF5F9B5537DED6A7C /* WidgetIntents.swift in Sources */,
+				8C168313618BE0F9D2048A61 /* NocturneWidget.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -248,12 +335,19 @@
 			target = 34A04005BCAF206EEC990BD9 /* Nocturne */;
 			targetProxy = 25A640B699F944DC77F1F1FE /* PBXContainerItemProxy */;
 		};
+		799BF84D660E2975470DCC79 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AD2495FA014F867A9B1AF0BE /* NocturneWidget */;
+			targetProxy = B3C80E9AFF93FD96D173A822 /* PBXContainerItemProxy */;
+		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		0B0C687DF8B6B8DC790B519C /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CURRENT_PROJECT_VERSION = 1;
+				MARKETING_VERSION = 0.1.0;
 				CLANG_ENABLE_MODULES = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -268,6 +362,7 @@
 		6C7EFF6369083C8E1F2B1994 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Nocturne/Resources/Nocturne.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 22YK6BV6UY;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -284,6 +379,8 @@
 		73EBF6644258C120893E685D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CURRENT_PROJECT_VERSION = 1;
+				MARKETING_VERSION = 0.1.0;
 				CLANG_ENABLE_MODULES = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -310,6 +407,7 @@
 		DD75E2CB1C510A828AC72D96 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Nocturne/Resources/Nocturne.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 22YK6BV6UY;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -332,6 +430,54 @@
 				PRODUCT_NAME = NocturneUITests;
 				TARGETED_DEVICE_FAMILY = 1;
 				TEST_TARGET_NAME = Nocturne;
+			};
+			name = Release;
+		};
+		ECAA336B5749E9602AB6684B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = NocturneWidget/NocturneWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 22YK6BV6UY;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = NocturneWidget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = app.nocturne.music.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG WIDGET_EXTENSION";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		A4CF8B41A236016B7AB4CCBF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = NocturneWidget/NocturneWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 22YK6BV6UY;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = NocturneWidget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = app.nocturne.music.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "WIDGET_EXTENSION";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
@@ -361,6 +507,15 @@
 			buildConfigurations = (
 				73EBF6644258C120893E685D /* Debug */,
 				0B0C687DF8B6B8DC790B519C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A73DF215AC10D78B0B6E997F /* Build configuration list for PBXNativeTarget "NocturneWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				ECAA336B5749E9602AB6684B /* Debug */,
+				A4CF8B41A236016B7AB4CCBF /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

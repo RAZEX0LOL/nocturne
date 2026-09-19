@@ -13,9 +13,9 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.1.0</string>
+	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
-	<string>1</string>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSLocalNetworkUsageDescription</key><string>Nocturne подключается к серверу Navidrome в твоей домашней сети.</string>
@@ -35,6 +35,17 @@
 	</array>
 	<key>UILaunchScreen</key>
 	<dict/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>app.nocturne.music</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>nocturne</string>
+			</array>
+		</dict>
+	</array>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>

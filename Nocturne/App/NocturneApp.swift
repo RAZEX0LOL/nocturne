@@ -59,6 +59,10 @@ struct RootView: View {
             if let client = library.client { player.restore(client: client) }
         }
         .task { await ArtworkCache.shared.trim() }
+        .onOpenURL { url in
+            // nocturne://player — from the widget and Siri results.
+            if url.scheme == "nocturne", url.host() == "player", player.current != nil { fullPlayer = true }
+        }
         .onChange(of: library.starredSongs) { _, songs in
             if UserDefaults.standard.bool(forKey: DownloadStore.autoFavoritesKey) { downloads.download(songs) }
         }

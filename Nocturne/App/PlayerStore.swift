@@ -1,6 +1,7 @@
 import AVFoundation
 import MediaPlayer
 import SwiftUI
+import WidgetKit
 
 @MainActor @Observable
 final class PlayerStore {
@@ -171,6 +172,7 @@ final class PlayerStore {
         resumeAfterInterruption = false
         player.pause()
         updateNowPlaying()
+        publishWidget()
         save(force: true)
     }
 
@@ -186,6 +188,7 @@ final class PlayerStore {
         isPlaying = true
         player.play()
         updateNowPlaying()
+        publishWidget()
     }
 
     func seek(_ seconds: Double) {
@@ -234,6 +237,7 @@ final class PlayerStore {
         currentItem = nil; nextItem = nil; itemObservations = [:]
         queue = PlaybackQueue(); elapsed = 0; duration = 0; client = nil; artwork = nil
         MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
+        publishWidget()
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
         try? FileManager.default.removeItem(at: Self.snapshotURL)
     }
@@ -419,6 +423,7 @@ final class PlayerStore {
 
     private func reportNowPlaying() {
         applyReplayGain()
+        publishWidget(resetCover: true)
         guard let client, let id = current?.id, !isLive else { return }
         scrobbledEntry = nil
         Task { try? await client.scrobble(songID: id, submission: false) }
@@ -428,6 +433,20 @@ final class PlayerStore {
     private func applyReplayGain() {
         let mode = UserDefaults.standard.string(forKey: PlaybackSettings.replayGainKey).flatMap(ReplayGainMode.init) ?? .off
         player.volume = current.map { mode.volume(for: $0) } ?? 1
+    }
+
+    /// Mirrors the current track into the App Group so the widget can show it.
+    private func publishWidget(cover: UIImage? = nil, resetCover: Bool = false) {
+        if let song = current {
+            NowPlayingSnapshot(title: song.title, artist: song.artist ?? "", album: song.album ?? "", isPlaying: isPlaying).save()
+            if let url = NowPlayingSnapshot.coverURL {
+                if resetCover { try? FileManager.default.removeItem(at: url) }
+                if let data = cover?.jpegData(compressionQuality: 0.8) { try? data.write(to: url, options: .atomic) }
+            }
+        } else {
+            NowPlayingSnapshot.clear()
+        }
+        WidgetCenter.shared.reloadTimelines(ofKind: NowPlayingSnapshot.widgetKind)
     }
 
     private func networkRestored() {
@@ -547,6 +566,7 @@ final class PlayerStore {
             artwork = Self.makeArtwork(image)
             Appearance.shared.coverColor = CoverPalette.vibrantColor(of: image)
             updateNowPlaying()
+            publishWidget(cover: image)
         }
     }
 
