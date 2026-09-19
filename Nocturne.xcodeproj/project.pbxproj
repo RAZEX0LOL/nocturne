@@ -38,6 +38,7 @@
 		2F50D00DF5F9B5537DED6A7C /* WidgetIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDC6CBE205B46EE8D1D63DF6 /* WidgetIntents.swift */; };
 		8C168313618BE0F9D2048A61 /* NocturneWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = B72DE0D24B2E2CB64D92A750 /* NocturneWidget.swift */; };
 		43E3EF56C042396FD4E8DC78 /* NocturneWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 1CF7607B608A7E6324CD10BC /* NocturneWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		F311A0F0AD4F5DF5A36F43B9 /* Nocturne/App/CarPlaySceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788DD5A81B6E4766D235BDF2 /* Nocturne/App/CarPlaySceneDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -106,6 +107,7 @@
 		A69F14E58C5F2365A36462CA /* NocturneWidget/NocturneWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NocturneWidget/NocturneWidget.entitlements; sourceTree = SOURCE_ROOT; };
 		831E54FF662C3D2A826AE8B4 /* Nocturne/Resources/Nocturne.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Nocturne/Resources/Nocturne.entitlements; sourceTree = SOURCE_ROOT; };
 		1CF7607B608A7E6324CD10BC /* NocturneWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = NocturneWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		788DD5A81B6E4766D235BDF2 /* Nocturne/App/CarPlaySceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/CarPlaySceneDelegate.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -139,6 +141,7 @@
 		0D6E4079E36703EBD37C0072 = {
 			isa = PBXGroup;
 			children = (
+				788DD5A81B6E4766D235BDF2 /* Nocturne/App/CarPlaySceneDelegate.swift */,
 				831E54FF662C3D2A826AE8B4 /* aent */,
 				A69F14E58C5F2365A36462CA /* went */,
 				28E3DC2AB6E1A9F88569D147 /* wplist */,
@@ -289,6 +292,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F311A0F0AD4F5DF5A36F43B9 /* Nocturne/App/CarPlaySceneDelegate.swift in Sources */,
 				4770F704DE92F6622D6A27F2 /* WidgetIntents.swift in Sources */,
 				BDEE8310D9AFC01D83686B9E /* NowPlayingSnapshot.swift in Sources */,
 				8EC0F1632945AD905D04ABB4 /* Nocturne/App/EqualizerView.swift in Sources */,
