@@ -2,6 +2,7 @@ import SwiftUI
 
 @main
 struct NocturneApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var library = LibraryStore.shared
     @State private var player = PlayerStore.shared
     @State private var downloads = DownloadStore.shared
