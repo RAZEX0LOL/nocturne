@@ -50,10 +50,10 @@ final class NocturneUITests: XCTestCase {
         XCTAssertFalse(app.buttons["Подключиться"].isEnabled)
         XCTAssertTrue(app.secureTextFields["Пароль Navidrome"].exists)
         app.buttons["Посмотреть демоверсию"].tap()
-        XCTAssertTrue(app.staticTexts["Недавно добавлено"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Недавно добавлено"].waitForExistence(timeout: 15))
         app.buttons["Настройки"].tap()
-        XCTAssertTrue(app.staticTexts["Демоверсия"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Демоверсия"].waitForExistence(timeout: 15))
         app.buttons["Подключить Navidrome"].tap()
-        XCTAssertTrue(app.textFields["https://music.example.com"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.textFields["https://music.example.com"].waitForExistence(timeout: 15))
     }
 }

@@ -1,76 +1,118 @@
 {
-  "sourceLanguage": "ru",
-  "strings": {
-    "Включи любимое в ${applicationName}": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Play favourites in ${applicationName}"
+  "sourceLanguage" : "ru",
+  "strings" : {
+    "Включи любимое в ${applicationName}" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Play favourites in ${applicationName}"
+          }
+        },
+        "ru" : {
+          "stringSet" : {
+            "state" : "new",
+            "values" : [
+              "Включи любимое в ${applicationName}",
+              "Любимые треки в ${applicationName}"
+            ]
           }
         }
       }
     },
-    "Включи похожие в ${applicationName}": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Play similar in ${applicationName}"
+    "Включи похожие в ${applicationName}" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Play similar in ${applicationName}"
           }
         }
       }
     },
-    "Любимые треки в ${applicationName}": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Favourite tracks in ${applicationName}"
+    "Любимые треки в ${applicationName}" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Favourite tracks in ${applicationName}"
           }
         }
       }
     },
-    "Микс в ${applicationName}": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mix in ${applicationName}"
+    "Микс в ${applicationName}" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Mix in ${applicationName}"
+          }
+        },
+        "ru" : {
+          "stringSet" : {
+            "state" : "new",
+            "values" : [
+              "Микс в ${applicationName}",
+              "Включи похожие в ${applicationName}"
+            ]
           }
         }
       }
     },
-    "Пауза в ${applicationName}": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pause ${applicationName}"
+    "Пауза в ${applicationName}" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Pause ${applicationName}"
+          }
+        },
+        "ru" : {
+          "stringSet" : {
+            "state" : "new",
+            "values" : [
+              "Пауза в ${applicationName}",
+              "Продолжи ${applicationName}"
+            ]
           }
         }
       }
     },
-    "Продолжи ${applicationName}": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Resume ${applicationName}"
+    "Продолжи ${applicationName}" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resume ${applicationName}"
           }
         }
       }
     },
-    "Следующий трек в ${applicationName}": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Next track in ${applicationName}"
+    "Следующий трек в ${applicationName}" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Next track in ${applicationName}"
+          }
+        },
+        "ru" : {
+          "stringSet" : {
+            "state" : "new",
+            "values" : [
+              "Следующий трек в ${applicationName}"
+            ]
           }
         }
       }
     }
   },
-  "version": "1.0"
+  "version" : "1.0"
 }

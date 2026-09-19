@@ -4,7 +4,7 @@ import UIKit
 /// CarPlay audio app: tabs for favourites, recently played albums, playlists and radio.
 /// Requires the `com.apple.developer.carplay-audio` entitlement (granted by Apple on request).
 @MainActor
-final class CarPlaySceneDelegate: UIResponder, @preconcurrency CPTemplateApplicationSceneDelegate {
+final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegate {
     private var interface: CPInterfaceController?
     private var library: LibraryStore { .shared }
     private var player: PlayerStore { .shared }

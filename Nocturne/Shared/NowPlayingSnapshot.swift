@@ -10,9 +10,9 @@ struct NowPlayingSnapshot: Codable, Sendable {
     var album: String
     var isPlaying: Bool
 
-    static var coverURL: URL? {
+    /// Resolved once: every lookup is an XPC round trip to the container manager.
+    static let coverURL: URL? =
         FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroup)?.appendingPathComponent("widget-cover.jpg")
-    }
 
     static func load() -> NowPlayingSnapshot? {
         UserDefaults(suiteName: appGroup)?.data(forKey: "nowPlaying").flatMap { try? JSONDecoder().decode(Self.self, from: $0) }

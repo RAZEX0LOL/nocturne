@@ -108,13 +108,10 @@ final class Appearance {
 
     private init() {
         let defaults = UserDefaults.standard
-        func value<T: RawRepresentable>(_ key: String, _ fallback: T) -> T where T.RawValue == String {
-            defaults.string(forKey: "appearance." + key).flatMap(T.init) ?? fallback
-        }
-        theme = value("theme", ThemeMode.dark)
-        accent = value("accent", AccentChoice.cover)
-        playerBackground = value("playerBackground", PlayerBackground.blur)
-        miniButton = value("miniButton", MiniButton.next)
+        theme = Self.stored("theme", ThemeMode.dark)
+        accent = Self.stored("accent", AccentChoice.cover)
+        playerBackground = Self.stored("playerBackground", PlayerBackground.blur)
+        miniButton = Self.stored("miniButton", MiniButton.next)
         libraryGrid = defaults.bool(forKey: "appearance.libraryGrid")
         lyricsScale = defaults.object(forKey: "appearance.lyricsScale") as? Double ?? 1
         haptics = defaults.object(forKey: "appearance.haptics") as? Bool ?? true
@@ -124,6 +121,11 @@ final class Appearance {
         // Sections added in later versions go to the end of a saved order.
         homeOrder = saved + HomeSection.allCases.filter { !saved.contains($0) }
         hiddenHome = Set((defaults.stringArray(forKey: "appearance.hiddenHome") ?? []).compactMap(HomeSection.init))
+    }
+
+    private nonisolated static func stored<T: RawRepresentable & Sendable>(_ key: String, _ fallback: T) -> T where T.RawValue == String {
+        guard let raw = UserDefaults.standard.string(forKey: "appearance." + key), let value = T(rawValue: raw) else { return fallback }
+        return value
     }
 
     func resetHome() { homeOrder = HomeSection.allCases; hiddenHome = [] }

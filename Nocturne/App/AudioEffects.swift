@@ -65,25 +65,33 @@ final class AudioEffects: Sendable {
     /// Seconds of fade-in/out at track edges; 0 disables.
     var fadeSeconds: Double { UserDefaults.standard.double(forKey: Self.fadeKey) }
 
-    /// Attaches the EQ tap and fades once the item's audio track is known.
+    /// Attaches the EQ tap and fades before the item reaches the player: changing the mix of a playing
+    /// item makes CoreMedia rebuild its pipeline. Audio files almost always use track ID 1; if the loaded
+    /// asset says otherwise, the mix is rebuilt for the real track.
     @MainActor func attach(to item: AVPlayerItem, duration: Double?) {
+        item.audioMix = mix(trackID: 1, duration: duration)
         Task { @MainActor in
-            guard let track = try? await item.asset.loadTracks(withMediaType: .audio).first else { return }
-            let parameters = AVMutableAudioMixInputParameters(track: track)
-            parameters.audioTapProcessor = Self.makeTap()
-            let fade = fadeSeconds
-            if fade > 0, let duration, duration > fade * 3 {
-                let scale: CMTimeScale = 600
-                parameters.setVolumeRamp(fromStartVolume: 0, toEndVolume: 1,
-                                         timeRange: CMTimeRange(start: .zero, duration: CMTime(seconds: fade, preferredTimescale: scale)))
-                parameters.setVolumeRamp(fromStartVolume: 1, toEndVolume: 0,
-                                         timeRange: CMTimeRange(start: CMTime(seconds: duration - fade, preferredTimescale: scale),
-                                                                duration: CMTime(seconds: fade, preferredTimescale: scale)))
-            }
-            let mix = AVMutableAudioMix()
-            mix.inputParameters = [parameters]
-            item.audioMix = mix
+            guard let track = try? await item.asset.loadTracks(withMediaType: .audio).first, track.trackID != 1 else { return }
+            item.audioMix = mix(trackID: track.trackID, duration: duration)
         }
+    }
+
+    private func mix(trackID: CMPersistentTrackID, duration: Double?) -> AVAudioMix {
+        let parameters = AVMutableAudioMixInputParameters()
+        parameters.trackID = trackID
+        parameters.audioTapProcessor = Self.makeTap()
+        let fade = fadeSeconds
+        if fade > 0, let duration, duration > fade * 3 {
+            let scale: CMTimeScale = 600
+            parameters.setVolumeRamp(fromStartVolume: 0, toEndVolume: 1,
+                                     timeRange: CMTimeRange(start: .zero, duration: CMTime(seconds: fade, preferredTimescale: scale)))
+            parameters.setVolumeRamp(fromStartVolume: 1, toEndVolume: 0,
+                                     timeRange: CMTimeRange(start: CMTime(seconds: duration - fade, preferredTimescale: scale),
+                                                            duration: CMTime(seconds: fade, preferredTimescale: scale)))
+        }
+        let mix = AVMutableAudioMix()
+        mix.inputParameters = [parameters]
+        return mix
     }
 
     private static func makeTap() -> MTAudioProcessingTap? {
