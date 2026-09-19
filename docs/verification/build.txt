@@ -1,0 +1,5 @@
+Command:
+xcodebuild -project Nocturne.xcodeproj -scheme Nocturne -sdk iphonesimulator -destination "generic/platform=iOS Simulator" -derivedDataPath build CODE_SIGNING_ALLOWED=NO build
+
+2026-09-18 19:47:06.680 appintentsmetadataprocessor[10289:238372] warning: Metadata extraction skipped, no AppIntents.framework dependency found
+** BUILD SUCCEEDED **

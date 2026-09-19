@@ -1,0 +1,15 @@
+.build/
+build/
+.DS_Store
+*.xcuserstate
+xcuserdata/
+.env
+.env.*
+!.env.example
+.gradle/
+local.properties
+.kotlin/
+*.apk
+*.aab
+.swiftpm/
+**/build/

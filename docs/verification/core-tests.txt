@@ -1,0 +1,38 @@
+Building for debugging...
+[Computing dependencies]
+[Provisioning 2 / 4]
+[Using on-disk description]
+[1 / 5]
+[1 / 2] NocturneCoreTests-product
+Build complete! (10,96 с)
+Test Suite 'All tests' started at 2026-09-18 19:46:39.611.
+Test Suite 'NocturneCoreTests.xctest' started at 2026-09-18 19:46:39.735.
+Test Suite 'NavidromeClientTests' started at 2026-09-18 19:46:39.738.
+Test Case '-[NocturneCoreTests.NavidromeClientTests testAlbumSongsDecodeFractionalDuration]' started.
+Test Case '-[NocturneCoreTests.NavidromeClientTests testAlbumSongsDecodeFractionalDuration]' passed (0.025 seconds).
+Test Case '-[NocturneCoreTests.NavidromeClientTests testAuthenticationFailureInsideHTTP200IsRejected]' started.
+Test Case '-[NocturneCoreTests.NavidromeClientTests testAuthenticationFailureInsideHTTP200IsRejected]' passed (0.029 seconds).
+Test Case '-[NocturneCoreTests.NavidromeClientTests testEachRequestUsesFreshSalt]' started.
+Test Case '-[NocturneCoreTests.NavidromeClientTests testEachRequestUsesFreshSalt]' passed (0.252 seconds).
+Test Case '-[NocturneCoreTests.NavidromeClientTests testEmptyCredentialsAreRejected]' started.
+Test Case '-[NocturneCoreTests.NavidromeClientTests testEmptyCredentialsAreRejected]' passed (0.000 seconds).
+Test Case '-[NocturneCoreTests.NavidromeClientTests testInvalidAndInsecureServerAddressesAreRejected]' started.
+Test Case '-[NocturneCoreTests.NavidromeClientTests testInvalidAndInsecureServerAddressesAreRejected]' passed (0.001 seconds).
+Test Case '-[NocturneCoreTests.NavidromeClientTests testMalformedOrHTMLResponseIsRejected]' started.
+Test Case '-[NocturneCoreTests.NavidromeClientTests testMalformedOrHTMLResponseIsRejected]' passed (0.003 seconds).
+Test Case '-[NocturneCoreTests.NavidromeClientTests testMissingOptionalAlbumMetadataAndEmptyLists]' started.
+Test Case '-[NocturneCoreTests.NavidromeClientTests testMissingOptionalAlbumMetadataAndEmptyLists]' passed (0.003 seconds).
+Test Case '-[NocturneCoreTests.NavidromeClientTests testServerSubpathAndUnicodeArePreserved]' started.
+Test Case '-[NocturneCoreTests.NavidromeClientTests testServerSubpathAndUnicodeArePreserved]' passed (0.004 seconds).
+Test Case '-[NocturneCoreTests.NavidromeClientTests testSubsonicAuthenticationMatchesOfficialVector]' started.
+Test Case '-[NocturneCoreTests.NavidromeClientTests testSubsonicAuthenticationMatchesOfficialVector]' passed (0.001 seconds).
+Test Suite 'NavidromeClientTests' passed at 2026-09-18 19:46:40.076.
+	 Executed 9 tests, with 0 failures (0 unexpected) in 0.318 (0.338) seconds
+Test Suite 'NocturneCoreTests.xctest' passed at 2026-09-18 19:46:40.076.
+	 Executed 9 tests, with 0 failures (0 unexpected) in 0.318 (0.342) seconds
+Test Suite 'All tests' passed at 2026-09-18 19:46:40.076.
+	 Executed 9 tests, with 0 failures (0 unexpected) in 0.318 (0.465) seconds
+􀟈  Test run started.
+􀄵  Testing Library Version: 2084
+􀄵  Target Platform: arm64e-apple-macos14.0
+􁁛  Test run with 0 tests in 0 suites passed after 0.012 seconds.
