@@ -267,7 +267,7 @@ final class PlayerStore {
 
     private func startCurrent(at time: Double, autoplay: Bool, isRetry: Bool = false) {
         guard let song = current, let item = makeItem(for: song) else { return }
-        Log.player.info("Start \(song.id, privacy: .public) at \(time, privacy: .public)s, retry \(isRetry, privacy: .public)")
+        Log.player.notice("Start \(song.id, privacy: .public) at \(time, privacy: .public)s, retry \(isRetry, privacy: .public)")
         if !isRetry { retryCount = 0 }
         waitingForNetwork = false
         if autoplay, !activateSession() { return }
@@ -451,7 +451,7 @@ final class PlayerStore {
 
     private func networkRestored() {
         guard waitingForNetwork, current != nil else { return }
-        Log.player.info("Network restored, resuming at \(self.elapsed, privacy: .public)s")
+        Log.player.notice("Network restored, resuming at \(self.elapsed, privacy: .public)s")
         startCurrent(at: elapsed, autoplay: true, isRetry: true)
     }
 
