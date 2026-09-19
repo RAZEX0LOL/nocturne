@@ -9,65 +9,65 @@ struct SongActions: View {
     @Environment(DownloadStore.self) private var downloads
 
     var body: some View {
-        Button { player.playNext(songs, client: library.client) } label: { Label("Играть следующим", systemImage: "text.line.first.and.arrowtriangle.forward") }
-        Button { player.addToQueue(songs, client: library.client) } label: { Label("В конец очереди", systemImage: "text.append") }
+        Button { player.playNext(songs, client: library.client) } label: { Label(String(localized: "Играть следующим"), systemImage: "text.line.first.and.arrowtriangle.forward") }
+        Button { player.addToQueue(songs, client: library.client) } label: { Label(String(localized: "В конец очереди"), systemImage: "text.append") }
         if songs.count == 1, let song = songs.first, let client = library.client {
             Button {
                 Task {
                     do {
                         let similar = try await client.similarSongs(to: song.id).filter { $0.id != song.id }
                         guard !similar.isEmpty else {
-                            player.show("Похожих треков нет — нужен Last.fm в Navidrome"); return
+                            player.show(String(localized: "Похожих треков нет — нужен Last.fm в Navidrome")); return
                         }
                         player.play([song] + similar, shuffle: false, client: client)
-                        player.show("Микс: \(similar.count + 1) треков")
+                        player.show(String(localized: "Микс: \(similar.count + 1) треков"))
                     } catch { player.error = LibraryStore.message(error) }
                 }
-            } label: { Label("Микс по треку", systemImage: "dot.radiowaves.left.and.right") }
+            } label: { Label(String(localized: "Микс по треку"), systemImage: "dot.radiowaves.left.and.right") }
             Menu {
                 ForEach(0...5, id: \.self) { stars in
                     Button {
                         Task {
-                            do { try await client.setRating(songID: song.id, rating: stars); player.show(stars == 0 ? "Оценка снята" : "Оценка: \(stars) из 5") }
+                            do { try await client.setRating(songID: song.id, rating: stars); player.show(stars == 0 ? String(localized: "Оценка снята") : String(localized: "Оценка: \(stars) из 5")) }
                             catch { player.error = LibraryStore.message(error) }
                         }
                     } label: {
-                        if stars == (song.userRating ?? 0) { Label(stars == 0 ? "Без оценки" : String(repeating: "★", count: stars), systemImage: "checkmark") }
-                        else { Text(stars == 0 ? "Без оценки" : String(repeating: "★", count: stars)) }
+                        if stars == (song.userRating ?? 0) { Label(stars == 0 ? String(localized: "Без оценки") : String(repeating: "★", count: stars), systemImage: "checkmark") }
+                        else { Text(stars == 0 ? String(localized: "Без оценки") : String(repeating: "★", count: stars)) }
                     }
                 }
-            } label: { Label("Оценка", systemImage: "star") }
+            } label: { Label(String(localized: "Оценка"), systemImage: "star") }
             Button {
                 Task {
                     do {
                         guard let url = try await client.createShare(songID: song.id) else { throw MusicError.invalidResponse }
                         ShareSheet.present([url])
                     } catch {
-                        player.error = "Не удалось создать ссылку. Проверь, что в Navidrome включён общий доступ (EnableSharing)."
+                        player.error = String(localized: "Не удалось создать ссылку. Проверь, что в Navidrome включён общий доступ (EnableSharing).")
                     }
                 }
-            } label: { Label("Поделиться", systemImage: "square.and.arrow.up") }
+            } label: { Label(String(localized: "Поделиться"), systemImage: "square.and.arrow.up") }
         }
         if songs.count == 1, let song = songs.first {
             let starred = library.isStarred(song)
             Button {
                 Task {
-                    do { try await library.setStarred(song, !starred); player.show(starred ? "Убрано из любимых" : "Добавлено в любимые") }
+                    do { try await library.setStarred(song, !starred); player.show(starred ? String(localized: "Убрано из любимых") : String(localized: "Добавлено в любимые")) }
                     catch { player.error = LibraryStore.message(error) }
                 }
-            } label: { Label(starred ? "Убрать из любимых" : "В любимые", systemImage: starred ? "heart.slash" : "heart") }
+            } label: { Label(starred ? String(localized: "Убрать из любимых") : String(localized: "В любимые"), systemImage: starred ? "heart.slash" : "heart") }
         }
-        Button { addToPlaylist = true } label: { Label("Добавить в плейлист…", systemImage: "music.note.list") }
+        Button { addToPlaylist = true } label: { Label(String(localized: "Добавить в плейлист…"), systemImage: "music.note.list") }
         if library.client != nil {
             let missing = songs.filter { !downloads.isDownloaded($0) }
             if !missing.isEmpty {
-                Button { downloads.download(missing); player.show(missing.count == 1 ? "Загрузка началась" : "Загружается треков: \(missing.count)") } label: {
-                    Label(songs.count == 1 ? "Скачать" : "Скачать все", systemImage: "arrow.down.circle")
+                Button { downloads.download(missing); player.show(missing.count == 1 ? String(localized: "Загрузка началась") : String(localized: "Загружается треков: \(missing.count)")) } label: {
+                    Label(songs.count == 1 ? String(localized: "Скачать") : String(localized: "Скачать все"), systemImage: "arrow.down.circle")
                 }
             }
             if missing.count < songs.count {
                 Button(role: .destructive) { downloads.remove(songs) } label: {
-                    Label(songs.count == 1 ? "Удалить загрузку" : "Удалить загрузки", systemImage: "trash")
+                    Label(songs.count == 1 ? String(localized: "Удалить загрузку") : String(localized: "Удалить загрузки"), systemImage: "trash")
                 }
             }
         }
@@ -87,16 +87,16 @@ struct PlaylistPicker: View {
     var body: some View {
         NavigationStack {
             List {
-                Button { creating = true } label: { Label("Новый плейлист", systemImage: "plus") }
+                Button { creating = true } label: { Label(String(localized: "Новый плейлист"), systemImage: "plus") }
                 ForEach(library.playlists) { playlist in
                     Button {
-                        run("Добавлено в «\(playlist.name)»") { try await library.add(songs, to: playlist) }
+                        run(String(localized: "Добавлено в «\(playlist.name)»")) { try await library.add(songs, to: playlist) }
                     } label: {
                         HStack(spacing: 12) {
                             Cover(id: playlist.coverArt, size: 44)
                             VStack(alignment: .leading, spacing: 3) {
                                 Text(playlist.name).foregroundStyle(Theme.primary)
-                                Text("Треков: \(playlist.songCount ?? 0)").font(.caption).foregroundStyle(Theme.secondary)
+                                Text(String(localized: "Треков: \(playlist.songCount ?? 0)")).font(.caption).foregroundStyle(Theme.secondary)
                             }
                         }
                     }
@@ -104,16 +104,16 @@ struct PlaylistPicker: View {
             }
             .scrollContentBackground(.hidden).background(Theme.background)
             .disabled(busy)
-            .navigationTitle("В плейлист").navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Отмена") { dismiss() } } }
-            .alert("Новый плейлист", isPresented: $creating) {
-                TextField("Название", text: $name)
-                Button("Создать") {
+            .navigationTitle(String(localized: "В плейлист")).navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .topBarTrailing) { Button(String(localized: "Отмена")) { dismiss() } } }
+            .alert(String(localized: "Новый плейлист"), isPresented: $creating) {
+                TextField(String(localized: "Название"), text: $name)
+                Button(String(localized: "Создать")) {
                     let title = name.trimmingCharacters(in: .whitespacesAndNewlines)
                     guard !title.isEmpty else { return }
-                    run("Плейлист «\(title)» создан") { try await library.createPlaylist(name: title, songs: songs) }
+                    run(String(localized: "Плейлист «\(title)» создан")) { try await library.createPlaylist(name: title, songs: songs) }
                 }
-                Button("Отмена", role: .cancel) {}
+                Button(String(localized: "Отмена"), role: .cancel) {}
             }
             .task { await library.reloadPlaylists() }
         }

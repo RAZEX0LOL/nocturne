@@ -41,6 +41,9 @@
 		F311A0F0AD4F5DF5A36F43B9 /* Nocturne/App/CarPlaySceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788DD5A81B6E4766D235BDF2 /* Nocturne/App/CarPlaySceneDelegate.swift */; };
 		618D0A3513FAEA75E288EF1E /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 6F5ADE23265FE4C20E5DAE8F /* PrivacyInfo.xcprivacy */; };
 		0D15B47E6E7F49D134222167 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 6F5ADE23265FE4C20E5DAE8F /* PrivacyInfo.xcprivacy */; };
+		E73F4F43FF05FAF5DE702CAC /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 72B8CC6E0CB3458A44F5748C /* Localizable.xcstrings */; };
+		5F58648F6626F63A71541F60 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 72B8CC6E0CB3458A44F5748C /* Localizable.xcstrings */; };
+		D1328A2F40BB1B9E331407A2 /* AppShortcuts.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 525330C55C345C8A7D4C51F0 /* AppShortcuts.xcstrings */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -111,6 +114,8 @@
 		1CF7607B608A7E6324CD10BC /* NocturneWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = NocturneWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		788DD5A81B6E4766D235BDF2 /* Nocturne/App/CarPlaySceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/CarPlaySceneDelegate.swift; sourceTree = SOURCE_ROOT; };
 		6F5ADE23265FE4C20E5DAE8F /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = Nocturne/Resources/PrivacyInfo.xcprivacy; sourceTree = SOURCE_ROOT; };
+		72B8CC6E0CB3458A44F5748C /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Nocturne/Resources/Localizable.xcstrings; sourceTree = SOURCE_ROOT; };
+		525330C55C345C8A7D4C51F0 /* AppShortcuts.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Nocturne/Resources/AppShortcuts.xcstrings; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -144,6 +149,8 @@
 		0D6E4079E36703EBD37C0072 = {
 			isa = PBXGroup;
 			children = (
+				525330C55C345C8A7D4C51F0 /* AppShortcuts.xcstrings */,
+				72B8CC6E0CB3458A44F5748C /* Localizable.xcstrings */,
 				6F5ADE23265FE4C20E5DAE8F /* PrivacyInfo.xcprivacy */,
 				788DD5A81B6E4766D235BDF2 /* Nocturne/App/CarPlaySceneDelegate.swift */,
 				831E54FF662C3D2A826AE8B4 /* aent */,
@@ -270,6 +277,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D1328A2F40BB1B9E331407A2 /* AppShortcuts.xcstrings in Resources */,
+				E73F4F43FF05FAF5DE702CAC /* Localizable.xcstrings in Resources */,
 				618D0A3513FAEA75E288EF1E /* PrivacyInfo.xcprivacy in Resources */,
 				B55E7C0A11C0A55E7C0A11C0 /* Nocturne/Resources/Assets.xcassets in Resources */,
 			);
@@ -279,6 +288,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5F58648F6626F63A71541F60 /* Localizable.xcstrings in Resources */,
 				0D15B47E6E7F49D134222167 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

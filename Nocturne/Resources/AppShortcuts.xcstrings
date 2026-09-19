@@ -1,0 +1,76 @@
+{
+  "sourceLanguage": "ru",
+  "strings": {
+    "Включи любимое в ${applicationName}": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Play favourites in ${applicationName}"
+          }
+        }
+      }
+    },
+    "Включи похожие в ${applicationName}": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Play similar in ${applicationName}"
+          }
+        }
+      }
+    },
+    "Любимые треки в ${applicationName}": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Favourite tracks in ${applicationName}"
+          }
+        }
+      }
+    },
+    "Микс в ${applicationName}": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mix in ${applicationName}"
+          }
+        }
+      }
+    },
+    "Пауза в ${applicationName}": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause ${applicationName}"
+          }
+        }
+      }
+    },
+    "Продолжи ${applicationName}": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resume ${applicationName}"
+          }
+        }
+      }
+    },
+    "Следующий трек в ${applicationName}": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next track in ${applicationName}"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

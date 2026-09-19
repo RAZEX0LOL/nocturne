@@ -11,13 +11,13 @@ final class CarPlaySceneDelegate: UIResponder, @preconcurrency CPTemplateApplica
 
     func templateApplicationScene(_ scene: CPTemplateApplicationScene, didConnect interfaceController: CPInterfaceController) {
         interface = interfaceController
-        let favorites = CPListTemplate(title: "Любимое", sections: [])
+        let favorites = CPListTemplate(title: String(localized: "Любимое"), sections: [])
         favorites.tabImage = UIImage(systemName: "heart.fill")
-        let recent = CPListTemplate(title: "Недавно", sections: [])
+        let recent = CPListTemplate(title: String(localized: "Недавно"), sections: [])
         recent.tabImage = UIImage(systemName: "clock")
-        let playlists = CPListTemplate(title: "Плейлисты", sections: [])
+        let playlists = CPListTemplate(title: String(localized: "Плейлисты"), sections: [])
         playlists.tabImage = UIImage(systemName: "music.note.list")
-        let radio = CPListTemplate(title: "Радио", sections: [])
+        let radio = CPListTemplate(title: String(localized: "Радио"), sections: [])
         radio.tabImage = UIImage(systemName: "antenna.radiowaves.left.and.right")
         interfaceController.setRootTemplate(CPTabBarTemplate(templates: [favorites, recent, playlists, radio]), animated: false, completion: nil)
         Task { await fill(favorites: favorites, recent: recent, playlists: playlists, radio: radio) }
@@ -29,14 +29,14 @@ final class CarPlaySceneDelegate: UIResponder, @preconcurrency CPTemplateApplica
 
     private func fill(favorites: CPListTemplate, recent: CPListTemplate, playlists: CPListTemplate, radio: CPListTemplate) async {
         guard let client = library.client else {
-            favorites.updateSections([CPListSection(items: [CPListItem(text: "Подключи сервер в приложении на iPhone", detailText: nil)])])
+            favorites.updateSections([CPListSection(items: [CPListItem(text: String(localized: "Подключи сервер в приложении на iPhone"), detailText: nil)])])
             return
         }
         if library.starredSongs.isEmpty { await library.refresh() }
         favorites.updateSections([CPListSection(items: songItems(library.starredSongs))])
         recent.updateSections([CPListSection(items: (library.recentlyPlayed.isEmpty ? library.albums : library.recentlyPlayed).prefix(20).map(albumItem))])
         playlists.updateSections([CPListSection(items: library.playlists.map { playlist in
-            let item = CPListItem(text: playlist.name, detailText: "Треков: \(playlist.songCount ?? 0)")
+            let item = CPListItem(text: playlist.name, detailText: String(localized: "Треков: \(playlist.songCount ?? 0)"))
             item.handler = { [weak self] _, completion in
                 Task { @MainActor in
                     let songs = (try? await client.request("getPlaylist", parameters: ["id": playlist.id]).playlist?.entry) ?? []

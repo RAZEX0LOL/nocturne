@@ -101,9 +101,9 @@ final class PlayerStore {
 
     func playRadio(_ station: RadioStation, client: NavidromeClient?) {
         guard let url = URL(string: station.streamUrl), ["http", "https"].contains(url.scheme?.lowercased() ?? "") else {
-            error = "У станции некорректный адрес потока."; return
+            error = String(localized: "У станции некорректный адрес потока."); return
         }
-        let song = Song(id: "radio-\(station.id)", title: station.name, artist: "Интернет-радио")
+        let song = Song(id: "radio-\(station.id)", title: station.name, artist: String(localized: "Интернет-радио"))
         directStreams[song.id] = url
         play([song], shuffle: false, client: client)
     }
@@ -112,14 +112,14 @@ final class PlayerStore {
         guard current != nil else { play(songs, client: client); return }
         queue.insertNext(songs)
         queueDidChange()
-        show(songs.count == 1 ? "Сыграет следующим" : "Сыграют следующими: \(songs.count)")
+        show(songs.count == 1 ? String(localized: "Сыграет следующим") : String(localized: "Сыграют следующими: \(songs.count)"))
     }
 
     func addToQueue(_ songs: [Song], client: NavidromeClient?) {
         guard current != nil else { play(songs, client: client); return }
         queue.append(songs)
         queueDidChange()
-        show(songs.count == 1 ? "Добавлено в очередь" : "Добавлено в очередь: \(songs.count)")
+        show(songs.count == 1 ? String(localized: "Добавлено в очередь") : String(localized: "Добавлено в очередь: \(songs.count)"))
     }
 
     func show(_ message: String) {
@@ -398,7 +398,7 @@ final class PlayerStore {
         guard retryCount < 4 else {
             Log.player.error("Giving up after \(self.retryCount, privacy: .public) retries")
             pause()
-            error = "Не удалось воспроизвести трек. Проверь сеть, формат файла и транскодирование в Navidrome."
+            error = String(localized: "Не удалось воспроизвести трек. Проверь сеть, формат файла и транскодирование в Navidrome.")
             return
         }
         retryCount += 1
@@ -487,7 +487,7 @@ final class PlayerStore {
             return true
         } catch {
             Log.player.error("Audio session: \(Log.describe(error), privacy: .public)")
-            self.error = "Не удалось запустить аудио. Попробуй ещё раз."
+            self.error = String(localized: "Не удалось запустить аудио. Попробуй ещё раз.")
             return false
         }
     }

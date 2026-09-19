@@ -17,8 +17,8 @@ struct HomeView: View {
                             HStack(spacing: 10) {
                                 Image(systemName: "sparkles")
                                 VStack(alignment: .leading, spacing: 3) {
-                                    Text("Твоя музыка будет здесь").font(.subheadline.weight(.medium))
-                                    Text("Демоверсия · Подключить Navidrome").font(.caption).foregroundStyle(Theme.secondary)
+                                    Text(String(localized: "Твоя музыка будет здесь")).font(.subheadline.weight(.medium))
+                                    Text(String(localized: "Демоверсия · Подключить Navidrome")).font(.caption).foregroundStyle(Theme.secondary)
                                 }
                                 Spacer(); Image(systemName: "arrow.up.right")
                             }.padding(16).background(Theme.surface, in: RoundedRectangle(cornerRadius: 17))
@@ -28,21 +28,21 @@ struct HomeView: View {
                     if let error = library.error {
                         VStack(alignment: .leading, spacing: 12) {
                             Text(error).foregroundStyle(Theme.secondary)
-                            Button("Повторить") { Task { await library.refresh() } }
+                            Button(String(localized: "Повторить")) { Task { await library.refresh() } }
                         }
                     }
                     ForEach(Appearance.shared.visibleHome) { section in
                         homeSection(section, width: width, columns: columns, carouselWidth: carouselWidth)
                     }
                     if library.albums.isEmpty && !library.isLoading && library.error == nil {
-                        ContentUnavailableView("Здесь пока тихо", systemImage: "music.note", description: Text("Добавь музыку в Navidrome и обнови медиатеку."))
+                        ContentUnavailableView(String(localized: "Здесь пока тихо"), systemImage: "music.note", description: Text(String(localized: "Добавь музыку в Navidrome и обнови медиатеку.")))
                     }
                 }.padding(24)
             }.refreshable { await library.refresh() }
                 .background(Theme.background)
-                .navigationTitle("Главная")
+                .navigationTitle(String(localized: "Главная"))
                 .toolbar { ToolbarItem(placement: .topBarTrailing) {
-                    Button { settings = true } label: { Image(systemName: "gearshape").foregroundStyle(Theme.primary) }.accessibilityLabel("Настройки")
+                    Button { settings = true } label: { Image(systemName: "gearshape").foregroundStyle(Theme.primary) }.accessibilityLabel(String(localized: "Настройки"))
                 } }
                 .navigationDestination(for: Album.self) { AlbumDetailView(album: $0) }
         }.background(Theme.background)
@@ -62,9 +62,9 @@ extension HomeView {
                     HStack {
                         Text(section.title).font(.title2.bold())
                         Spacer()
-                        NavigationLink { AlbumListPage(title: "Все альбомы", type: "newest") } label: {
+                        NavigationLink { AlbumListPage(title: String(localized: "Все альбомы"), type: "newest") } label: {
                             Image(systemName: "chevron.right").foregroundStyle(Theme.secondary)
-                        }.accessibilityLabel("Все альбомы")
+                        }.accessibilityLabel(String(localized: "Все альбомы"))
                     }
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: columns), spacing: 24) {
                         ForEach(library.albums.prefix(columns == 2 ? 6 : columns * 2)) { album in
@@ -79,7 +79,7 @@ extension HomeView {
                     HStack {
                         Text(section.title).font(.title2.bold())
                         Spacer()
-                        NavigationLink { StarredSongsView() } label: { Text("Все").foregroundStyle(Theme.accent) }
+                        NavigationLink { StarredSongsView() } label: { Text(String(localized: "Все")).foregroundStyle(Theme.accent) }
                     }
                     let songs = library.starredSongs
                     ForEach(Array(songs.prefix(4).enumerated()), id: \.offset) { index, song in
@@ -117,12 +117,12 @@ struct LibraryView: View {
         case newest, alphabeticalByName, alphabeticalByArtist, recent, frequent, random
         var title: String {
             switch self {
-            case .newest: "Недавно добавленные"
-            case .alphabeticalByName: "По названию"
-            case .alphabeticalByArtist: "По исполнителю"
-            case .recent: "Недавно прослушанные"
-            case .frequent: "Часто прослушиваемые"
-            case .random: "Случайные"
+            case .newest: String(localized: "Недавно добавленные")
+            case .alphabeticalByName: String(localized: "По названию")
+            case .alphabeticalByArtist: String(localized: "По исполнителю")
+            case .recent: String(localized: "Недавно прослушанные")
+            case .frequent: String(localized: "Часто прослушиваемые")
+            case .random: String(localized: "Случайные")
             }
         }
     }
@@ -140,7 +140,7 @@ struct LibraryView: View {
                     HStack(spacing: 8) {
                         ForEach(Category.allCases, id: \.self) { item in
                             Button { category = item } label: {
-                                Text(item.rawValue).font(.subheadline.weight(.medium)).padding(.horizontal, 14).padding(.vertical, 8)
+                                Text(LocalizedStringKey(item.rawValue)).font(.subheadline.weight(.medium)).padding(.horizontal, 14).padding(.vertical, 8)
                                     .background(category == item ? Theme.accent : Theme.surface, in: Capsule())
                                     .foregroundStyle(category == item ? Theme.onAccent : Theme.primary)
                             }.buttonStyle(.plain).accessibilityAddTraits(category == item ? .isSelected : [])
@@ -158,35 +158,35 @@ struct LibraryView: View {
                 }
                 if let error = library.error { Text(error).foregroundStyle(Theme.secondary) }
             }.padding(24)
-        }.background(Theme.background).navigationTitle("Медиатека")
+        }.background(Theme.background).navigationTitle(String(localized: "Медиатека"))
             .refreshable { await library.refresh() }
             .navigationDestination(for: Album.self) { AlbumDetailView(album: $0) }
             .toolbar {
                 if category == .albums {
                     ToolbarItem(placement: .topBarTrailing) {
                         Menu {
-                            Picker("Сортировка", selection: $sort) { ForEach(AlbumSort.allCases, id: \.self) { Text($0.title).tag($0) } }
-                            Toggle("Сеткой", systemImage: "square.grid.2x2", isOn: Binding(get: { Appearance.shared.libraryGrid }, set: { Appearance.shared.libraryGrid = $0 }))
-                        } label: { Image(systemName: "arrow.up.arrow.down") }.accessibilityLabel("Сортировка альбомов")
+                            Picker(String(localized: "Сортировка"), selection: $sort) { ForEach(AlbumSort.allCases, id: \.self) { Text($0.title).tag($0) } }
+                            Toggle(String(localized: "Сеткой"), systemImage: "square.grid.2x2", isOn: Binding(get: { Appearance.shared.libraryGrid }, set: { Appearance.shared.libraryGrid = $0 }))
+                        } label: { Image(systemName: "arrow.up.arrow.down") }.accessibilityLabel(String(localized: "Сортировка альбомов"))
                     }
                 }
                 if category == .playlists && library.isConnected {
                     ToolbarItem(placement: .topBarTrailing) {
-                        Button { playlistName = ""; creatingPlaylist = true } label: { Image(systemName: "plus") }.accessibilityLabel("Новый плейлист")
+                        Button { playlistName = ""; creatingPlaylist = true } label: { Image(systemName: "plus") }.accessibilityLabel(String(localized: "Новый плейлист"))
                     }
                 }
             }
-            .alert("Новый плейлист", isPresented: $creatingPlaylist) {
-                TextField("Название", text: $playlistName)
-                Button("Создать") {
+            .alert(String(localized: "Новый плейлист"), isPresented: $creatingPlaylist) {
+                TextField(String(localized: "Название"), text: $playlistName)
+                Button(String(localized: "Создать")) {
                     let name = playlistName.trimmingCharacters(in: .whitespacesAndNewlines)
                     guard !name.isEmpty else { return }
                     Task {
-                        do { try await library.createPlaylist(name: name, songs: []); player.show("Плейлист «\(name)» создан") }
+                        do { try await library.createPlaylist(name: name, songs: []); player.show(String(localized: "Плейлист «\(name)» создан")) }
                         catch { player.error = LibraryStore.message(error) }
                     }
                 }
-                Button("Отмена", role: .cancel) {}
+                Button(String(localized: "Отмена"), role: .cancel) {}
             }
     }
 
@@ -206,7 +206,7 @@ struct LibraryView: View {
                                 Cover(id: artist.coverArt, size: 56).clipShape(Circle())
                                 VStack(alignment: .leading, spacing: 5) {
                                     Text(artist.name).foregroundStyle(Theme.primary)
-                                    Text("Альбомов: \(artist.albumCount ?? 0)").font(.caption).foregroundStyle(Theme.secondary)
+                                    Text(String(localized: "Альбомов: \(artist.albumCount ?? 0)")).font(.caption).foregroundStyle(Theme.secondary)
                                 }
                                 Spacer(); Image(systemName: "chevron.right").font(.caption).foregroundStyle(Theme.secondary)
                             }.padding(.vertical, 4)
@@ -222,7 +222,7 @@ struct LibraryView: View {
 
     @ViewBuilder private var playlists: some View {
         if library.playlists.isEmpty {
-            ContentUnavailableView("Плейлистов пока нет", systemImage: "music.note.list", description: Text("Создай плейлист кнопкой «+» или через меню трека."))
+            ContentUnavailableView(String(localized: "Плейлистов пока нет"), systemImage: "music.note.list", description: Text(String(localized: "Создай плейлист кнопкой «+» или через меню трека.")))
         }
         ForEach(library.playlists) { playlist in
             NavigationLink { PlaylistDetailView(playlist: playlist) } label: {
@@ -230,7 +230,7 @@ struct LibraryView: View {
                     Cover(id: playlist.coverArt, size: 64)
                     VStack(alignment: .leading, spacing: 5) {
                         Text(playlist.name).foregroundStyle(Theme.primary)
-                        Text("Треков: \(playlist.songCount ?? 0)").font(.caption).foregroundStyle(Theme.secondary)
+                        Text(String(localized: "Треков: \(playlist.songCount ?? 0)")).font(.caption).foregroundStyle(Theme.secondary)
                     }
                     Spacer(); Image(systemName: "chevron.right").font(.caption).foregroundStyle(Theme.secondary)
                 }
@@ -241,7 +241,7 @@ struct LibraryView: View {
     @ViewBuilder private var favoriteSongs: some View {
         let songs = library.starredSongs
         if songs.isEmpty {
-            ContentUnavailableView("Любимых треков нет", systemImage: "heart", description: Text("Отмечай треки сердцем в плеере или через долгое нажатие."))
+            ContentUnavailableView(String(localized: "Любимых треков нет"), systemImage: "heart", description: Text(String(localized: "Отмечай треки сердцем в плеере или через долгое нажатие.")))
         } else {
             PlayButtons(songs: songs)
             LazyVStack(spacing: 12) {
@@ -262,8 +262,8 @@ struct RadioStationsView: View {
         LazyVStack(alignment: .leading, spacing: 4) {
             if loading { ProgressView().frame(maxWidth: .infinity).padding() }
             else if stations.isEmpty {
-                ContentUnavailableView("Радиостанций нет", systemImage: "antenna.radiowaves.left.and.right",
-                                       description: Text("Добавь станции в Navidrome: Настройки → Интернет-радио."))
+                ContentUnavailableView(String(localized: "Радиостанций нет"), systemImage: "antenna.radiowaves.left.and.right",
+                                       description: Text(String(localized: "Добавь станции в Navidrome: Настройки → Интернет-радио.")))
             }
             ForEach(stations) { station in
                 Button { player.playRadio(station, client: library.client) } label: {
@@ -295,10 +295,10 @@ struct DownloadsList: View {
     var body: some View {
         let songs = downloads.songs
         if songs.isEmpty {
-            ContentUnavailableView("Загрузок нет", systemImage: "arrow.down.circle",
-                                   description: Text("Долгое нажатие на трек или меню альбома → «Скачать». Скачанное играет без сети."))
+            ContentUnavailableView(String(localized: "Загрузок нет"), systemImage: "arrow.down.circle",
+                                   description: Text(String(localized: "Долгое нажатие на трек или меню альбома → «Скачать». Скачанное играет без сети.")))
         } else {
-            Text("\(songs.count) треков · \(ByteCountFormatter.string(fromByteCount: Int64(downloads.totalSize), countStyle: .file))")
+            Text(String(localized: "\(songs.count) треков · \(ByteCountFormatter.string(fromByteCount: Int64(downloads.totalSize), countStyle: .file))"))
                 .font(.caption).foregroundStyle(Theme.secondary)
             PlayButtons(songs: songs)
             LazyVStack(spacing: 12) {
@@ -318,12 +318,12 @@ struct PlayButtons: View {
     var body: some View {
         HStack(spacing: 14) {
             Button { player.play(songs, shuffle: false, client: library.client) } label: {
-                Label("Слушать", systemImage: "play.fill").fontWeight(.semibold).frame(maxWidth: .infinity).padding(16)
+                Label(String(localized: "Слушать"), systemImage: "play.fill").fontWeight(.semibold).frame(maxWidth: .infinity).padding(16)
                     .background(Theme.accent, in: RoundedRectangle(cornerRadius: 15)).foregroundStyle(Theme.onAccent)
             }
             Button { player.play(songs, at: songs.indices.randomElement() ?? 0, shuffle: true, client: library.client) } label: {
                 Image(systemName: "shuffle").frame(width: 52, height: 52).background(Theme.surface, in: RoundedRectangle(cornerRadius: 15))
-            }.accessibilityLabel("Перемешать")
+            }.accessibilityLabel(String(localized: "Перемешать"))
         }.disabled(songs.isEmpty)
     }
 }
@@ -360,10 +360,10 @@ struct AlbumBrowser: View {
             if loading { ProgressView().padding() }
             if let error {
                 Text(error).foregroundStyle(Theme.secondary)
-                Button("Повторить") { Task { await loadMore() } }
+                Button(String(localized: "Повторить")) { Task { await loadMore() } }
             }
             if !loading && error == nil && !hasMore && albums.isEmpty {
-                ContentUnavailableView("Альбомов нет", systemImage: "square.stack")
+                ContentUnavailableView(String(localized: "Альбомов нет"), systemImage: "square.stack")
             }
         }
         .task { if albums.isEmpty { await loadMore() } }
@@ -404,7 +404,7 @@ struct GenresView: View {
     var body: some View {
         LazyVStack(alignment: .leading, spacing: 4) {
             if loading { ProgressView().frame(maxWidth: .infinity).padding() }
-            else if genres.isEmpty { ContentUnavailableView("Жанров нет", systemImage: "guitars", description: Text("Жанры берутся из тегов файлов.")) }
+            else if genres.isEmpty { ContentUnavailableView(String(localized: "Жанров нет"), systemImage: "guitars", description: Text(String(localized: "Жанры берутся из тегов файлов."))) }
             ForEach(genres) { genre in
                 NavigationLink { AlbumListPage(title: genre.value, type: "byGenre", genre: genre.value) } label: {
                     HStack {
@@ -438,7 +438,7 @@ struct StarredSongsView: View {
                     }
                 }
             }.padding(24)
-        }.background(Theme.background).navigationTitle("Любимые треки").navigationBarTitleDisplayMode(.inline)
+        }.background(Theme.background).navigationTitle(String(localized: "Любимые треки")).navigationBarTitleDisplayMode(.inline)
     }
 }
 
@@ -450,7 +450,7 @@ struct AlbumGridTile: View {
             Color.clear.aspectRatio(1, contentMode: .fit)
                 .overlay { GeometryReader { proxy in Cover(id: album.coverArt, size: proxy.size.width) } }
             Text(album.name).font(.subheadline.weight(.medium)).foregroundStyle(Theme.primary).lineLimit(1)
-            Text(album.artist ?? "Неизвестный исполнитель").font(.caption).foregroundStyle(Theme.secondary).lineLimit(1)
+            Text(album.artist ?? String(localized: "Неизвестный исполнитель")).font(.caption).foregroundStyle(Theme.secondary).lineLimit(1)
         }
     }
 }
@@ -463,8 +463,8 @@ struct AlbumRow: View {
                 Cover(id: album.coverArt, size: 70)
                 VStack(alignment: .leading, spacing: 5) {
                     Text(album.name).font(.body.weight(.medium)).foregroundStyle(Theme.primary).lineLimit(1)
-                    Text(album.artist ?? "Неизвестный исполнитель").font(.subheadline).foregroundStyle(Theme.secondary).lineLimit(1)
-                    Text([album.year.map(String.init), album.songCount.map { "Треков: \($0)" }].compactMap { $0 }.joined(separator: " · "))
+                    Text(album.artist ?? String(localized: "Неизвестный исполнитель")).font(.subheadline).foregroundStyle(Theme.secondary).lineLimit(1)
+                    Text([album.year.map(String.init), album.songCount.map { String(localized: "Треков: \($0)") }].compactMap { $0 }.joined(separator: " · "))
                         .font(.caption).foregroundStyle(Theme.secondary)
                 }
                 Spacer(minLength: 0)
@@ -492,8 +492,8 @@ struct AlbumDetailView: View {
                 Cover(id: album.coverArt, size: 260).shadow(color: Theme.accent.opacity(0.1), radius: 35, y: 10).padding(.top, 18)
                 VStack(spacing: 8) {
                     Text(album.name).font(.title2.bold()).multilineTextAlignment(.center)
-                    Text(album.artist ?? "Неизвестный исполнитель").foregroundStyle(Theme.accent)
-                    Text([album.year.map(String.init), album.songCount.map { "Треков: \($0)" }].compactMap { $0 }.joined(separator: " · "))
+                    Text(album.artist ?? String(localized: "Неизвестный исполнитель")).foregroundStyle(Theme.accent)
+                    Text([album.year.map(String.init), album.songCount.map { String(localized: "Треков: \($0)") }].compactMap { $0 }.joined(separator: " · "))
                         .font(.caption).foregroundStyle(Theme.secondary)
                 }
                 PlayButtons(songs: songs)
@@ -501,12 +501,12 @@ struct AlbumDetailView: View {
                     Text(notes).font(.callout).foregroundStyle(Theme.secondary).lineLimit(notesExpanded ? nil : 3)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .onTapGesture { withAnimation { notesExpanded.toggle() } }
-                        .accessibilityHint(notesExpanded ? "Свернуть описание" : "Показать описание полностью")
+                        .accessibilityHint(notesExpanded ? String(localized: "Свернуть описание") : String(localized: "Показать описание полностью"))
                 }
                 if loading { ProgressView() }
                 if let error {
                     Text(error).foregroundStyle(Theme.secondary)
-                    Button("Повторить") { Task { await load() } }
+                    Button(String(localized: "Повторить")) { Task { await load() } }
                 }
                 LazyVStack(spacing: 12) {
                     ForEach(Array(songs.enumerated()), id: \.offset) { index, song in
@@ -528,9 +528,9 @@ struct AlbumDetailView: View {
                             saving = false
                         }
                     } label: { Image(systemName: starred ? "heart.fill" : "heart") }
-                        .disabled(saving).accessibilityLabel(starred ? "Убрать из избранного" : "В избранное")
+                        .disabled(saving).accessibilityLabel(starred ? String(localized: "Убрать из избранного") : String(localized: "В избранное"))
                     Menu { SongActions(songs: songs, addToPlaylist: $addToPlaylist) } label: { Image(systemName: "ellipsis") }
-                        .disabled(songs.isEmpty || library.client == nil).accessibilityLabel("Действия с альбомом")
+                        .disabled(songs.isEmpty || library.client == nil).accessibilityLabel(String(localized: "Действия с альбомом"))
                 }
             }
             .sheet(isPresented: $addToPlaylist) { PlaylistPicker(songs: songs) }
@@ -574,26 +574,26 @@ struct ArtistDetailView: View {
                         } else { Cover(id: artist.coverArt, size: 180) }
                     }.frame(width: 180, height: 180).clipShape(Circle())
                     Text(artist.name).font(.title.bold()).multilineTextAlignment(.center)
-                    Text("Альбомов: \(albums.isEmpty ? artist.albumCount ?? 0 : albums.count)").font(.caption).foregroundStyle(Theme.secondary)
+                    Text(String(localized: "Альбомов: \(albums.isEmpty ? artist.albumCount ?? 0 : albums.count)")).font(.caption).foregroundStyle(Theme.secondary)
                 }.frame(maxWidth: .infinity)
                 if loading { ProgressView().frame(maxWidth: .infinity) }
                 if let error { Text(error).foregroundStyle(Theme.secondary) }
                 if let biography, !biography.isEmpty {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Об исполнителе").font(.title2.bold())
+                        Text(String(localized: "Об исполнителе")).font(.title2.bold())
                         Text(biography).font(.callout).foregroundStyle(Theme.secondary).lineLimit(bioExpanded ? nil : 4)
-                        Button(bioExpanded ? "Свернуть" : "Читать полностью") { withAnimation { bioExpanded.toggle() } }.font(.callout)
+                        Button(bioExpanded ? String(localized: "Свернуть") : String(localized: "Читать полностью")) { withAnimation { bioExpanded.toggle() } }.font(.callout)
                     }
                 }
                 if !topSongs.isEmpty {
-                    Text("Популярные треки").font(.title2.bold())
+                    Text(String(localized: "Популярные треки")).font(.title2.bold())
                     PlayButtons(songs: topSongs)
                     ForEach(Array(topSongs.prefix(5).enumerated()), id: \.offset) { index, song in
                         SongRow(song: song) { player.play(topSongs, at: index, client: library.client) }
                     }
                 }
                 if !albums.isEmpty {
-                    Text("Альбомы").font(.title2.bold())
+                    Text(String(localized: "Альбомы")).font(.title2.bold())
                     LazyVStack(spacing: 16) { ForEach(albums) { AlbumRow(album: $0) } }
                 }
             }.padding(24)
@@ -632,7 +632,7 @@ struct PlaylistDetailView: View {
                 VStack(spacing: 14) {
                     Cover(id: playlist.coverArt, size: 180)
                     Text(playlist.name).font(.title2.bold()).multilineTextAlignment(.center)
-                    Text("Треков: \(songs.count)").font(.caption).foregroundStyle(Theme.secondary)
+                    Text(String(localized: "Треков: \(songs.count)")).font(.caption).foregroundStyle(Theme.secondary)
                     PlayButtons(songs: songs)
                 }.frame(maxWidth: .infinity).listRowBackground(Color.clear).listRowSeparator(.hidden)
             }
@@ -649,12 +649,12 @@ struct PlaylistDetailView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
-                    Button("Удалить плейлист", systemImage: "trash", role: .destructive) { confirmDelete = true }
+                    Button(String(localized: "Удалить плейлист"), systemImage: "trash", role: .destructive) { confirmDelete = true }
                 } label: { Image(systemName: "ellipsis") }.disabled(library.client == nil)
             }
         }
-        .confirmationDialog("Удалить «\(playlist.name)»?", isPresented: $confirmDelete, titleVisibility: .visible) {
-            Button("Удалить", role: .destructive) {
+        .confirmationDialog(String(localized: "Удалить «\(playlist.name)»?"), isPresented: $confirmDelete, titleVisibility: .visible) {
+            Button(String(localized: "Удалить"), role: .destructive) {
                 Task {
                     do {
                         _ = try await library.client?.request("deletePlaylist", parameters: ["id": playlist.id])
@@ -662,7 +662,7 @@ struct PlaylistDetailView: View {
                     } catch { self.error = LibraryStore.message(error) }
                 }
             }
-        } message: { Text("Треки останутся в медиатеке.") }
+        } message: { Text(String(localized: "Треки останутся в медиатеке.")) }
         .task { await load() }
     }
 
@@ -712,12 +712,12 @@ struct SearchView: View {
             LazyVStack(alignment: .leading, spacing: 18) {
                 if query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     if history.isEmpty {
-                        ContentUnavailableView("Найди своё звучание", systemImage: "magnifyingglass", description: Text("Альбомы, исполнители и любимые треки."))
+                        ContentUnavailableView(String(localized: "Найди своё звучание"), systemImage: "magnifyingglass", description: Text(String(localized: "Альбомы, исполнители и любимые треки.")))
                     } else {
                         HStack {
-                            Text("Недавние запросы").font(.title3.bold())
+                            Text(String(localized: "Недавние запросы")).font(.title3.bold())
                             Spacer()
-                            Button("Очистить") { historyData = Data() }.font(.callout)
+                            Button(String(localized: "Очистить")) { historyData = Data() }.font(.callout)
                         }
                         ForEach(history, id: \.self) { item in
                             Button { query = item } label: {
@@ -731,28 +731,28 @@ struct SearchView: View {
                 else if (result.album ?? []).isEmpty && (result.song ?? []).isEmpty && (result.artist ?? []).isEmpty {
                     ContentUnavailableView.search(text: query)
                 } else {
-                    Picker("Фильтр", selection: $filter) { ForEach(Filter.allCases, id: \.self) { Text($0.rawValue).tag($0) } }
+                    Picker(String(localized: "Фильтр"), selection: $filter) { ForEach(Filter.allCases, id: \.self) { Text(LocalizedStringKey($0.rawValue)).tag($0) } }
                         .pickerStyle(.segmented)
                     if show(.artists), let artists = result.artist, !artists.isEmpty {
-                        Text("Исполнители").font(.title2.bold())
+                        Text(String(localized: "Исполнители")).font(.title2.bold())
                         ForEach(artists) { artist in
                             NavigationLink { ArtistDetailView(artist: artist) } label: { Label(artist.name, systemImage: "person.crop.circle").padding(.vertical, 8) }
                         }
                     }
                     if show(.albums), let albums = result.album, !albums.isEmpty {
-                        Text("Альбомы").font(.title2.bold())
+                        Text(String(localized: "Альбомы")).font(.title2.bold())
                         ForEach(albums) { AlbumRow(album: $0) }
                     }
                     if show(.songs), let songs = result.song, !songs.isEmpty {
-                        Text("Треки").font(.title2.bold())
+                        Text(String(localized: "Треки")).font(.title2.bold())
                         ForEach(Array(songs.enumerated()), id: \.offset) { index, song in
                             SongRow(song: song) { player.play(songs, at: index, client: library.client) }
                         }
                     }
                 }
             }.padding(24)
-        }.background(Theme.background).navigationTitle("Поиск")
-            .searchable(text: $query, prompt: "Поиск в медиатеке")
+        }.background(Theme.background).navigationTitle(String(localized: "Поиск"))
+            .searchable(text: $query, prompt: String(localized: "Поиск в медиатеке"))
             .onSubmit(of: .search) { remember(query) }
             .navigationDestination(for: Album.self) { AlbumDetailView(album: $0) }
             .task(id: query) {

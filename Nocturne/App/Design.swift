@@ -89,7 +89,7 @@ struct AlbumTile: View {
         VStack(alignment: .leading, spacing: 7) {
             Cover(id: album.coverArt, size: width)
             Text(album.name).font(.subheadline.weight(.medium)).lineLimit(1)
-            Text(album.artist ?? "Неизвестный исполнитель").font(.caption).foregroundStyle(Theme.secondary).lineLimit(1)
+            Text(album.artist ?? String(localized: "Неизвестный исполнитель")).font(.caption).foregroundStyle(Theme.secondary).lineLimit(1)
         }.frame(width: width, alignment: .leading)
     }
 }
@@ -105,7 +105,7 @@ struct SongRow: View {
                 Cover(id: song.coverArt, size: 48)
                 VStack(alignment: .leading, spacing: 5) {
                     Text(song.title).font(.subheadline.weight(.medium)).foregroundStyle(player.current?.id == song.id ? Theme.accent : Theme.primary).lineLimit(1)
-                    Text(song.artist ?? "Неизвестный исполнитель").font(.caption).foregroundStyle(Theme.secondary).lineLimit(1)
+                    Text(song.artist ?? String(localized: "Неизвестный исполнитель")).font(.caption).foregroundStyle(Theme.secondary).lineLimit(1)
                 }
                 Spacer()
                 if player.current?.id == song.id { Image(systemName: "waveform").foregroundStyle(Theme.accent) }
@@ -127,11 +127,11 @@ struct DownloadBadge: View {
                 ZStack {
                     Circle().stroke(Theme.secondary.opacity(0.3), lineWidth: 2)
                     Circle().trim(from: 0, to: fraction).stroke(Theme.accent, style: StrokeStyle(lineWidth: 2, lineCap: .round)).rotationEffect(.degrees(-90))
-                }.frame(width: 14, height: 14).accessibilityLabel("Загружается")
-            case .queued: Image(systemName: "clock").foregroundStyle(Theme.secondary).accessibilityLabel("В очереди на загрузку")
-            case .failed: Image(systemName: "exclamationmark.circle").foregroundStyle(.orange).accessibilityLabel("Ошибка загрузки")
+                }.frame(width: 14, height: 14).accessibilityLabel(String(localized: "Загружается"))
+            case .queued: Image(systemName: "clock").foregroundStyle(Theme.secondary).accessibilityLabel(String(localized: "В очереди на загрузку"))
+            case .failed: Image(systemName: "exclamationmark.circle").foregroundStyle(.orange).accessibilityLabel(String(localized: "Ошибка загрузки"))
             case nil:
-                if downloaded { Image(systemName: "arrow.down.circle.fill").foregroundStyle(Theme.accent).accessibilityLabel("Скачано") }
+                if downloaded { Image(systemName: "arrow.down.circle.fill").foregroundStyle(Theme.accent).accessibilityLabel(String(localized: "Скачано")) }
             }
         }.font(.caption)
     }

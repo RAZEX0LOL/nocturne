@@ -150,9 +150,9 @@ final class LibraryStore {
     static func message(_ error: Error) -> String {
         if let known = error as? MusicError { return known.localizedDescription }
         if (error as? URLError)?.code == .notConnectedToInternet { return MusicError.offline.localizedDescription }
-        if error is CancellationError { return "Загрузка отменена." }
+        if error is CancellationError { return String(localized: "Загрузка отменена.") }
         // Системные ошибки могут содержать URL с токеном — не показываем их пользователю.
-        return "Не удалось связаться с сервером. Проверь подключение и адрес Navidrome."
+        return String(localized: "Не удалось связаться с сервером. Проверь подключение и адрес Navidrome.")
     }
 }
 

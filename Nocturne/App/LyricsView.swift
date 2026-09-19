@@ -13,8 +13,8 @@ struct LyricsView: View {
             Group {
                 switch state {
                 case .loading: ProgressView()
-                case .empty: ContentUnavailableView("Текста нет", systemImage: "quote.bubble", description: Text("Navidrome не нашёл текст для этого трека."))
-                case .failed: ContentUnavailableView("Не удалось загрузить текст", systemImage: "exclamationmark.triangle")
+                case .empty: ContentUnavailableView(String(localized: "Текста нет"), systemImage: "quote.bubble", description: Text(String(localized: "Navidrome не нашёл текст для этого трека.")))
+                case .failed: ContentUnavailableView(String(localized: "Не удалось загрузить текст"), systemImage: "exclamationmark.triangle")
                 case .loaded: content
                 }
             }
@@ -25,15 +25,15 @@ struct LyricsView: View {
                     Cover(id: player.current?.coverArt, size: 600).blur(radius: 80).opacity(0.3)
                 }.ignoresSafeArea()
             }
-            .navigationTitle(player.current?.title ?? "Текст").navigationBarTitleDisplayMode(.inline)
+            .navigationTitle(player.current?.title ?? String(localized: "Текст")).navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItemGroup(placement: .topBarLeading) {
                     Button { Appearance.shared.lyricsScale = max(0.8, Appearance.shared.lyricsScale - 0.1) } label: { Image(systemName: "textformat.size.smaller") }
-                        .accessibilityLabel("Уменьшить текст")
+                        .accessibilityLabel(String(localized: "Уменьшить текст"))
                     Button { Appearance.shared.lyricsScale = min(1.6, Appearance.shared.lyricsScale + 0.1) } label: { Image(systemName: "textformat.size.larger") }
-                        .accessibilityLabel("Увеличить текст")
+                        .accessibilityLabel(String(localized: "Увеличить текст"))
                 }
-                ToolbarItem(placement: .topBarTrailing) { Button("Готово") { dismiss() } }
+                ToolbarItem(placement: .topBarTrailing) { Button(String(localized: "Готово")) { dismiss() } }
             }
         }
         .task(id: player.current?.id) { await load() }

@@ -15,17 +15,17 @@ struct MiniPlayer: View {
                         }
                         Spacer(minLength: 0)
                     }.contentShape(Rectangle())
-                }.buttonStyle(.plain).accessibilityLabel("Открыть плеер: \(song.title)")
+                }.buttonStyle(.plain).accessibilityLabel(String(localized: "Открыть плеер: \(song.title)"))
                 Button { player.toggle() } label: {
                     if player.isBuffering { ProgressView().frame(width: 44, height: 44) }
                     else { Image(systemName: player.isPlaying ? "pause.fill" : "play.fill").frame(width: 44, height: 44) }
-                }.accessibilityLabel(player.isPlaying ? "Пауза" : "Воспроизвести")
+                }.accessibilityLabel(player.isPlaying ? String(localized: "Пауза") : String(localized: "Воспроизвести"))
                 if Appearance.shared.miniButton == .forward15 {
                     Button { player.seek(player.elapsed + 15) } label: { Image(systemName: "goforward.15").frame(width: 36, height: 44) }
-                        .accessibilityLabel("Вперёд на 15 секунд")
+                        .accessibilityLabel(String(localized: "Вперёд на 15 секунд"))
                 } else {
                     Button { player.advance() } label: { Image(systemName: "forward.end.fill").frame(width: 36, height: 44) }
-                        .accessibilityLabel("Следующий трек")
+                        .accessibilityLabel(String(localized: "Следующий трек"))
                 }
             }.padding(10).foregroundStyle(Theme.primary)
                 .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18))
@@ -87,17 +87,17 @@ struct PlayerView: View {
             ScrollView {
                 VStack(spacing: 16) {
                     HStack {
-                        Button { dismiss() } label: { Image(systemName: "chevron.down").frame(width: 44, height: 44) }.accessibilityLabel("Свернуть плеер")
+                        Button { dismiss() } label: { Image(systemName: "chevron.down").frame(width: 44, height: 44) }.accessibilityLabel(String(localized: "Свернуть плеер"))
                         Spacer()
                         VStack(spacing: 4) {
-                            Text("СЕЙЧАС ИГРАЕТ").font(.system(size: 11, weight: .semibold)).tracking(2).foregroundStyle(Theme.secondary)
-                            Text(player.current?.album ?? "Твоя музыка").font(.caption).foregroundStyle(Theme.secondary).lineLimit(1)
+                            Text(String(localized: "СЕЙЧАС ИГРАЕТ")).font(.system(size: 11, weight: .semibold)).tracking(2).foregroundStyle(Theme.secondary)
+                            Text(player.current?.album ?? String(localized: "Твоя музыка")).font(.caption).foregroundStyle(Theme.secondary).lineLimit(1)
                         }
                         Spacer()
                         Menu {
                             if let song = player.current { SongActions(songs: [song], addToPlaylist: $addToPlaylist) }
                         } label: { Image(systemName: "ellipsis").frame(width: 44, height: 44) }
-                            .accessibilityLabel("Действия с треком").disabled(library.client == nil)
+                            .accessibilityLabel(String(localized: "Действия с треком")).disabled(library.client == nil)
                     }
                     Cover(id: player.current?.coverArt, size: coverSize(in: geometry))
                         .shadow(color: .black.opacity(0.35), radius: 25, y: 18)
@@ -107,10 +107,10 @@ struct PlayerView: View {
                         .rotationEffect(.degrees(Double(swipeOffset) / 40))
                         .onTapGesture { showLyrics = true }
                         .gesture(coverSwipe, including: appearance.coverSwipe ? .all : .none)
-                        .accessibilityAction(named: "Текст песни") { showLyrics = true }
+                        .accessibilityAction(named: String(localized: "Текст песни")) { showLyrics = true }
                     HStack(alignment: .center) {
                         VStack(alignment: .leading, spacing: 7) {
-                            Text(player.current?.title ?? "Ничего не играет").font(.title2.bold()).lineLimit(2)
+                            Text(player.current?.title ?? String(localized: "Ничего не играет")).font(.title2.bold()).lineLimit(2)
                             Text(player.current?.artist ?? "").font(.title3).foregroundStyle(Theme.secondary).lineLimit(1)
                         }
                         Spacer()
@@ -127,12 +127,12 @@ struct PlayerView: View {
                                 saving = false
                             }
                         } label: { Image(systemName: starred ? "heart.fill" : "heart").font(.title2).frame(width: 44, height: 44).foregroundStyle(Theme.accent) }
-                            .disabled(saving).accessibilityLabel(starred ? "Убрать из избранного" : "В избранное")
+                            .disabled(saving).accessibilityLabel(starred ? String(localized: "Убрать из избранного") : String(localized: "В избранное"))
                     }
                     if player.isLive {
                         HStack(spacing: 8) {
                             Circle().fill(.red).frame(width: 8, height: 8)
-                            Text("ПРЯМОЙ ЭФИР").font(.caption.weight(.semibold)).tracking(1.5)
+                            Text(String(localized: "ПРЯМОЙ ЭФИР")).font(.caption.weight(.semibold)).tracking(1.5)
                             Spacer()
                             Text(timeLabel(player.elapsed)).font(.caption.monospacedDigit())
                         }.foregroundStyle(Theme.secondary).frame(height: 44)
@@ -142,7 +142,7 @@ struct PlayerView: View {
                             if editing { position = player.elapsed }
                             scrubbing = editing
                             if !editing { player.seek(position) }
-                        }.accessibilityLabel("Позиция воспроизведения")
+                        }.accessibilityLabel(String(localized: "Позиция воспроизведения"))
                         HStack {
                             Text(timeLabel(scrubbing ? position : player.elapsed))
                             Spacer()
@@ -152,9 +152,9 @@ struct PlayerView: View {
                     }
                     HStack {
                         Button { player.shuffle.toggle() } label: { Image(systemName: "shuffle").frame(width: 44, height: 44).foregroundStyle(player.shuffle ? Theme.accent : Theme.primary) }
-                            .accessibilityLabel(player.shuffle ? "Выключить перемешивание" : "Перемешивать")
+                            .accessibilityLabel(player.shuffle ? String(localized: "Выключить перемешивание") : String(localized: "Перемешивать"))
                         Spacer()
-                        Button { player.previous() } label: { Image(systemName: "backward.end.fill").font(.title).frame(width: 44, height: 44) }.accessibilityLabel("Предыдущий трек")
+                        Button { player.previous() } label: { Image(systemName: "backward.end.fill").font(.title).frame(width: 44, height: 44) }.accessibilityLabel(String(localized: "Предыдущий трек"))
                         Spacer()
                         Button { player.toggle() } label: {
                             ZStack {
@@ -162,15 +162,15 @@ struct PlayerView: View {
                                 if player.isBuffering { ProgressView() }
                                 else { Image(systemName: player.isPlaying ? "pause.fill" : "play.fill").font(.system(size: 31)) }
                             }
-                        }.accessibilityLabel(player.isPlaying ? "Пауза" : "Воспроизвести")
+                        }.accessibilityLabel(player.isPlaying ? String(localized: "Пауза") : String(localized: "Воспроизвести"))
                         Spacer()
-                        Button { player.advance() } label: { Image(systemName: "forward.end.fill").font(.title).frame(width: 44, height: 44) }.accessibilityLabel("Следующий трек")
+                        Button { player.advance() } label: { Image(systemName: "forward.end.fill").font(.title).frame(width: 44, height: 44) }.accessibilityLabel(String(localized: "Следующий трек"))
                         Spacer()
                         Button { player.cycleRepeat() } label: {
                             Image(systemName: player.repeatMode == .one ? "repeat.1" : "repeat").frame(width: 44, height: 44).foregroundStyle(player.repeatMode == .off ? Theme.primary : Theme.accent)
-                        }.accessibilityLabel("Повтор: \(player.repeatMode == .off ? "выключен" : player.repeatMode == .one ? "один трек" : "вся очередь")")
+                        }.accessibilityLabel(player.repeatMode == .off ? String(localized: "Повтор выключен") : player.repeatMode == .one ? String(localized: "Повтор одного трека") : String(localized: "Повтор всей очереди"))
                     }.buttonStyle(.plain)
-                    VolumeSlider().frame(height: 30).accessibilityLabel("Громкость")
+                    VolumeSlider().frame(height: 30).accessibilityLabel(String(localized: "Громкость"))
                     Color.clear.frame(maxHeight: .infinity)
                         .onGeometryChange(for: CGFloat.self) { $0.size.height } action: {
                             slack = $0
@@ -178,14 +178,14 @@ struct PlayerView: View {
                         }
                     HStack {
                         Button { showLyrics = true } label: { Image(systemName: "quote.bubble").frame(width: 44, height: 44) }
-                            .accessibilityLabel("Текст песни")
+                            .accessibilityLabel(String(localized: "Текст песни"))
                         Spacer()
                         SleepTimerMenu()
                         Spacer()
-                        RoutePicker().frame(width: 44, height: 44).accessibilityLabel("Выбрать аудиоустройство")
+                        RoutePicker().frame(width: 44, height: 44).accessibilityLabel(String(localized: "Выбрать аудиоустройство"))
                         Spacer()
                         Button { showQueue = true } label: { Image(systemName: "list.bullet").frame(width: 44, height: 44) }
-                            .accessibilityLabel("Очередь")
+                            .accessibilityLabel(String(localized: "Очередь"))
                     }.font(.title3).foregroundStyle(Theme.secondary)
                 }.padding(.horizontal, 28).padding(.top, 34).padding(.bottom, 12)
                     // Natural height before the min-height frame; the cover is subtracted, the rest is what it must leave room for.
@@ -229,9 +229,9 @@ struct QueueView: View {
         NavigationStack {
             List {
                 if let entry = player.queue.current {
-                    Section("Сейчас играет") { SongRow(song: entry.song) {} }
+                    Section(String(localized: "Сейчас играет")) { SongRow(song: entry.song) {} }
                 }
-                Section(player.queue.upcoming.isEmpty ? "Дальше ничего нет" : "Далее") {
+                Section(player.queue.upcoming.isEmpty ? String(localized: "Дальше ничего нет") : String(localized: "Далее")) {
                     ForEach(player.queue.upcoming) { entry in
                         SongRow(song: entry.song) { player.select(entry.id) }
                     }
@@ -244,18 +244,18 @@ struct QueueView: View {
             }
             .listStyle(.plain).scrollContentBackground(.hidden).background(Theme.background)
             .environment(\.editMode, .constant(.active))
-            .navigationTitle("Очередь").navigationBarTitleDisplayMode(.inline)
+            .navigationTitle(String(localized: "Очередь")).navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     HStack {
                         Button { player.shuffle.toggle() } label: { Image(systemName: "shuffle").foregroundStyle(player.shuffle ? Theme.accent : Theme.primary) }
-                            .accessibilityLabel(player.shuffle ? "Выключить перемешивание" : "Перемешивать")
+                            .accessibilityLabel(player.shuffle ? String(localized: "Выключить перемешивание") : String(localized: "Перемешивать"))
                         Button { player.cycleRepeat() } label: {
                             Image(systemName: player.repeatMode == .one ? "repeat.1" : "repeat").foregroundStyle(player.repeatMode == .off ? Theme.primary : Theme.accent)
-                        }.accessibilityLabel("Режим повтора")
+                        }.accessibilityLabel(String(localized: "Режим повтора"))
                     }
                 }
-                ToolbarItem(placement: .topBarTrailing) { Button("Готово") { dismiss() } }
+                ToolbarItem(placement: .topBarTrailing) { Button(String(localized: "Готово")) { dismiss() } }
             }
         }
     }
@@ -266,11 +266,11 @@ struct SleepTimerMenu: View {
     var body: some View {
         Menu {
             if player.sleepDeadline != nil || player.sleepAtTrackEnd {
-                Button("Выключить таймер", role: .destructive) { player.setSleepTimer(minutes: nil) }
+                Button(String(localized: "Выключить таймер"), role: .destructive) { player.setSleepTimer(minutes: nil) }
             }
-            Button("В конце трека") { player.setSleepTimer(minutes: 0) }
+            Button(String(localized: "В конце трека")) { player.setSleepTimer(minutes: 0) }
             ForEach([15, 30, 45, 60, 90], id: \.self) { minutes in
-                Button("\(minutes) мин") { player.setSleepTimer(minutes: minutes) }
+                Button(String(localized: "\(minutes) мин")) { player.setSleepTimer(minutes: minutes) }
             }
         } label: {
             let active = player.sleepDeadline != nil || player.sleepAtTrackEnd
@@ -281,6 +281,6 @@ struct SleepTimerMenu: View {
                     Image(systemName: active ? "moon.zzz.fill" : "moon.zzz").frame(width: 44, height: 44)
                 }
             }.foregroundStyle(active ? Theme.accent : Theme.secondary)
-        }.accessibilityLabel("Таймер сна")
+        }.accessibilityLabel(String(localized: "Таймер сна"))
     }
 }

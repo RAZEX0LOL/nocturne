@@ -14,12 +14,12 @@ final class AudioEffects: Sendable {
         var id: String { rawValue }
         var title: String {
             switch self {
-            case .flat: "Ровно"
-            case .bass: "Больше баса"
-            case .treble: "Больше верхов"
-            case .vocal: "Вокал"
-            case .loudness: "Громкость (V-образный)"
-            case .custom: "Свой"
+            case .flat: String(localized: "Ровно")
+            case .bass: String(localized: "Больше баса")
+            case .treble: String(localized: "Больше верхов")
+            case .vocal: String(localized: "Вокал")
+            case .loudness: String(localized: "Громкость (V-образный)")
+            case .custom: String(localized: "Свой")
             }
         }
         var gains: [Float]? {

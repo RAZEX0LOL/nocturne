@@ -109,10 +109,10 @@ enum StreamQuality: String, Codable, CaseIterable, Identifiable, Sendable {
     var id: String { rawValue }
     var title: String {
         switch self {
-        case .original: "Оригинал (без сжатия)"
-        case .mp3High: "Высокое · MP3 320"
-        case .mp3Medium: "Среднее · MP3 192"
-        case .mp3Low: "Экономное · MP3 128"
+        case .original: String(localized: "Оригинал (без сжатия)")
+        case .mp3High: String(localized: "Высокое · MP3 320")
+        case .mp3Medium: String(localized: "Среднее · MP3 192")
+        case .mp3Low: String(localized: "Экономное · MP3 128")
         }
     }
     var streamParameters: [String: String] {
@@ -130,9 +130,9 @@ enum ReplayGainMode: String, CaseIterable, Identifiable, Sendable {
     var id: String { rawValue }
     var title: String {
         switch self {
-        case .off: "Выключено"
-        case .track: "По треку"
-        case .album: "По альбому"
+        case .off: String(localized: "Выключено")
+        case .track: String(localized: "По треку")
+        case .album: String(localized: "По альбому")
         }
     }
 

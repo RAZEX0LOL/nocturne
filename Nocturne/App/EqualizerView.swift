@@ -7,12 +7,12 @@ struct EqualizerView: View {
     var body: some View {
         Form {
             Section {
-                Toggle("Эквалайзер", isOn: Binding(get: { settings.enabled }, set: { value in apply { $0.enabled = value } }))
-                Picker("Пресет", selection: Binding(get: { preset }, set: select)) {
+                Toggle(String(localized: "Эквалайзер"), isOn: Binding(get: { settings.enabled }, set: { value in apply { $0.enabled = value } }))
+                Picker(String(localized: "Пресет"), selection: Binding(get: { preset }, set: select)) {
                     ForEach(AudioEffects.Preset.allCases) { Text($0.title).tag($0) }
                 }
-            } footer: { Text("Работает для потока и скачанных треков. Изменения слышны сразу.") }
-            Section("Полосы, дБ") {
+            } footer: { Text(String(localized: "Работает для потока и скачанных треков. Изменения слышны сразу.")) }
+            Section(String(localized: "Полосы, дБ")) {
                 HStack(alignment: .bottom, spacing: 0) {
                     ForEach(AudioEffects.frequencies.indices, id: \.self) { band in
                         VStack(spacing: 8) {
@@ -22,7 +22,7 @@ struct EqualizerView: View {
                                 apply { $0.gains[band] = Float(value.rounded()) }
                             }), in: -12...12, step: 1)
                             .frame(width: 170).rotationEffect(.degrees(-90)).frame(width: 36, height: 170)
-                            .accessibilityLabel("Полоса \(label(AudioEffects.frequencies[band]))")
+                            .accessibilityLabel(String(localized: "Полоса \(label(AudioEffects.frequencies[band]))"))
                             Text(label(AudioEffects.frequencies[band])).font(.caption2).foregroundStyle(Theme.secondary)
                         }.frame(maxWidth: .infinity)
                     }
@@ -31,11 +31,11 @@ struct EqualizerView: View {
             }
         }
         .scrollContentBackground(.hidden).background(Theme.background)
-        .navigationTitle("Эквалайзер").navigationBarTitleDisplayMode(.inline)
+        .navigationTitle(String(localized: "Эквалайзер")).navigationBarTitleDisplayMode(.inline)
     }
 
     private func label(_ frequency: Double) -> String {
-        frequency >= 1_000 ? "\(Int(frequency / 1_000))к" : "\(Int(frequency))"
+        frequency >= 1_000 ? String(localized: "\(Int(frequency / 1_000))к") : "\(Int(frequency))"
     }
 
     private func select(_ newValue: AudioEffects.Preset) {

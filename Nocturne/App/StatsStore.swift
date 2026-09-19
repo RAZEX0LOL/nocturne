@@ -23,7 +23,7 @@ final class StatsStore {
     }
 
     func record(_ song: Song, seconds: Double) {
-        plays.append(Play(songID: song.id, title: song.title, artist: song.artist ?? "Неизвестный исполнитель",
+        plays.append(Play(songID: song.id, title: song.title, artist: song.artist ?? String(localized: "Неизвестный исполнитель"),
                           album: song.album ?? "", seconds: seconds, date: Date()))
         if plays.count > Self.limit { plays.removeFirst(plays.count - Self.limit) }
         save()

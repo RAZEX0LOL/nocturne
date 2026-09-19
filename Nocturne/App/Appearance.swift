@@ -12,10 +12,10 @@ final class Appearance {
         var id: String { rawValue }
         var title: String {
             switch self {
-            case .dark: "Тёмная"
-            case .oled: "Чёрная (OLED)"
-            case .light: "Светлая"
-            case .system: "Как в системе"
+            case .dark: String(localized: "Тёмная")
+            case .oled: String(localized: "Чёрная (OLED)")
+            case .light: String(localized: "Светлая")
+            case .system: String(localized: "Как в системе")
             }
         }
     }
@@ -25,14 +25,14 @@ final class Appearance {
         var id: String { rawValue }
         var title: String {
             switch self {
-            case .cover: "Из обложки"
-            case .lavender: "Лаванда"
-            case .mint: "Мята"
-            case .coral: "Коралл"
-            case .amber: "Янтарь"
-            case .sky: "Небо"
-            case .rose: "Роза"
-            case .lime: "Лайм"
+            case .cover: String(localized: "Из обложки")
+            case .lavender: String(localized: "Лаванда")
+            case .mint: String(localized: "Мята")
+            case .coral: String(localized: "Коралл")
+            case .amber: String(localized: "Янтарь")
+            case .sky: String(localized: "Небо")
+            case .rose: String(localized: "Роза")
+            case .lime: String(localized: "Лайм")
             }
         }
         /// Hue/saturation of the preset; brightness is adapted to the colour scheme in `Theme`.
@@ -54,9 +54,9 @@ final class Appearance {
         var id: String { rawValue }
         var title: String {
             switch self {
-            case .blur: "Размытая обложка"
-            case .gradient: "Градиент"
-            case .solid: "Однотонный"
+            case .blur: String(localized: "Размытая обложка")
+            case .gradient: String(localized: "Градиент")
+            case .solid: String(localized: "Однотонный")
             }
         }
     }
@@ -64,7 +64,7 @@ final class Appearance {
     enum MiniButton: String, CaseIterable, Identifiable {
         case next, forward15
         var id: String { rawValue }
-        var title: String { self == .next ? "Следующий трек" : "Вперёд на 15 с" }
+        var title: String { self == .next ? String(localized: "Следующий трек") : String(localized: "Вперёд на 15 с") }
     }
 
     enum HomeSection: String, CaseIterable, Identifiable, Codable {
@@ -72,12 +72,12 @@ final class Appearance {
         var id: String { rawValue }
         var title: String {
             switch self {
-            case .recentlyPlayed: "Недавно слушал"
-            case .recentlyAdded: "Недавно добавлено"
-            case .starredSongs: "Любимые треки"
-            case .frequent: "Часто слушаю"
-            case .favoriteAlbums: "Любимые альбомы"
-            case .discover: "Случайные альбомы"
+            case .recentlyPlayed: String(localized: "Недавно слушал")
+            case .recentlyAdded: String(localized: "Недавно добавлено")
+            case .starredSongs: String(localized: "Любимые треки")
+            case .frequent: String(localized: "Часто слушаю")
+            case .favoriteAlbums: String(localized: "Любимые альбомы")
+            case .discover: String(localized: "Случайные альбомы")
             }
         }
     }

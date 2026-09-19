@@ -120,13 +120,13 @@ enum MusicError: LocalizedError {
     case invalidServer, http(Int), server(Int), invalidResponse, keychain, demo, offline
     var errorDescription: String? {
         switch self {
-        case .invalidServer: "Укажи HTTPS-адрес сервера без логина, параметров и фрагмента. HTTP разрешён только для локальной сети."
-        case .http(let code): "Сервер вернул HTTP \(code). Проверь адрес и доступность Navidrome."
-        case .server(let code): code == 40 ? "Неверный логин или пароль." : "Ошибка Navidrome (\(code))."
-        case .invalidResponse: "Сервер вернул неожиданный ответ. Проверь адрес Navidrome."
-        case .keychain: "Не удалось сохранить данные в Связке ключей."
-        case .demo: "Это демомедиатека. Подключи Navidrome, чтобы слушать свою музыку."
-        case .offline: "Нет подключения к сети."
+        case .invalidServer: String(localized: "Укажи HTTPS-адрес сервера без логина, параметров и фрагмента. HTTP разрешён только для локальной сети.")
+        case .http(let code): String(localized: "Сервер вернул HTTP \(code). Проверь адрес и доступность Navidrome.")
+        case .server(let code): code == 40 ? String(localized: "Неверный логин или пароль.") : String(localized: "Ошибка Navidrome (\(code)).")
+        case .invalidResponse: String(localized: "Сервер вернул неожиданный ответ. Проверь адрес Navidrome.")
+        case .keychain: String(localized: "Не удалось сохранить данные в Связке ключей.")
+        case .demo: String(localized: "Это демомедиатека. Подключи Navidrome, чтобы слушать свою музыку.")
+        case .offline: String(localized: "Нет подключения к сети.")
         }
     }
 }

@@ -28,13 +28,13 @@ struct RootView: View {
                 TabView(selection: $selectedTab) {
                     NavigationStack { HomeView(settings: $settings) }
                         .safeAreaInset(edge: .bottom, spacing: 0) { miniPlayer }
-                        .tabItem { Label("Главная", systemImage: "house.fill") }.tag(0)
+                        .tabItem { Label(String(localized: "Главная"), systemImage: "house.fill") }.tag(0)
                     NavigationStack { LibraryView() }
                         .safeAreaInset(edge: .bottom, spacing: 0) { miniPlayer }
-                        .tabItem { Label("Медиатека", systemImage: "square.stack.fill") }.tag(1)
+                        .tabItem { Label(String(localized: "Медиатека"), systemImage: "square.stack.fill") }.tag(1)
                     NavigationStack { SearchView() }
                         .safeAreaInset(edge: .bottom, spacing: 0) { miniPlayer }
-                        .tabItem { Label("Поиск", systemImage: "magnifyingglass") }.tag(2)
+                        .tabItem { Label(String(localized: "Поиск"), systemImage: "magnifyingglass") }.tag(2)
                 }
                 .task { await library.refresh() }
                 .safeAreaInset(edge: .top, spacing: 0) {
@@ -43,7 +43,7 @@ struct RootView: View {
                             UserDefaults.standard.set(LibraryView.Category.downloads.rawValue, forKey: "library.category")
                             selectedTab = 1
                         } label: {
-                            Label(downloads.items.isEmpty ? "Нет сети" : "Нет сети · открыть загрузки", systemImage: "wifi.slash")
+                            Label(downloads.items.isEmpty ? String(localized: "Нет сети") : String(localized: "Нет сети · открыть загрузки"), systemImage: "wifi.slash")
                                 .font(.footnote.weight(.medium)).frame(maxWidth: .infinity).padding(.vertical, 6)
                         }.background(.orange.opacity(0.85)).foregroundStyle(.black)
                             .transition(.move(edge: .top))
@@ -72,14 +72,14 @@ struct RootView: View {
             // Layout check without a server: `--demo --demo-player` opens the full player with a stub track.
             guard ProcessInfo.processInfo.arguments.contains("--demo-player") else { return }
             player.preview([Song(id: "demo-track", title: "Очень длинное название трека для проверки переноса", artist: "Свет внутри",
-                                 album: "Параллели", coverArt: "demo-0", duration: 214)])
+                                 album: String(localized: "Параллели"), coverArt: "demo-0", duration: 214)])
             fullPlayer = true
         }
         #endif
         .sheet(isPresented: $settings) { SettingsView() }
         .sheet(isPresented: $fullPlayer) { PlayerView().presentationDragIndicator(.visible) }
-        .alert("Воспроизведение", isPresented: Binding(get: { player.error != nil }, set: { if !$0 { player.error = nil } })) {
-            Button("Понятно") { player.error = nil }
+        .alert(String(localized: "Воспроизведение"), isPresented: Binding(get: { player.error != nil }, set: { if !$0 { player.error = nil } })) {
+            Button(String(localized: "Понятно")) { player.error = nil }
         } message: { Text(player.error ?? "") }
         .preferredColorScheme(Appearance.shared.colorScheme)
         .tint(Theme.accent)
@@ -115,16 +115,16 @@ struct ConnectionView: View {
                         Image(systemName: "waveform").font(.system(size: 37, weight: .light)).foregroundStyle(Theme.accent)
                     }.padding(.top, 35)
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Твоя музыка.\nТвоё пространство.").font(.system(size: 34, weight: .bold, design: .rounded))
-                        Text("Подключи Navidrome и забери любимую музыку с собой.")
+                        Text(String(localized: "Твоя музыка.\nТвоё пространство.")).font(.system(size: 34, weight: .bold, design: .rounded))
+                        Text(String(localized: "Подключи Navidrome и забери любимую музыку с собой."))
                             .foregroundStyle(Theme.secondary).font(.body)
                     }
                     VStack(spacing: 16) {
-                        field("Адрес сервера") { TextField("https://music.example.com", text: $server).keyboardType(.URL).textContentType(.URL) }
-                        Text("HTTP без шифрования разрешён только для адресов домашней сети: 192.168.x.x, 10.x.x.x, *.local.")
+                        field(String(localized: "Адрес сервера")) { TextField("https://music.example.com", text: $server).keyboardType(.URL).textContentType(.URL) }
+                        Text(String(localized: "HTTP без шифрования разрешён только для адресов домашней сети: 192.168.x.x, 10.x.x.x, *.local."))
                             .font(.caption).foregroundStyle(Theme.secondary)
-                        field("Логин") { TextField("Имя пользователя", text: $username).textContentType(.username) }
-                        field("Пароль") { SecureField("Пароль Navidrome", text: $password).textContentType(.password) }
+                        field(String(localized: "Логин")) { TextField(String(localized: "Имя пользователя"), text: $username).textContentType(.username) }
+                        field(String(localized: "Пароль")) { SecureField(String(localized: "Пароль Navidrome"), text: $password).textContentType(.password) }
                     }.textInputAutocapitalization(.never).autocorrectionDisabled()
                     if let error { Text(error).font(.callout).foregroundStyle(.red) }
                     Button {
@@ -137,18 +137,18 @@ struct ConnectionView: View {
                             busy = false
                         }
                     } label: {
-                        HStack { Spacer(); if busy { ProgressView().tint(Theme.onAccent) } else { Text("Подключиться").fontWeight(.semibold); Image(systemName: "arrow.right") }; Spacer() }
+                        HStack { Spacer(); if busy { ProgressView().tint(Theme.onAccent) } else { Text(String(localized: "Подключиться")).fontWeight(.semibold); Image(systemName: "arrow.right") }; Spacer() }
                             .padding(18).background(Theme.accent, in: RoundedRectangle(cornerRadius: 18)).foregroundStyle(Theme.onAccent)
                     }.disabled(busy || server.isEmpty || username.isEmpty || password.isEmpty)
-                    Label("Пароль хранится в Связке ключей на этом устройстве.", systemImage: "lock.shield")
+                    Label(String(localized: "Пароль хранится в Связке ключей на этом устройстве."), systemImage: "lock.shield")
                         .font(.caption).foregroundStyle(Theme.secondary)
                     if adding {
                         EmptyView()
                     } else if !library.isConnected {
-                        Button("Посмотреть демоверсию") { player.stop(); library.useDemo(); dismiss() }
+                        Button(String(localized: "Посмотреть демоверсию")) { player.stop(); library.useDemo(); dismiss() }
                             .frame(maxWidth: .infinity).padding(.vertical, 8).disabled(busy)
                     } else {
-                        Button("Отключить сервер", role: .destructive) {
+                        Button(String(localized: "Отключить сервер"), role: .destructive) {
                             do { try library.disconnect(); player.stop(); dismiss() }
                             catch { self.error = LibraryStore.message(error) }
                         }.disabled(busy)
@@ -156,7 +156,7 @@ struct ConnectionView: View {
                     Text("NOCTURNE").font(.caption2.weight(.semibold)).tracking(5).foregroundStyle(Theme.secondary).frame(maxWidth: .infinity)
                 }.padding(24)
             }.background(Theme.background)
-                .toolbar { if !isInitial { ToolbarItem(placement: .topBarTrailing) { Button("Закрыть") { dismiss() }.disabled(busy) } } }
+                .toolbar { if !isInitial { ToolbarItem(placement: .topBarTrailing) { Button(String(localized: "Закрыть")) { dismiss() }.disabled(busy) } } }
                 .interactiveDismissDisabled(busy)
                 .onAppear {
                     guard !adding else { return }
