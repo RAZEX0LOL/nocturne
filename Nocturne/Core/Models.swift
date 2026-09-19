@@ -20,7 +20,30 @@ struct Song: Codable, Identifiable, Hashable, Sendable {
     var duration: Double?
     var track: Int?
     var starred: String?
+    var userRating: Int?
+    var genre: String?
+    /// OpenSubsonic ReplayGain values in dB.
+    var replayGain: ReplayGain?
 }
+
+struct ReplayGain: Codable, Hashable, Sendable {
+    var trackGain: Double?
+    var albumGain: Double?
+    var trackPeak: Double?
+    var albumPeak: Double?
+}
+
+struct RadioStation: Decodable, Hashable, Identifiable, Sendable {
+    let id: String
+    var name: String
+    var streamUrl: String
+    var homePageUrl: String?
+}
+struct RadioList: Decodable, Sendable { var internetRadioStation: [RadioStation]? }
+struct ArtistInfo: Decodable, Sendable { var biography: String?; var largeImageUrl: String? }
+struct AlbumInfo: Decodable, Sendable { var notes: String? }
+struct Share: Decodable, Sendable { var url: String }
+struct ShareList: Decodable, Sendable { var share: [Share]? }
 
 struct MusicPlaylist: Codable, Identifiable, Hashable, Sendable {
     let id: String
@@ -81,6 +104,11 @@ struct ServerResponse: Decodable, Sendable {
     var genres: GenreList?
     var lyricsList: LyricsList?
     var lyrics: PlainLyrics?
+    var similarSongs2: SongList?
+    var internetRadioStations: RadioList?
+    var artistInfo2: ArtistInfo?
+    var albumInfo: AlbumInfo?
+    var shares: ShareList?
 }
 
 struct ResponseEnvelope: Decodable, Sendable {

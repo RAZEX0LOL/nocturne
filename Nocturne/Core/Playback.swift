@@ -125,6 +125,29 @@ enum StreamQuality: String, Codable, CaseIterable, Identifiable, Sendable {
     }
 }
 
+enum ReplayGainMode: String, CaseIterable, Identifiable, Sendable {
+    case off, track, album
+    var id: String { rawValue }
+    var title: String {
+        switch self {
+        case .off: "Выключено"
+        case .track: "По треку"
+        case .album: "По альбому"
+        }
+    }
+
+    /// Linear volume for the song. AVPlayer can't amplify, so positive gains are capped at 1;
+    /// the peak keeps the result from clipping.
+    func volume(for song: Song, preamp: Double = 0) -> Float {
+        guard self != .off, let gain = song.replayGain else { return 1 }
+        let db = (self == .album ? gain.albumGain ?? gain.trackGain : gain.trackGain ?? gain.albumGain) ?? 0
+        let peak = (self == .album ? gain.albumPeak ?? gain.trackPeak : gain.trackPeak ?? gain.albumPeak) ?? 0
+        var linear = pow(10, (db + preamp) / 20)
+        if peak > 0 { linear = min(linear, 1 / peak) }
+        return Float(min(max(linear, 0), 1))
+    }
+}
+
 /// Persisted player state; restored paused on the next launch for the same server and user.
 struct QueueSnapshot: Codable, Equatable, Sendable {
     var account: String

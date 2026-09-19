@@ -64,4 +64,15 @@ final class PlaybackQueueTests: XCTestCase {
         let decoded = try JSONDecoder().decode(QueueSnapshot.self, from: JSONEncoder().encode(snapshot))
         XCTAssertEqual(decoded, snapshot)
     }
+
+    func testReplayGainVolume() {
+        var song = Song(id: "s", title: "Loud")
+        song.replayGain = ReplayGain(trackGain: -6.02, albumGain: -3, trackPeak: 0.9, albumPeak: 1.6)
+        XCTAssertEqual(ReplayGainMode.off.volume(for: song), 1)
+        XCTAssertEqual(ReplayGainMode.track.volume(for: song), 0.5, accuracy: 0.01)
+        XCTAssertEqual(ReplayGainMode.album.volume(for: song), Float(1 / 1.6), accuracy: 0.01, "peak limits the album gain")
+        song.replayGain = ReplayGain(trackGain: 4)
+        XCTAssertEqual(ReplayGainMode.track.volume(for: song), 1, "positive gain can't amplify past 1")
+        XCTAssertEqual(ReplayGainMode.track.volume(for: Song(id: "n", title: "No tags")), 1)
+    }
 }

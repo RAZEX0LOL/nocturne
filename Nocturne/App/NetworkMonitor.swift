@@ -7,6 +7,8 @@ final class NetworkMonitor {
     /// Cellular or personal hotspot: stream quality switches to the cellular preset.
     private(set) var isExpensive = false
     @ObservationIgnored var onReconnect: (() -> Void)?
+    /// Extra listeners for any path change (downloads wait for Wi-Fi).
+    @ObservationIgnored var onChange: [() -> Void] = []
     @ObservationIgnored private let monitor = NWPathMonitor()
 
     init() {
@@ -30,6 +32,7 @@ final class NetworkMonitor {
         isOnline = online
         isExpensive = expensive
         if reconnected { onReconnect?() }
+        onChange.forEach { $0() }
     }
 }
 
@@ -38,6 +41,7 @@ enum PlaybackSettings {
     static let cellularQualityKey = "quality.cellular"
     static let defaultWifi = StreamQuality.mp3High
     static let defaultCellular = StreamQuality.mp3Medium
+    static let replayGainKey = "playback.replayGain"
 
     static func quality(expensive: Bool) -> StreamQuality {
         let key = expensive ? cellularQualityKey : wifiQualityKey

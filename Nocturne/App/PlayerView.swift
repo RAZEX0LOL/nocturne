@@ -117,6 +117,14 @@ struct PlayerView: View {
                         } label: { Image(systemName: starred ? "heart.fill" : "heart").font(.title2).frame(width: 44, height: 44).foregroundStyle(Theme.accent) }
                             .disabled(saving).accessibilityLabel(starred ? "Убрать из избранного" : "В избранное")
                     }
+                    if player.isLive {
+                        HStack(spacing: 8) {
+                            Circle().fill(.red).frame(width: 8, height: 8)
+                            Text("ПРЯМОЙ ЭФИР").font(.caption.weight(.semibold)).tracking(1.5)
+                            Spacer()
+                            Text(timeLabel(player.elapsed)).font(.caption.monospacedDigit())
+                        }.foregroundStyle(Theme.secondary).frame(height: 44)
+                    } else {
                     VStack(spacing: 0) {
                         Slider(value: Binding(get: { scrubbing ? position : min(player.elapsed, max(player.duration, 1)) }, set: { position = $0 }), in: 0...max(player.duration, 1)) { editing in
                             if editing { position = player.elapsed }
@@ -128,6 +136,7 @@ struct PlayerView: View {
                             Spacer()
                             Text("−" + timeLabel(max(0, player.duration - (scrubbing ? position : player.elapsed))))
                         }.font(.caption.monospacedDigit()).foregroundStyle(Theme.secondary)
+                    }
                     }
                     HStack {
                         Button { player.shuffle.toggle() } label: { Image(systemName: "shuffle").frame(width: 44, height: 44).foregroundStyle(player.shuffle ? Theme.accent : Theme.primary) }

@@ -5,6 +5,10 @@ import Foundation
 /// one folder per account; `index.json` maps song ids to files and metadata.
 @MainActor @Observable
 final class DownloadStore {
+    static let shared = DownloadStore()
+    static let wifiOnlyKey = "downloads.wifiOnly"
+    static let autoFavoritesKey = "downloads.autoFavorites"
+    static let limitKey = "downloads.limitGB"
     enum State: Equatable { case queued, downloading(Double), failed }
 
     struct Item: Codable, Sendable {
@@ -27,6 +31,12 @@ final class DownloadStore {
     @ObservationIgnored private var pending: [Song] = []
     @ObservationIgnored private var tasks: [String: Task<Void, Never>] = [:]
     @ObservationIgnored private var directory: URL?
+    /// Set by the app; used for the Wi-Fi-only rule.
+    @ObservationIgnored var network: NetworkMonitor? {
+        didSet { network?.onChange.append { [weak self] in self?.pump() } }
+    }
+    /// True while queued downloads wait for Wi-Fi.
+    private(set) var waitingForWiFi = false
 
     /// Switches to the account's folder; called whenever the connected server changes.
     func use(_ client: NavidromeClient?) {
@@ -83,6 +93,17 @@ final class DownloadStore {
     }
 
     private func pump() {
+        let defaults = UserDefaults.standard
+        waitingForWiFi = defaults.bool(forKey: Self.wifiOnlyKey) && (network?.isExpensive ?? false) && !pending.isEmpty
+        guard !waitingForWiFi, network?.isOnline ?? true else { return }
+        let limitGB = defaults.double(forKey: Self.limitKey)
+        if limitGB > 0, Double(totalSize) >= limitGB * 1_073_741_824 {
+            // Over the storage limit: leave the rest queued as failed so the user sees why.
+            for song in pending { active[song.id] = .failed }
+            pending = []
+            Log.library.info("Download limit reached")
+            return
+        }
         while tasks.count < Self.maxConcurrent, !pending.isEmpty {
             let song = pending.removeFirst()
             tasks[song.id] = Task { await fetch(song) }

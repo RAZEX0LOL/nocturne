@@ -5,6 +5,7 @@ import SwiftUI
 @MainActor @Observable
 final class PlayerStore {
     typealias RepeatMode = PlaybackQueue.Repeat
+    static let shared = PlayerStore()
 
     private(set) var queue = PlaybackQueue()
     /// What the user asked for; stays true while the stream buffers or waits for the network.
@@ -21,6 +22,8 @@ final class PlayerStore {
     let network = NetworkMonitor()
 
     var current: Song? { queue.current?.song }
+    /// Internet radio: a live stream without duration, seeking or scrobbling.
+    var isLive: Bool { current.map { directStreams[$0.id] != nil } ?? false }
     var shuffle: Bool {
         get { queue.shuffle }
         set { queue.setShuffle(newValue); queueDidChange() }
@@ -50,6 +53,8 @@ final class PlayerStore {
     @ObservationIgnored private var artwork: MPMediaItemArtwork?
     /// Offline copy lookup, provided by `DownloadStore`; local files are preferred over streaming.
     @ObservationIgnored var localFile: ((String) -> URL?)?
+    /// Songs that stream from an external URL (radio stations), keyed by song id.
+    @ObservationIgnored private var directStreams: [String: URL] = [:]
     @ObservationIgnored private var sleepTask: Task<Void, Never>?
     @ObservationIgnored private var noticeTask: Task<Void, Never>?
     /// Queue entry already submitted as a play, so a track is scrobbled at most once per play.
@@ -91,6 +96,15 @@ final class PlayerStore {
         queue = PlaybackQueue(songs: songs, startAt: index, shuffle: shuffle ?? queue.shuffle)
         queue.repeatMode = repeatMode
         startCurrent(at: 0, autoplay: true)
+    }
+
+    func playRadio(_ station: RadioStation, client: NavidromeClient?) {
+        guard let url = URL(string: station.streamUrl), ["http", "https"].contains(url.scheme?.lowercased() ?? "") else {
+            error = "У станции некорректный адрес потока."; return
+        }
+        let song = Song(id: "radio-\(station.id)", title: station.name, artist: "Интернет-радио")
+        directStreams[song.id] = url
+        play([song], shuffle: false, client: client)
     }
 
     func playNext(_ songs: [Song], client: NavidromeClient?) {
@@ -228,7 +242,8 @@ final class PlayerStore {
     func restore(client: NavidromeClient) {
         guard current == nil, let data = try? Data(contentsOf: Self.snapshotURL),
               let snapshot = try? JSONDecoder().decode(QueueSnapshot.self, from: data),
-              snapshot.account == client.credentials.account, snapshot.queue.current != nil else { return }
+              snapshot.account == client.credentials.account, let restored = snapshot.queue.current,
+              !restored.song.id.hasPrefix("radio-") else { return }
         self.client = client
         queue = snapshot.queue
         duration = current?.duration ?? 0
@@ -270,6 +285,7 @@ final class PlayerStore {
     }
 
     private func makeItem(for song: Song) -> AVPlayerItem? {
+        if let direct = directStreams[song.id] { return AVPlayerItem(url: direct) }
         if let local = localFile?(song.id) { return AVPlayerItem(url: local) }
         guard let client else { return nil }
         let quality = PlaybackSettings.quality(expensive: network.isExpensive)
@@ -385,17 +401,25 @@ final class PlayerStore {
 
     // Last.fm rules: a play counts after half the track or 4 minutes, and only for tracks longer than 30 s.
     private func submitScrobbleIfNeeded() {
-        guard let entry = queue.current, scrobbledEntry != entry.id, duration > 30,
+        guard let entry = queue.current, scrobbledEntry != entry.id, !isLive, duration > 30,
               elapsed >= min(duration / 2, 240), let client else { return }
         scrobbledEntry = entry.id
+        StatsStore.shared.record(entry.song, seconds: duration)
         let id = entry.song.id
         Task { try? await client.scrobble(songID: id, submission: true) }
     }
 
     private func reportNowPlaying() {
-        guard let client, let id = current?.id else { return }
+        applyReplayGain()
+        guard let client, let id = current?.id, !isLive else { return }
         scrobbledEntry = nil
         Task { try? await client.scrobble(songID: id, submission: false) }
+    }
+
+    /// Per-track volume from ReplayGain tags; radio and untagged tracks play at full volume.
+    private func applyReplayGain() {
+        let mode = UserDefaults.standard.string(forKey: PlaybackSettings.replayGainKey).flatMap(ReplayGainMode.init) ?? .off
+        player.volume = current.map { mode.volume(for: $0) } ?? 1
     }
 
     private func networkRestored() {

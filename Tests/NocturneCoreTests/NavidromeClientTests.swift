@@ -103,4 +103,18 @@ final class NavidromeClientTests: XCTestCase {
         XCTAssertEqual(response.genres?.genre?.first?.value, "Rock")
         XCTAssertEqual(response.lyricsList?.structuredLyrics?.first?.line?.first?.start, 1200)
     }
+
+    func testRadioShareAndReplayGainDecode() throws {
+        let data = Data(#"""
+        {"subsonic-response":{"status":"ok",
+         "internetRadioStations":{"internetRadioStation":[{"id":"r1","name":"Jazz","streamUrl":"https://radio.example/jazz"}]},
+         "shares":{"share":[{"id":"x","url":"https://music.example/share/abc"}]},
+         "album":{"id":"a","name":"A","song":[{"id":"s","title":"S","userRating":4,"replayGain":{"trackGain":-7.5,"trackPeak":0.98}}]}}}
+        """#.utf8)
+        let response = try NavidromeClient.decode(data)
+        XCTAssertEqual(response.internetRadioStations?.internetRadioStation?.first?.streamUrl, "https://radio.example/jazz")
+        XCTAssertEqual(response.shares?.share?.first?.url, "https://music.example/share/abc")
+        XCTAssertEqual(response.album?.song?.first?.replayGain?.trackGain, -7.5)
+        XCTAssertEqual(response.album?.song?.first?.userRating, 4)
+    }
 }

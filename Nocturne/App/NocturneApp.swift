@@ -2,9 +2,9 @@ import SwiftUI
 
 @main
 struct NocturneApp: App {
-    @State private var library = LibraryStore()
-    @State private var player = PlayerStore()
-    @State private var downloads = DownloadStore()
+    @State private var library = LibraryStore.shared
+    @State private var player = PlayerStore.shared
+    @State private var downloads = DownloadStore.shared
     var body: some Scene {
         WindowGroup {
             RootView().environment(library).environment(player).environment(downloads)
@@ -38,8 +38,13 @@ struct RootView: View {
                 .task { await library.refresh() }
                 .safeAreaInset(edge: .top, spacing: 0) {
                     if !player.network.isOnline {
-                        Label("Нет сети", systemImage: "wifi.slash").font(.footnote.weight(.medium))
-                            .frame(maxWidth: .infinity).padding(.vertical, 6).background(.orange.opacity(0.85)).foregroundStyle(.black)
+                        Button {
+                            UserDefaults.standard.set(LibraryView.Category.downloads.rawValue, forKey: "library.category")
+                            selectedTab = 1
+                        } label: {
+                            Label(downloads.items.isEmpty ? "Нет сети" : "Нет сети · открыть загрузки", systemImage: "wifi.slash")
+                                .font(.footnote.weight(.medium)).frame(maxWidth: .infinity).padding(.vertical, 6)
+                        }.background(.orange.opacity(0.85)).foregroundStyle(.black)
                             .transition(.move(edge: .top))
                     }
                 }
@@ -48,10 +53,14 @@ struct RootView: View {
         }
         .task(id: library.client?.credentials.account) {
             downloads.use(library.client)
+            if downloads.network == nil { downloads.network = player.network }
             player.localFile = { [downloads] id in downloads.localURL(for: id) }
             if let client = library.client { player.restore(client: client) }
         }
         .task { await ArtworkCache.shared.trim() }
+        .onChange(of: library.starredSongs) { _, songs in
+            if UserDefaults.standard.bool(forKey: DownloadStore.autoFavoritesKey) { downloads.download(songs) }
+        }
         .onChange(of: scenePhase) { _, phase in if phase != .active { player.save(force: true) } }
         #if DEBUG
         .task {
@@ -82,6 +91,8 @@ struct RootView: View {
 
 struct ConnectionView: View {
     let isInitial: Bool
+    /// Adding another server: empty form, no "disconnect" button.
+    var adding = false
     @Environment(LibraryStore.self) private var library
     @Environment(PlayerStore.self) private var player
     @Environment(\.dismiss) private var dismiss
@@ -126,7 +137,9 @@ struct ConnectionView: View {
                     }.disabled(busy || server.isEmpty || username.isEmpty || password.isEmpty)
                     Label("Пароль хранится в Связке ключей на этом устройстве.", systemImage: "lock.shield")
                         .font(.caption).foregroundStyle(Theme.secondary)
-                    if !library.isConnected {
+                    if adding {
+                        EmptyView()
+                    } else if !library.isConnected {
                         Button("Посмотреть демоверсию") { player.stop(); library.useDemo(); dismiss() }
                             .frame(maxWidth: .infinity).padding(.vertical, 8).disabled(busy)
                     } else {
@@ -141,6 +154,7 @@ struct ConnectionView: View {
                 .toolbar { if !isInitial { ToolbarItem(placement: .topBarTrailing) { Button("Закрыть") { dismiss() }.disabled(busy) } } }
                 .interactiveDismissDisabled(busy)
                 .onAppear {
+                    guard !adding else { return }
                     server = library.client?.credentials.server.absoluteString ?? ""
                     username = library.client?.credentials.username ?? ""
                 }

@@ -11,6 +11,43 @@ struct SongActions: View {
     var body: some View {
         Button { player.playNext(songs, client: library.client) } label: { Label("Играть следующим", systemImage: "text.line.first.and.arrowtriangle.forward") }
         Button { player.addToQueue(songs, client: library.client) } label: { Label("В конец очереди", systemImage: "text.append") }
+        if songs.count == 1, let song = songs.first, let client = library.client {
+            Button {
+                Task {
+                    do {
+                        let similar = try await client.similarSongs(to: song.id).filter { $0.id != song.id }
+                        guard !similar.isEmpty else {
+                            player.show("Похожих треков нет — нужен Last.fm в Navidrome"); return
+                        }
+                        player.play([song] + similar, shuffle: false, client: client)
+                        player.show("Микс: \(similar.count + 1) треков")
+                    } catch { player.error = LibraryStore.message(error) }
+                }
+            } label: { Label("Микс по треку", systemImage: "dot.radiowaves.left.and.right") }
+            Menu {
+                ForEach(0...5, id: \.self) { stars in
+                    Button {
+                        Task {
+                            do { try await client.setRating(songID: song.id, rating: stars); player.show(stars == 0 ? "Оценка снята" : "Оценка: \(stars) из 5") }
+                            catch { player.error = LibraryStore.message(error) }
+                        }
+                    } label: {
+                        if stars == (song.userRating ?? 0) { Label(stars == 0 ? "Без оценки" : String(repeating: "★", count: stars), systemImage: "checkmark") }
+                        else { Text(stars == 0 ? "Без оценки" : String(repeating: "★", count: stars)) }
+                    }
+                }
+            } label: { Label("Оценка", systemImage: "star") }
+            Button {
+                Task {
+                    do {
+                        guard let url = try await client.createShare(songID: song.id) else { throw MusicError.invalidResponse }
+                        ShareSheet.present([url])
+                    } catch {
+                        player.error = "Не удалось создать ссылку. Проверь, что в Navidrome включён общий доступ (EnableSharing)."
+                    }
+                }
+            } label: { Label("Поделиться", systemImage: "square.and.arrow.up") }
+        }
         if songs.count == 1, let song = songs.first {
             let starred = library.isStarred(song)
             Button {
@@ -117,5 +154,17 @@ struct Toast: View {
             .overlay(Capsule().stroke(Theme.primary.opacity(0.1)))
             .transition(.move(edge: .top).combined(with: .opacity))
             .accessibilityAddTraits(.isStaticText)
+    }
+}
+
+/// Presents the system share sheet from the top-most view controller.
+@MainActor enum ShareSheet {
+    static func present(_ items: [Any]) {
+        guard let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first,
+              var top = scene.keyWindow?.rootViewController else { return }
+        while let presented = top.presentedViewController { top = presented }
+        let controller = UIActivityViewController(activityItems: items, applicationActivities: nil)
+        controller.popoverPresentationController?.sourceView = top.view
+        top.present(controller, animated: true)
     }
 }

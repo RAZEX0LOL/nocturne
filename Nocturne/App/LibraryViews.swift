@@ -6,8 +6,10 @@ struct HomeView: View {
     @Environment(PlayerStore.self) private var player
     var body: some View {
         GeometryReader { geometry in
-            let width = max(1, (geometry.size.width - 60) / 2)
-            let carouselWidth = max(1, (geometry.size.width - 64) / 2.4)
+            // Two columns on iPhone, more on iPad; tiles stay around 160–220 pt.
+            let columns = max(2, Int((geometry.size.width - 48) / 210))
+            let width = max(1, (geometry.size.width - 48 - CGFloat(columns - 1) * 12) / CGFloat(columns))
+            let carouselWidth = min(max(1, (geometry.size.width - 64) / 2.4), 190)
             ScrollView {
                 VStack(alignment: .leading, spacing: 28) {
                     if library.isDemo {
@@ -30,7 +32,7 @@ struct HomeView: View {
                         }
                     }
                     ForEach(Appearance.shared.visibleHome) { section in
-                        homeSection(section, width: width, carouselWidth: carouselWidth)
+                        homeSection(section, width: width, columns: columns, carouselWidth: carouselWidth)
                     }
                     if library.albums.isEmpty && !library.isLoading && library.error == nil {
                         ContentUnavailableView("Здесь пока тихо", systemImage: "music.note", description: Text("Добавь музыку в Navidrome и обнови медиатеку."))
@@ -48,7 +50,7 @@ struct HomeView: View {
 }
 
 extension HomeView {
-    @ViewBuilder func homeSection(_ section: Appearance.HomeSection, width: CGFloat, carouselWidth: CGFloat) -> some View {
+    @ViewBuilder func homeSection(_ section: Appearance.HomeSection, width: CGFloat, columns: Int, carouselWidth: CGFloat) -> some View {
         switch section {
         case .recentlyPlayed: AlbumCarousel(title: section.title, albums: library.recentlyPlayed, width: carouselWidth)
         case .frequent: AlbumCarousel(title: section.title, albums: library.frequent, width: carouselWidth)
@@ -64,8 +66,8 @@ extension HomeView {
                             Image(systemName: "chevron.right").foregroundStyle(Theme.secondary)
                         }.accessibilityLabel("Все альбомы")
                     }
-                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 24) {
-                        ForEach(library.albums.prefix(6)) { album in
+                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: columns), spacing: 24) {
+                        ForEach(library.albums.prefix(columns == 2 ? 6 : columns * 2)) { album in
                             NavigationLink(value: album) { AlbumTile(album: album, width: width) }.buttonStyle(.plain)
                         }
                     }
@@ -110,7 +112,7 @@ struct AlbumCarousel: View {
 }
 
 struct LibraryView: View {
-    enum Category: String, CaseIterable { case albums = "Альбомы", artists = "Артисты", playlists = "Плейлисты", songs = "Любимое", downloads = "Загрузки", genres = "Жанры" }
+    enum Category: String, CaseIterable { case albums = "Альбомы", artists = "Артисты", playlists = "Плейлисты", songs = "Любимое", downloads = "Загрузки", radio = "Радио", genres = "Жанры" }
     enum AlbumSort: String, CaseIterable {
         case newest, alphabeticalByName, alphabeticalByArtist, recent, frequent, random
         var title: String {
@@ -151,6 +153,7 @@ struct LibraryView: View {
                 case .playlists: playlists
                 case .songs: favoriteSongs
                 case .downloads: DownloadsList()
+                case .radio: RadioStationsView()
                 case .genres: GenresView()
                 }
                 if let error = library.error { Text(error).foregroundStyle(Theme.secondary) }
@@ -250,6 +253,40 @@ struct LibraryView: View {
     }
 }
 
+struct RadioStationsView: View {
+    @Environment(LibraryStore.self) private var library
+    @Environment(PlayerStore.self) private var player
+    @State private var stations: [RadioStation] = []
+    @State private var loading = true
+    var body: some View {
+        LazyVStack(alignment: .leading, spacing: 4) {
+            if loading { ProgressView().frame(maxWidth: .infinity).padding() }
+            else if stations.isEmpty {
+                ContentUnavailableView("Радиостанций нет", systemImage: "antenna.radiowaves.left.and.right",
+                                       description: Text("Добавь станции в Navidrome: Настройки → Интернет-радио."))
+            }
+            ForEach(stations) { station in
+                Button { player.playRadio(station, client: library.client) } label: {
+                    HStack(spacing: 14) {
+                        Image(systemName: "antenna.radiowaves.left.and.right").font(.title3).frame(width: 48, height: 48)
+                            .background(Theme.surface, in: RoundedRectangle(cornerRadius: 10)).foregroundStyle(Theme.accent)
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(station.name).foregroundStyle(Theme.primary)
+                            Text(URL(string: station.streamUrl)?.host() ?? "").font(.caption).foregroundStyle(Theme.secondary)
+                        }
+                        Spacer()
+                        if player.current?.id == "radio-\(station.id)" { Image(systemName: "waveform").foregroundStyle(Theme.accent) }
+                    }.padding(.vertical, 6).contentShape(Rectangle())
+                }.buttonStyle(.plain)
+            }
+        }
+        .task {
+            defer { loading = false }
+            stations = (try? await library.client?.radioStations()) ?? []
+        }
+    }
+}
+
 /// Songs available offline; works without a connection.
 struct DownloadsList: View {
     @Environment(DownloadStore.self) private var downloads
@@ -305,7 +342,7 @@ struct AlbumBrowser: View {
     var body: some View {
         Group {
             if Appearance.shared.libraryGrid {
-                LazyVGrid(columns: [GridItem(.flexible(), spacing: 16), GridItem(.flexible(), spacing: 16)], spacing: 22) {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 150, maximum: 230), spacing: 16)], spacing: 22) {
                     ForEach(albums) { album in
                         NavigationLink(value: album) { AlbumGridTile(album: album) }.buttonStyle(.plain)
                             .onAppear { if album.id == albums.last?.id { Task { await loadMore() } } }
@@ -447,6 +484,8 @@ struct AlbumDetailView: View {
     @State private var starred = false
     @State private var saving = false
     @State private var addToPlaylist = false
+    @State private var notes: String?
+    @State private var notesExpanded = false
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
@@ -458,6 +497,12 @@ struct AlbumDetailView: View {
                         .font(.caption).foregroundStyle(Theme.secondary)
                 }
                 PlayButtons(songs: songs)
+                if let notes, !notes.isEmpty {
+                    Text(notes).font(.callout).foregroundStyle(Theme.secondary).lineLimit(notesExpanded ? nil : 3)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .onTapGesture { withAnimation { notesExpanded.toggle() } }
+                        .accessibilityHint(notesExpanded ? "Свернуть описание" : "Показать описание полностью")
+                }
                 if loading { ProgressView() }
                 if let error {
                     Text(error).foregroundStyle(Theme.secondary)
@@ -497,7 +542,15 @@ struct AlbumDetailView: View {
         if library.isDemo { songs = DemoLibrary.songs(for: album); return }
         do { songs = try await library.client?.songs(albumID: album.id) ?? [] }
         catch { self.error = LibraryStore.message(error) }
+        if let info = try? await library.client?.albumInfo(id: album.id) { notes = info.notes.map(stripHTML) }
     }
+}
+
+/// Last.fm texts come with HTML links and entities; show them as plain text.
+func stripHTML(_ text: String) -> String {
+    text.replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
+        .replacingOccurrences(of: "&amp;", with: "&").replacingOccurrences(of: "&quot;", with: "\"")
+        .replacingOccurrences(of: "&#39;", with: "'").trimmingCharacters(in: .whitespacesAndNewlines)
 }
 
 struct ArtistDetailView: View {
@@ -506,18 +559,32 @@ struct ArtistDetailView: View {
     @Environment(PlayerStore.self) private var player
     @State private var albums: [Album] = []
     @State private var topSongs: [Song] = []
+    @State private var biography: String?
+    @State private var imageURL: URL?
+    @State private var bioExpanded = false
     @State private var error: String?
     @State private var loading = true
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 VStack(spacing: 12) {
-                    Cover(id: artist.coverArt, size: 180).clipShape(Circle())
+                    Group {
+                        if let imageURL {
+                            AsyncImage(url: imageURL) { image in image.resizable().scaledToFill() } placeholder: { Cover(id: artist.coverArt, size: 180) }
+                        } else { Cover(id: artist.coverArt, size: 180) }
+                    }.frame(width: 180, height: 180).clipShape(Circle())
                     Text(artist.name).font(.title.bold()).multilineTextAlignment(.center)
                     Text("Альбомов: \(albums.isEmpty ? artist.albumCount ?? 0 : albums.count)").font(.caption).foregroundStyle(Theme.secondary)
                 }.frame(maxWidth: .infinity)
                 if loading { ProgressView().frame(maxWidth: .infinity) }
                 if let error { Text(error).foregroundStyle(Theme.secondary) }
+                if let biography, !biography.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Об исполнителе").font(.title2.bold())
+                        Text(biography).font(.callout).foregroundStyle(Theme.secondary).lineLimit(bioExpanded ? nil : 4)
+                        Button(bioExpanded ? "Свернуть" : "Читать полностью") { withAnimation { bioExpanded.toggle() } }.font(.callout)
+                    }
+                }
                 if !topSongs.isEmpty {
                     Text("Популярные треки").font(.title2.bold())
                     PlayButtons(songs: topSongs)
@@ -537,9 +604,15 @@ struct ArtistDetailView: View {
                 guard let client = library.client else { return }
                 // Top songs need Last.fm on the server; without it the section simply stays hidden.
                 async let top = try? client.topSongs(artist: artist.name)
+                async let info = try? client.artistInfo(id: artist.id)
                 do { albums = try await client.request("getArtist", parameters: ["id": artist.id]).artist?.album ?? [] }
                 catch { self.error = LibraryStore.message(error) }
                 topSongs = await top ?? []
+                if let details = await info ?? nil {
+                    biography = details.biography.map(stripHTML)
+                    // Only HTTPS images; Last.fm placeholders are skipped by Navidrome when there is no photo.
+                    imageURL = details.largeImageUrl.flatMap(URL.init(string:)).flatMap { $0.scheme == "https" ? $0 : nil }
+                }
             }
     }
 }
@@ -621,27 +694,56 @@ struct SearchView: View {
     @State private var result = SearchResult()
     @State private var loading = false
     @State private var error: String?
+    @State private var filter = Filter.all
+    @AppStorage("search.history") private var historyData = Data()
+    enum Filter: String, CaseIterable { case all = "Всё", artists = "Исполнители", albums = "Альбомы", songs = "Треки" }
+
+    private var history: [String] { (try? JSONDecoder().decode([String].self, from: historyData)) ?? [] }
+    private func remember(_ value: String) {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        let list = [trimmed] + history.filter { $0.caseInsensitiveCompare(trimmed) != .orderedSame }
+        historyData = (try? JSONEncoder().encode(Array(list.prefix(12)))) ?? Data()
+    }
+    private func show(_ kind: Filter) -> Bool { filter == .all || filter == kind }
+
     var body: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 18) {
                 if query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    ContentUnavailableView("Найди своё звучание", systemImage: "magnifyingglass", description: Text("Альбомы, исполнители и любимые треки."))
+                    if history.isEmpty {
+                        ContentUnavailableView("Найди своё звучание", systemImage: "magnifyingglass", description: Text("Альбомы, исполнители и любимые треки."))
+                    } else {
+                        HStack {
+                            Text("Недавние запросы").font(.title3.bold())
+                            Spacer()
+                            Button("Очистить") { historyData = Data() }.font(.callout)
+                        }
+                        ForEach(history, id: \.self) { item in
+                            Button { query = item } label: {
+                                Label(item, systemImage: "clock.arrow.circlepath").foregroundStyle(Theme.primary)
+                                    .frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 6)
+                            }.buttonStyle(.plain)
+                        }
+                    }
                 } else if loading { ProgressView().frame(maxWidth: .infinity).padding(40) }
                 else if let error { Text(error).foregroundStyle(Theme.secondary) }
                 else if (result.album ?? []).isEmpty && (result.song ?? []).isEmpty && (result.artist ?? []).isEmpty {
                     ContentUnavailableView.search(text: query)
                 } else {
-                    if let artists = result.artist, !artists.isEmpty {
+                    Picker("Фильтр", selection: $filter) { ForEach(Filter.allCases, id: \.self) { Text($0.rawValue).tag($0) } }
+                        .pickerStyle(.segmented)
+                    if show(.artists), let artists = result.artist, !artists.isEmpty {
                         Text("Исполнители").font(.title2.bold())
                         ForEach(artists) { artist in
                             NavigationLink { ArtistDetailView(artist: artist) } label: { Label(artist.name, systemImage: "person.crop.circle").padding(.vertical, 8) }
                         }
                     }
-                    if let albums = result.album, !albums.isEmpty {
+                    if show(.albums), let albums = result.album, !albums.isEmpty {
                         Text("Альбомы").font(.title2.bold())
                         ForEach(albums) { AlbumRow(album: $0) }
                     }
-                    if let songs = result.song, !songs.isEmpty {
+                    if show(.songs), let songs = result.song, !songs.isEmpty {
                         Text("Треки").font(.title2.bold())
                         ForEach(Array(songs.enumerated()), id: \.offset) { index, song in
                             SongRow(song: song) { player.play(songs, at: index, client: library.client) }
@@ -651,6 +753,7 @@ struct SearchView: View {
             }.padding(24)
         }.background(Theme.background).navigationTitle("Поиск")
             .searchable(text: $query, prompt: "Поиск в медиатеке")
+            .onSubmit(of: .search) { remember(query) }
             .navigationDestination(for: Album.self) { AlbumDetailView(album: $0) }
             .task(id: query) {
                 let value = query.trimmingCharacters(in: .whitespacesAndNewlines)

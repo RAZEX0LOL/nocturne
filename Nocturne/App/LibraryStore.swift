@@ -3,6 +3,7 @@ import Security
 
 @MainActor @Observable
 final class LibraryStore {
+    static let shared = LibraryStore()
     var client: NavidromeClient?
     var albums: [Album] = []
     var favorites: [Album] = []
@@ -17,8 +18,12 @@ final class LibraryStore {
     var error: String?
     private var generation = UUID()
     var isConnected: Bool { client != nil }
+    /// All saved servers (`user@server`), for the switcher in settings.
+    private(set) var accounts: [String] = []
 
     init() {
+        CredentialVault.migrate()
+        accounts = CredentialVault.accounts
         if let credentials = CredentialVault.load() { client = NavidromeClient(credentials: credentials) }
         if ProcessInfo.processInfo.arguments.contains("--demo") { useDemo() }
         #if DEBUG
@@ -36,6 +41,7 @@ final class LibraryStore {
         let candidate = NavidromeClient(credentials: credentials)
         _ = try await candidate.request("ping")
         try CredentialVault.save(credentials)
+        accounts = CredentialVault.accounts
         generation = UUID()
         client = candidate
         isDemo = false
@@ -57,10 +63,25 @@ final class LibraryStore {
         error = nil
     }
 
+    /// Forgets the current server; switches to another saved one if there is any.
     func disconnect() throws {
-        try CredentialVault.delete()
+        guard let account = client?.credentials.account else { return }
+        let next = CredentialVault.delete(account)
+        accounts = CredentialVault.accounts
+        activate(next.flatMap { CredentialVault.load($0) })
+    }
+
+    func switchTo(_ account: String) async {
+        guard account != client?.credentials.account, let credentials = CredentialVault.load(account) else { return }
+        CredentialVault.setActive(account)
+        activate(credentials)
+        await refresh()
+    }
+
+    private func activate(_ credentials: Credentials?) {
         generation = UUID()
-        client = nil; isDemo = false; clearSections()
+        client = credentials.map { NavidromeClient(credentials: $0) }
+        isDemo = false; clearSections()
         isLoading = false; error = nil
     }
 
@@ -135,38 +156,69 @@ final class LibraryStore {
     }
 }
 
+/// Keychain storage for several servers: one item per account key (`user@server`).
+/// The list of accounts and the active one live in UserDefaults — no secrets there.
 @MainActor enum CredentialVault {
-    private static let query: [String: Any] = [
-        kSecClass as String: kSecClassGenericPassword,
-        kSecAttrService as String: "app.nocturne.navidrome",
-        kSecAttrAccount as String: "primary"
-    ]
+    private static let service = "app.nocturne.navidrome"
+    private static let accountsKey = "servers.accounts"
+    private static let activeKey = "servers.active"
 
-    static func load() -> Credentials? {
-        var request = query
-        request[kSecReturnData as String] = true
-        request[kSecMatchLimit as String] = kSecMatchLimitOne
-        var result: CFTypeRef?
-        guard SecItemCopyMatching(request as CFDictionary, &result) == errSecSuccess,
-              let data = result as? Data else { return nil }
-        return try? JSONDecoder().decode(Credentials.self, from: data)
+    static var accounts: [String] { UserDefaults.standard.stringArray(forKey: accountsKey) ?? [] }
+    static var active: String? { UserDefaults.standard.string(forKey: activeKey) }
+
+    /// Moves the single pre-multi-server item ("primary") into the new layout once.
+    static func migrate() {
+        guard accounts.isEmpty, let legacy = read("primary") else { return }
+        try? save(legacy)
+        remove("primary")
     }
 
+    static func load(_ account: String? = nil) -> Credentials? {
+        guard let account = account ?? active else { return nil }
+        return read(account)
+    }
+
+    /// Stores the credentials and makes them active.
     static func save(_ credentials: Credentials) throws {
         let data = try JSONEncoder().encode(credentials)
+        let query = itemQuery(credentials.account)
         let attributes: [String: Any] = [
             kSecValueData as String: data,
             kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
         ]
         let status = SecItemUpdate(query as CFDictionary, attributes as CFDictionary)
         if status == errSecItemNotFound {
-            let insert = query.merging(attributes) { _, new in new }
-            guard SecItemAdd(insert as CFDictionary, nil) == errSecSuccess else { throw MusicError.keychain }
+            guard SecItemAdd(query.merging(attributes) { _, new in new } as CFDictionary, nil) == errSecSuccess else { throw MusicError.keychain }
         } else if status != errSecSuccess { throw MusicError.keychain }
+        var list = accounts
+        if !list.contains(credentials.account) { list.append(credentials.account) }
+        UserDefaults.standard.set(list, forKey: accountsKey)
+        setActive(credentials.account)
     }
 
-    static func delete() throws {
-        let status = SecItemDelete(query as CFDictionary)
-        guard status == errSecSuccess || status == errSecItemNotFound else { throw MusicError.keychain }
+    static func setActive(_ account: String?) { UserDefaults.standard.set(account, forKey: activeKey) }
+
+    /// Removes one server; returns the account that should become active, if any.
+    @discardableResult static func delete(_ account: String) -> String? {
+        remove(account)
+        let list = accounts.filter { $0 != account }
+        UserDefaults.standard.set(list, forKey: accountsKey)
+        if active == account { setActive(list.first) }
+        return active
     }
+
+    private static func itemQuery(_ account: String) -> [String: Any] {
+        [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service, kSecAttrAccount as String: account]
+    }
+
+    private static func read(_ account: String) -> Credentials? {
+        var request = itemQuery(account)
+        request[kSecReturnData as String] = true
+        request[kSecMatchLimit as String] = kSecMatchLimitOne
+        var result: CFTypeRef?
+        guard SecItemCopyMatching(request as CFDictionary, &result) == errSecSuccess, let data = result as? Data else { return nil }
+        return try? JSONDecoder().decode(Credentials.self, from: data)
+    }
+
+    private static func remove(_ account: String) { SecItemDelete(itemQuery(account) as CFDictionary) }
 }

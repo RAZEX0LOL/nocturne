@@ -142,6 +142,29 @@ struct NavidromeClient: Sendable {
         _ = try await request("scrobble", parameters: ["id": songID, "submission": submission ? "true" : "false"])
     }
 
+    /// "Instant mix": tracks similar to the seed (needs Last.fm integration on the server).
+    func similarSongs(to songID: String) async throws -> [Song] {
+        try await request("getSimilarSongs2", parameters: ["id": songID, "count": "50"]).similarSongs2?.song ?? []
+    }
+    func radioStations() async throws -> [RadioStation] {
+        try await request("getInternetRadioStations").internetRadioStations?.internetRadioStation ?? []
+    }
+    func artistInfo(id: String) async throws -> ArtistInfo? {
+        try await request("getArtistInfo2", parameters: ["id": id]).artistInfo2
+    }
+    func albumInfo(id: String) async throws -> AlbumInfo? {
+        try await request("getAlbumInfo2", parameters: ["id": id]).albumInfo
+    }
+    /// `rating` 0 removes the rating, 1…5 sets it.
+    func setRating(songID: String, rating: Int) async throws {
+        _ = try await request("setRating", parameters: ["id": songID, "rating": String(min(max(rating, 0), 5))])
+    }
+    /// Public link to a song; requires `EnableSharing` in Navidrome.
+    func createShare(songID: String) async throws -> URL? {
+        let link = try await request("createShare", parameters: ["id": songID]).shares?.share?.first?.url
+        return link.flatMap(URL.init(string:))
+    }
+
     func search(_ query: String) async throws -> SearchResult {
         try await request("search3", parameters: ["query": query, "songCount": "50", "albumCount": "30", "artistCount": "20"]).searchResult3
             ?? SearchResult()

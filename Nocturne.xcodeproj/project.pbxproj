@@ -27,6 +27,9 @@
 		FE739EA672EDAC1B19B522D6 /* Nocturne/App/DownloadStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86F2E037AA6AE809969B7A58 /* Nocturne/App/DownloadStore.swift */; };
 		69DC6D616DC99FF7736C23E5 /* Nocturne/App/Appearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 056767913ABE2F2802614D74 /* Nocturne/App/Appearance.swift */; };
 		543A80626A777E6CC7CB554A /* Nocturne/App/AppearanceSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18F7EDDEA20CBC997CD88CD3 /* Nocturne/App/AppearanceSettingsView.swift */; };
+		1DF57C4B51D0F23F195FB43C /* Nocturne/App/StatsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EE4DF7186F349BAC4D5A532 /* Nocturne/App/StatsStore.swift */; };
+		F2F35E08546F89A8C4A29AE8 /* Nocturne/App/StatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7171064AA73188A248019ED9 /* Nocturne/App/StatsView.swift */; };
+		10AC574E8ABD15AB22190D57 /* Nocturne/App/AppIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02B6B373835CAAA78174B882 /* Nocturne/App/AppIntents.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -62,6 +65,9 @@
 		86F2E037AA6AE809969B7A58 /* Nocturne/App/DownloadStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/DownloadStore.swift; sourceTree = SOURCE_ROOT; };
 		056767913ABE2F2802614D74 /* Nocturne/App/Appearance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/Appearance.swift; sourceTree = SOURCE_ROOT; };
 		18F7EDDEA20CBC997CD88CD3 /* Nocturne/App/AppearanceSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/AppearanceSettingsView.swift; sourceTree = SOURCE_ROOT; };
+		8EE4DF7186F349BAC4D5A532 /* Nocturne/App/StatsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/StatsStore.swift; sourceTree = SOURCE_ROOT; };
+		7171064AA73188A248019ED9 /* Nocturne/App/StatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/StatsView.swift; sourceTree = SOURCE_ROOT; };
+		02B6B373835CAAA78174B882 /* Nocturne/App/AppIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/AppIntents.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -87,6 +93,9 @@
 		0D6E4079E36703EBD37C0072 = {
 			isa = PBXGroup;
 			children = (
+				02B6B373835CAAA78174B882 /* Nocturne/App/AppIntents.swift */,
+				7171064AA73188A248019ED9 /* Nocturne/App/StatsView.swift */,
+				8EE4DF7186F349BAC4D5A532 /* Nocturne/App/StatsStore.swift */,
 				18F7EDDEA20CBC997CD88CD3 /* Nocturne/App/AppearanceSettingsView.swift */,
 				056767913ABE2F2802614D74 /* Nocturne/App/Appearance.swift */,
 				86F2E037AA6AE809969B7A58 /* Nocturne/App/DownloadStore.swift */,
@@ -199,6 +208,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				10AC574E8ABD15AB22190D57 /* Nocturne/App/AppIntents.swift in Sources */,
+				F2F35E08546F89A8C4A29AE8 /* Nocturne/App/StatsView.swift in Sources */,
+				1DF57C4B51D0F23F195FB43C /* Nocturne/App/StatsStore.swift in Sources */,
 				543A80626A777E6CC7CB554A /* Nocturne/App/AppearanceSettingsView.swift in Sources */,
 				69DC6D616DC99FF7736C23E5 /* Nocturne/App/Appearance.swift in Sources */,
 				FE739EA672EDAC1B19B522D6 /* Nocturne/App/DownloadStore.swift in Sources */,
@@ -257,7 +269,7 @@
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				TARGETED_DEVICE_FAMILY = 1;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
@@ -299,7 +311,7 @@
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				TARGETED_DEVICE_FAMILY = 1;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
