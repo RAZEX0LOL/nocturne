@@ -166,7 +166,9 @@ enum Theme {
                        light: UIColor(hue: hue, saturation: max(min(saturation + 0.25, 0.85), 0.45), brightness: 0.55, alpha: 1))
     }
 
-    private static func dynamic(dark: UIColor, light: UIColor) -> Color {
+    /// Built outside the main actor on purpose: SwiftUI resolves dynamic colours on its background
+    /// render thread, and a main-actor closure there traps Swift's isolation check (crash on device).
+    private nonisolated static func dynamic(dark: UIColor, light: UIColor) -> Color {
         Color(uiColor: UIColor { $0.userInterfaceStyle == .light ? light : dark })
     }
 }

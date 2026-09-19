@@ -152,8 +152,9 @@ final class DownloadStore {
     private func cancelTransfers(where match: @escaping @Sendable (String) -> Bool) {
         for id in transfers.keys where match(id) { transfers[id] = nil; active[id] = nil }
         saveTransfers()
-        session.getAllTasks { tasks in
-            for task in tasks where match(task.taskDescription ?? "") { task.cancel() }
+        let session = session!
+        Task {
+            for task in await session.allTasks where match(task.taskDescription ?? "") { task.cancel() }
         }
     }
 

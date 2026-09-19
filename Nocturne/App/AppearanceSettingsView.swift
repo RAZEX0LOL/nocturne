@@ -87,8 +87,11 @@ struct AppearanceSettingsView: View {
 
     private func setIcon(_ name: String?) {
         guard UIApplication.shared.supportsAlternateIcons, name != iconName else { return }
-        UIApplication.shared.setAlternateIconName(name) { error in
-            if error == nil { Task { @MainActor in iconName = name } }
+        Task {
+            do {
+                try await UIApplication.shared.setAlternateIconName(name)
+                iconName = name
+            } catch { Log.library.error("Icon change failed: \(Log.describe(error), privacy: .public)") }
         }
     }
 }

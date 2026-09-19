@@ -56,4 +56,15 @@ final class NocturneUITests: XCTestCase {
         app.buttons["Подключить Navidrome"].tap()
         XCTAssertTrue(app.textFields["https://music.example.com"].waitForExistence(timeout: 15))
     }
+
+    /// Regression: theme colours were closures isolated to the main actor and crashed when
+    /// SwiftUI resolved them on its background render thread (tapping shuffle/repeat on device).
+    @MainActor func testThemeColorsResolveOffMainThread() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--demo", "--check-threading"]
+        app.launch()
+        XCTAssertTrue(app.staticTexts["Недавно добавлено"].waitForExistence(timeout: 30))
+        sleep(2)
+        XCTAssertEqual(app.state, .runningForeground, "resolving theme colours off the main thread must not crash the app")
+    }
 }

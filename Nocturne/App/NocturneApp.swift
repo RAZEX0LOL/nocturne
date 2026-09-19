@@ -69,6 +69,17 @@ struct RootView: View {
         .onChange(of: scenePhase) { _, phase in if phase != .active { player.save(force: true) } }
         #if DEBUG
         .task {
+            // Threading self-check (`--check-threading`): SwiftUI's async renderer resolves dynamic colours
+            // off the main thread; doing the same here must not trip Swift's isolation checks.
+            guard ProcessInfo.processInfo.arguments.contains("--check-threading") else { return }
+            nonisolated(unsafe) let colors = [Theme.background, Theme.surface, Theme.primary, Theme.secondary, Theme.onAccent, Theme.accent].map { UIColor($0) }
+            DispatchQueue.global().async {
+                for color in colors {
+                    for style in [UIUserInterfaceStyle.light, .dark] { _ = color.resolvedColor(with: UITraitCollection(userInterfaceStyle: style)) }
+                }
+            }
+        }
+        .task {
             // Layout check without a server: `--demo --demo-player` opens the full player with a stub track.
             guard ProcessInfo.processInfo.arguments.contains("--demo-player") else { return }
             player.preview([Song(id: "demo-track", title: "Очень длинное название трека для проверки переноса", artist: "Свет внутри",
