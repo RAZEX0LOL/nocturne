@@ -8,7 +8,6 @@ struct NocturneApp: App {
     var body: some Scene {
         WindowGroup {
             RootView().environment(library).environment(player).environment(downloads)
-                .preferredColorScheme(.dark).tint(Theme.accent)
         }
     }
 }
@@ -68,6 +67,8 @@ struct RootView: View {
         .alert("Воспроизведение", isPresented: Binding(get: { player.error != nil }, set: { if !$0 { player.error = nil } })) {
             Button("Понятно") { player.error = nil }
         } message: { Text(player.error ?? "") }
+        .preferredColorScheme(Appearance.shared.colorScheme)
+        .tint(Theme.accent)
         .overlay(alignment: .top) { if let notice = player.notice, !fullPlayer { Toast(text: notice).padding(.top, 8) } }
         .animation(.spring(duration: 0.3), value: player.notice)
     }
@@ -120,8 +121,8 @@ struct ConnectionView: View {
                             busy = false
                         }
                     } label: {
-                        HStack { Spacer(); if busy { ProgressView().tint(Theme.background) } else { Text("Подключиться").fontWeight(.semibold); Image(systemName: "arrow.right") }; Spacer() }
-                            .padding(18).background(Theme.accent, in: RoundedRectangle(cornerRadius: 18)).foregroundStyle(Theme.background)
+                        HStack { Spacer(); if busy { ProgressView().tint(Theme.onAccent) } else { Text("Подключиться").fontWeight(.semibold); Image(systemName: "arrow.right") }; Spacer() }
+                            .padding(18).background(Theme.accent, in: RoundedRectangle(cornerRadius: 18)).foregroundStyle(Theme.onAccent)
                     }.disabled(busy || server.isEmpty || username.isEmpty || password.isEmpty)
                     Label("Пароль хранится в Связке ключей на этом устройстве.", systemImage: "lock.shield")
                         .font(.caption).foregroundStyle(Theme.secondary)

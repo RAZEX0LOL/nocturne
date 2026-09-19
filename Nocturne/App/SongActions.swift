@@ -58,7 +58,7 @@ struct PlaylistPicker: View {
                         HStack(spacing: 12) {
                             Cover(id: playlist.coverArt, size: 44)
                             VStack(alignment: .leading, spacing: 3) {
-                                Text(playlist.name).foregroundStyle(.white)
+                                Text(playlist.name).foregroundStyle(Theme.primary)
                                 Text("Треков: \(playlist.songCount ?? 0)").font(.caption).foregroundStyle(Theme.secondary)
                             }
                         }
@@ -111,10 +111,10 @@ private struct SongActionsModifier: ViewModifier {
 struct Toast: View {
     let text: String
     var body: some View {
-        Text(text).font(.subheadline.weight(.medium)).foregroundStyle(.white)
+        Text(text).font(.subheadline.weight(.medium)).foregroundStyle(Theme.primary)
             .padding(.horizontal, 18).padding(.vertical, 11)
             .background(.ultraThinMaterial, in: Capsule())
-            .overlay(Capsule().stroke(.white.opacity(0.1)))
+            .overlay(Capsule().stroke(Theme.primary.opacity(0.1)))
             .transition(.move(edge: .top).combined(with: .opacity))
             .accessibilityAddTraits(.isStaticText)
     }

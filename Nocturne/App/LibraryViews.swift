@@ -29,48 +29,63 @@ struct HomeView: View {
                             Button("Повторить") { Task { await library.refresh() } }
                         }
                     }
-                    AlbumCarousel(title: "Недавно слушал", albums: library.recentlyPlayed, width: carouselWidth)
-                    if !library.albums.isEmpty {
-                        HStack {
-                            Text("Недавно добавлено").font(.title2.bold())
-                            Spacer()
-                            NavigationLink { AlbumListPage(title: "Все альбомы", type: "newest") } label: {
-                                Image(systemName: "chevron.right").foregroundStyle(Theme.secondary)
-                            }.accessibilityLabel("Все альбомы")
-                        }
-                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 24) {
-                            ForEach(library.albums.prefix(6)) { album in
-                                NavigationLink(value: album) { AlbumTile(album: album, width: width) }.buttonStyle(.plain)
-                            }
-                        }
-                    } else if !library.isLoading && library.error == nil {
+                    ForEach(Appearance.shared.visibleHome) { section in
+                        homeSection(section, width: width, carouselWidth: carouselWidth)
+                    }
+                    if library.albums.isEmpty && !library.isLoading && library.error == nil {
                         ContentUnavailableView("Здесь пока тихо", systemImage: "music.note", description: Text("Добавь музыку в Navidrome и обнови медиатеку."))
                     }
-                    if !library.starredSongs.isEmpty {
-                        VStack(alignment: .leading, spacing: 10) {
-                            HStack {
-                                Text("Любимые треки").font(.title2.bold())
-                                Spacer()
-                                NavigationLink { StarredSongsView() } label: { Text("Все").foregroundStyle(Theme.accent) }
-                            }
-                            let songs = library.starredSongs
-                            ForEach(Array(songs.prefix(4).enumerated()), id: \.offset) { index, song in
-                                SongRow(song: song) { player.play(songs, at: index, client: library.client) }
-                            }
-                        }
-                    }
-                    AlbumCarousel(title: "Часто слушаю", albums: library.frequent, width: carouselWidth)
-                    AlbumCarousel(title: "Любимые альбомы", albums: library.favorites, width: carouselWidth)
-                    AlbumCarousel(title: "Случайные альбомы", albums: library.discover, width: carouselWidth)
                 }.padding(24)
             }.refreshable { await library.refresh() }
                 .background(Theme.background)
                 .navigationTitle("Главная")
                 .toolbar { ToolbarItem(placement: .topBarTrailing) {
-                    Button { settings = true } label: { Image(systemName: "gearshape").foregroundStyle(.white) }.accessibilityLabel("Настройки")
+                    Button { settings = true } label: { Image(systemName: "gearshape").foregroundStyle(Theme.primary) }.accessibilityLabel("Настройки")
                 } }
                 .navigationDestination(for: Album.self) { AlbumDetailView(album: $0) }
         }.background(Theme.background)
+    }
+}
+
+extension HomeView {
+    @ViewBuilder func homeSection(_ section: Appearance.HomeSection, width: CGFloat, carouselWidth: CGFloat) -> some View {
+        switch section {
+        case .recentlyPlayed: AlbumCarousel(title: section.title, albums: library.recentlyPlayed, width: carouselWidth)
+        case .frequent: AlbumCarousel(title: section.title, albums: library.frequent, width: carouselWidth)
+        case .favoriteAlbums: AlbumCarousel(title: section.title, albums: library.favorites, width: carouselWidth)
+        case .discover: AlbumCarousel(title: section.title, albums: library.discover, width: carouselWidth)
+        case .recentlyAdded:
+            if !library.albums.isEmpty {
+                VStack(alignment: .leading, spacing: 14) {
+                    HStack {
+                        Text(section.title).font(.title2.bold())
+                        Spacer()
+                        NavigationLink { AlbumListPage(title: "Все альбомы", type: "newest") } label: {
+                            Image(systemName: "chevron.right").foregroundStyle(Theme.secondary)
+                        }.accessibilityLabel("Все альбомы")
+                    }
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 24) {
+                        ForEach(library.albums.prefix(6)) { album in
+                            NavigationLink(value: album) { AlbumTile(album: album, width: width) }.buttonStyle(.plain)
+                        }
+                    }
+                }
+            }
+        case .starredSongs:
+            if !library.starredSongs.isEmpty {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        Text(section.title).font(.title2.bold())
+                        Spacer()
+                        NavigationLink { StarredSongsView() } label: { Text("Все").foregroundStyle(Theme.accent) }
+                    }
+                    let songs = library.starredSongs
+                    ForEach(Array(songs.prefix(4).enumerated()), id: \.offset) { index, song in
+                        SongRow(song: song) { player.play(songs, at: index, client: library.client) }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -125,7 +140,7 @@ struct LibraryView: View {
                             Button { category = item } label: {
                                 Text(item.rawValue).font(.subheadline.weight(.medium)).padding(.horizontal, 14).padding(.vertical, 8)
                                     .background(category == item ? Theme.accent : Theme.surface, in: Capsule())
-                                    .foregroundStyle(category == item ? Theme.background : .white)
+                                    .foregroundStyle(category == item ? Theme.onAccent : Theme.primary)
                             }.buttonStyle(.plain).accessibilityAddTraits(category == item ? .isSelected : [])
                         }
                     }
@@ -148,6 +163,7 @@ struct LibraryView: View {
                     ToolbarItem(placement: .topBarTrailing) {
                         Menu {
                             Picker("Сортировка", selection: $sort) { ForEach(AlbumSort.allCases, id: \.self) { Text($0.title).tag($0) } }
+                            Toggle("Сеткой", systemImage: "square.grid.2x2", isOn: Binding(get: { Appearance.shared.libraryGrid }, set: { Appearance.shared.libraryGrid = $0 }))
                         } label: { Image(systemName: "arrow.up.arrow.down") }.accessibilityLabel("Сортировка альбомов")
                     }
                 }
@@ -186,7 +202,7 @@ struct LibraryView: View {
                             HStack(spacing: 14) {
                                 Cover(id: artist.coverArt, size: 56).clipShape(Circle())
                                 VStack(alignment: .leading, spacing: 5) {
-                                    Text(artist.name).foregroundStyle(.white)
+                                    Text(artist.name).foregroundStyle(Theme.primary)
                                     Text("Альбомов: \(artist.albumCount ?? 0)").font(.caption).foregroundStyle(Theme.secondary)
                                 }
                                 Spacer(); Image(systemName: "chevron.right").font(.caption).foregroundStyle(Theme.secondary)
@@ -210,7 +226,7 @@ struct LibraryView: View {
                 HStack(spacing: 14) {
                     Cover(id: playlist.coverArt, size: 64)
                     VStack(alignment: .leading, spacing: 5) {
-                        Text(playlist.name).foregroundStyle(.white)
+                        Text(playlist.name).foregroundStyle(Theme.primary)
                         Text("Треков: \(playlist.songCount ?? 0)").font(.caption).foregroundStyle(Theme.secondary)
                     }
                     Spacer(); Image(systemName: "chevron.right").font(.caption).foregroundStyle(Theme.secondary)
@@ -266,7 +282,7 @@ struct PlayButtons: View {
         HStack(spacing: 14) {
             Button { player.play(songs, shuffle: false, client: library.client) } label: {
                 Label("Слушать", systemImage: "play.fill").fontWeight(.semibold).frame(maxWidth: .infinity).padding(16)
-                    .background(Theme.accent, in: RoundedRectangle(cornerRadius: 15)).foregroundStyle(Theme.background)
+                    .background(Theme.accent, in: RoundedRectangle(cornerRadius: 15)).foregroundStyle(Theme.onAccent)
             }
             Button { player.play(songs, at: songs.indices.randomElement() ?? 0, shuffle: true, client: library.client) } label: {
                 Image(systemName: "shuffle").frame(width: 52, height: 52).background(Theme.surface, in: RoundedRectangle(cornerRadius: 15))
@@ -287,10 +303,23 @@ struct AlbumBrowser: View {
     private let pageSize = 40
 
     var body: some View {
-        LazyVStack(spacing: 16) {
-            ForEach(albums) { album in
-                AlbumRow(album: album).onAppear { if album.id == albums.last?.id { Task { await loadMore() } } }
+        Group {
+            if Appearance.shared.libraryGrid {
+                LazyVGrid(columns: [GridItem(.flexible(), spacing: 16), GridItem(.flexible(), spacing: 16)], spacing: 22) {
+                    ForEach(albums) { album in
+                        NavigationLink(value: album) { AlbumGridTile(album: album) }.buttonStyle(.plain)
+                            .onAppear { if album.id == albums.last?.id { Task { await loadMore() } } }
+                    }
+                }
+            } else {
+                LazyVStack(spacing: 16) {
+                    ForEach(albums) { album in
+                        AlbumRow(album: album).onAppear { if album.id == albums.last?.id { Task { await loadMore() } } }
+                    }
+                }
             }
+        }
+        LazyVStack(spacing: 16) {
             if loading { ProgressView().padding() }
             if let error {
                 Text(error).foregroundStyle(Theme.secondary)
@@ -342,7 +371,7 @@ struct GenresView: View {
             ForEach(genres) { genre in
                 NavigationLink { AlbumListPage(title: genre.value, type: "byGenre", genre: genre.value) } label: {
                     HStack {
-                        Text(genre.value).foregroundStyle(.white)
+                        Text(genre.value).foregroundStyle(Theme.primary)
                         Spacer()
                         Text("\(genre.albumCount ?? 0)").font(.caption.monospacedDigit()).foregroundStyle(Theme.secondary)
                         Image(systemName: "chevron.right").font(.caption).foregroundStyle(Theme.secondary)
@@ -376,6 +405,19 @@ struct StarredSongsView: View {
     }
 }
 
+/// Grid cell that sizes its cover to the column width.
+struct AlbumGridTile: View {
+    let album: Album
+    var body: some View {
+        VStack(alignment: .leading, spacing: 7) {
+            Color.clear.aspectRatio(1, contentMode: .fit)
+                .overlay { GeometryReader { proxy in Cover(id: album.coverArt, size: proxy.size.width) } }
+            Text(album.name).font(.subheadline.weight(.medium)).foregroundStyle(Theme.primary).lineLimit(1)
+            Text(album.artist ?? "Неизвестный исполнитель").font(.caption).foregroundStyle(Theme.secondary).lineLimit(1)
+        }
+    }
+}
+
 struct AlbumRow: View {
     let album: Album
     var body: some View {
@@ -383,7 +425,7 @@ struct AlbumRow: View {
             HStack(spacing: 14) {
                 Cover(id: album.coverArt, size: 70)
                 VStack(alignment: .leading, spacing: 5) {
-                    Text(album.name).font(.body.weight(.medium)).foregroundStyle(.white).lineLimit(1)
+                    Text(album.name).font(.body.weight(.medium)).foregroundStyle(Theme.primary).lineLimit(1)
                     Text(album.artist ?? "Неизвестный исполнитель").font(.subheadline).foregroundStyle(Theme.secondary).lineLimit(1)
                     Text([album.year.map(String.init), album.songCount.map { "Треков: \($0)" }].compactMap { $0 }.joined(separator: " · "))
                         .font(.caption).foregroundStyle(Theme.secondary)

@@ -2,12 +2,6 @@ import SwiftUI
 import AVKit
 import MediaPlayer
 
-enum Theme {
-    static let background = Color(red: 0.055, green: 0.055, blue: 0.075)
-    static let surface = Color(red: 0.105, green: 0.105, blue: 0.135)
-    static let accent = Color(red: 0.77, green: 0.66, blue: 1)
-    static let secondary = Color(red: 0.61, green: 0.61, blue: 0.68)
-}
 
 struct Cover: View {
     let id: String?
@@ -110,7 +104,7 @@ struct SongRow: View {
             HStack(spacing: 12) {
                 Cover(id: song.coverArt, size: 48)
                 VStack(alignment: .leading, spacing: 5) {
-                    Text(song.title).font(.subheadline.weight(.medium)).foregroundStyle(player.current?.id == song.id ? Theme.accent : .white).lineLimit(1)
+                    Text(song.title).font(.subheadline.weight(.medium)).foregroundStyle(player.current?.id == song.id ? Theme.accent : Theme.primary).lineLimit(1)
                     Text(song.artist ?? "Неизвестный исполнитель").font(.caption).foregroundStyle(Theme.secondary).lineLimit(1)
                 }
                 Spacer()

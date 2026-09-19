@@ -29,6 +29,9 @@ struct SettingsView: View {
                     Button(library.isConnected ? "Изменить подключение" : "Подключить Navidrome") { connection = true }
                 }
                 Section {
+                    NavigationLink { AppearanceSettingsView() } label: { Label("Оформление", systemImage: "paintpalette") }
+                }
+                Section {
                     Picker("Wi-Fi", selection: $wifiQuality) { qualityOptions }
                     Picker("Сотовая сеть", selection: $cellularQuality) { qualityOptions }
                 } header: { Text("Качество потока") } footer: {

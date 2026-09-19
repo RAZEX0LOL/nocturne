@@ -508,11 +508,12 @@ final class PlayerStore {
 
     private func loadArtwork(for song: Song) {
         artworkTask?.cancel()
-        guard let client, let id = song.coverArt else { return }
+        guard let client, let id = song.coverArt else { Appearance.shared.coverColor = nil; return }
         artworkTask = Task {
             guard let image = await ArtworkCache.shared.image(id: id, bucket: 640, client: client),
                   !Task.isCancelled, self.current?.id == song.id else { return }
             artwork = Self.makeArtwork(image)
+            Appearance.shared.coverColor = CoverPalette.vibrantColor(of: image)
             updateNowPlaying()
         }
     }

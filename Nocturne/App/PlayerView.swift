@@ -10,7 +10,7 @@ struct MiniPlayer: View {
                     HStack(spacing: 12) {
                         Cover(id: song.coverArt, size: 44)
                         VStack(alignment: .leading, spacing: 4) {
-                            Text(song.title).font(.subheadline.weight(.medium)).foregroundStyle(.white).lineLimit(1)
+                            Text(song.title).font(.subheadline.weight(.medium)).foregroundStyle(Theme.primary).lineLimit(1)
                             Text(song.artist ?? "").font(.caption).foregroundStyle(Theme.secondary).lineLimit(1)
                         }
                         Spacer(minLength: 0)
@@ -20,11 +20,16 @@ struct MiniPlayer: View {
                     if player.isBuffering { ProgressView().frame(width: 44, height: 44) }
                     else { Image(systemName: player.isPlaying ? "pause.fill" : "play.fill").frame(width: 44, height: 44) }
                 }.accessibilityLabel(player.isPlaying ? "Пауза" : "Воспроизвести")
-                Button { player.advance() } label: { Image(systemName: "forward.end.fill").frame(width: 36, height: 44) }
-                    .accessibilityLabel("Следующий трек")
-            }.padding(10).foregroundStyle(.white)
+                if Appearance.shared.miniButton == .forward15 {
+                    Button { player.seek(player.elapsed + 15) } label: { Image(systemName: "goforward.15").frame(width: 36, height: 44) }
+                        .accessibilityLabel("Вперёд на 15 секунд")
+                } else {
+                    Button { player.advance() } label: { Image(systemName: "forward.end.fill").frame(width: 36, height: 44) }
+                        .accessibilityLabel("Следующий трек")
+                }
+            }.padding(10).foregroundStyle(Theme.primary)
                 .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18))
-                .overlay(RoundedRectangle(cornerRadius: 18).stroke(.white.opacity(0.08)))
+                .overlay(RoundedRectangle(cornerRadius: 18).stroke(Theme.primary.opacity(0.08)))
         }
     }
 }
@@ -39,6 +44,8 @@ struct PlayerView: View {
     @State private var starred = false
     @State private var saving = false
     @State private var showLyrics = false
+    @State private var swipeOffset: CGFloat = 0
+    private var appearance: Appearance { Appearance.shared }
     @State private var addToPlaylist = false
     // Height taken by everything except the cover; scales with Dynamic Type so the layout still fits.
     @ScaledMetric(relativeTo: .body) private var reservedHeight: CGFloat = 465
@@ -46,6 +53,20 @@ struct PlayerView: View {
     private func coverSize(in geometry: GeometryProxy) -> CGFloat {
         let byWidth = min(geometry.size.width - 56, 370)
         return max(140, min(byWidth, geometry.size.height - reservedHeight))
+    }
+
+    /// Horizontal swipe on the cover: left = next track, right = previous.
+    private var coverSwipe: some Gesture {
+        DragGesture(minimumDistance: 20)
+            .onChanged { value in
+                guard abs(value.translation.width) > abs(value.translation.height) else { return }
+                swipeOffset = value.translation.width * 0.6
+            }
+            .onEnded { value in
+                let width = value.translation.width
+                if width < -80 { player.advance() } else if width > 80 { player.previous() }
+                withAnimation(.spring(duration: 0.35)) { swipeOffset = 0 }
+            }
     }
 
     var body: some View {
@@ -68,6 +89,13 @@ struct PlayerView: View {
                     }
                     Cover(id: player.current?.coverArt, size: coverSize(in: geometry))
                         .shadow(color: .black.opacity(0.35), radius: 25, y: 18)
+                        .scaleEffect(appearance.animateCover && !player.isPlaying ? 0.86 : 1)
+                        .animation(.spring(duration: 0.45, bounce: 0.3), value: player.isPlaying)
+                        .offset(x: swipeOffset)
+                        .rotationEffect(.degrees(Double(swipeOffset) / 40))
+                        .onTapGesture { showLyrics = true }
+                        .gesture(coverSwipe, including: appearance.coverSwipe ? .all : .none)
+                        .accessibilityAction(named: "Текст песни") { showLyrics = true }
                     HStack(alignment: .center) {
                         VStack(alignment: .leading, spacing: 7) {
                             Text(player.current?.title ?? "Ничего не играет").font(.title2.bold()).lineLimit(2)
@@ -102,14 +130,14 @@ struct PlayerView: View {
                         }.font(.caption.monospacedDigit()).foregroundStyle(Theme.secondary)
                     }
                     HStack {
-                        Button { player.shuffle.toggle() } label: { Image(systemName: "shuffle").frame(width: 44, height: 44).foregroundStyle(player.shuffle ? Theme.accent : .white) }
+                        Button { player.shuffle.toggle() } label: { Image(systemName: "shuffle").frame(width: 44, height: 44).foregroundStyle(player.shuffle ? Theme.accent : Theme.primary) }
                             .accessibilityLabel(player.shuffle ? "Выключить перемешивание" : "Перемешивать")
                         Spacer()
                         Button { player.previous() } label: { Image(systemName: "backward.end.fill").font(.title).frame(width: 44, height: 44) }.accessibilityLabel("Предыдущий трек")
                         Spacer()
                         Button { player.toggle() } label: {
                             ZStack {
-                                Circle().fill(.white.opacity(0.13)).frame(width: 80, height: 80)
+                                Circle().fill(Theme.primary.opacity(0.13)).frame(width: 80, height: 80)
                                 if player.isBuffering { ProgressView() }
                                 else { Image(systemName: player.isPlaying ? "pause.fill" : "play.fill").font(.system(size: 31)) }
                             }
@@ -118,7 +146,7 @@ struct PlayerView: View {
                         Button { player.advance() } label: { Image(systemName: "forward.end.fill").font(.title).frame(width: 44, height: 44) }.accessibilityLabel("Следующий трек")
                         Spacer()
                         Button { player.cycleRepeat() } label: {
-                            Image(systemName: player.repeatMode == .one ? "repeat.1" : "repeat").frame(width: 44, height: 44).foregroundStyle(player.repeatMode == .off ? .white : Theme.accent)
+                            Image(systemName: player.repeatMode == .one ? "repeat.1" : "repeat").frame(width: 44, height: 44).foregroundStyle(player.repeatMode == .off ? Theme.primary : Theme.accent)
                         }.accessibilityLabel("Повтор: \(player.repeatMode == .off ? "выключен" : player.repeatMode == .one ? "один трек" : "вся очередь")")
                     }.buttonStyle(.plain)
                     VolumeSlider().frame(height: 30).accessibilityLabel("Громкость")
@@ -139,13 +167,23 @@ struct PlayerView: View {
             }.scrollBounceBehavior(.basedOnSize).background {
                 ZStack(alignment: .top) {
                     Theme.background
-                    Cover(id: player.current?.coverArt, size: geometry.size.width).blur(radius: 90).opacity(0.35).allowsHitTesting(false)
+                    switch appearance.playerBackground {
+                    case .blur:
+                        Cover(id: player.current?.coverArt, size: geometry.size.width).blur(radius: 90).opacity(0.35).allowsHitTesting(false)
+                    case .gradient:
+                        LinearGradient(colors: [Theme.accent.opacity(0.45), Theme.accent.opacity(0.12), .clear], startPoint: .top, endPoint: .bottom)
+                            .animation(.easeInOut(duration: 0.6), value: player.current?.id)
+                    case .solid:
+                        EmptyView()
+                    }
                 }.ignoresSafeArea()
             }
-        }.foregroundStyle(.white)
+        }.foregroundStyle(Theme.primary)
             .onChange(of: player.current?.id, initial: true) { _, _ in
                 starred = player.current.map { $0.starred != nil || library.isStarred($0) } ?? false
             }
+            .sensoryFeedback(.impact(weight: .light), trigger: player.isPlaying) { _, _ in appearance.haptics }
+            .sensoryFeedback(.selection, trigger: player.current?.id) { _, _ in appearance.haptics }
             .sheet(isPresented: $showQueue) { QueueView() }
             .sheet(isPresented: $showLyrics) { LyricsView() }
             .sheet(isPresented: $addToPlaylist) { if let song = player.current { PlaylistPicker(songs: [song]) } }
@@ -180,10 +218,10 @@ struct QueueView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     HStack {
-                        Button { player.shuffle.toggle() } label: { Image(systemName: "shuffle").foregroundStyle(player.shuffle ? Theme.accent : .white) }
+                        Button { player.shuffle.toggle() } label: { Image(systemName: "shuffle").foregroundStyle(player.shuffle ? Theme.accent : Theme.primary) }
                             .accessibilityLabel(player.shuffle ? "Выключить перемешивание" : "Перемешивать")
                         Button { player.cycleRepeat() } label: {
-                            Image(systemName: player.repeatMode == .one ? "repeat.1" : "repeat").foregroundStyle(player.repeatMode == .off ? .white : Theme.accent)
+                            Image(systemName: player.repeatMode == .one ? "repeat.1" : "repeat").foregroundStyle(player.repeatMode == .off ? Theme.primary : Theme.accent)
                         }.accessibilityLabel("Режим повтора")
                     }
                 }
