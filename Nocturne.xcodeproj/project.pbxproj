@@ -39,6 +39,8 @@
 		8C168313618BE0F9D2048A61 /* NocturneWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = B72DE0D24B2E2CB64D92A750 /* NocturneWidget.swift */; };
 		43E3EF56C042396FD4E8DC78 /* NocturneWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 1CF7607B608A7E6324CD10BC /* NocturneWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		F311A0F0AD4F5DF5A36F43B9 /* Nocturne/App/CarPlaySceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788DD5A81B6E4766D235BDF2 /* Nocturne/App/CarPlaySceneDelegate.swift */; };
+		618D0A3513FAEA75E288EF1E /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 6F5ADE23265FE4C20E5DAE8F /* PrivacyInfo.xcprivacy */; };
+		0D15B47E6E7F49D134222167 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 6F5ADE23265FE4C20E5DAE8F /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -108,6 +110,7 @@
 		831E54FF662C3D2A826AE8B4 /* Nocturne/Resources/Nocturne.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Nocturne/Resources/Nocturne.entitlements; sourceTree = SOURCE_ROOT; };
 		1CF7607B608A7E6324CD10BC /* NocturneWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = NocturneWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		788DD5A81B6E4766D235BDF2 /* Nocturne/App/CarPlaySceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/CarPlaySceneDelegate.swift; sourceTree = SOURCE_ROOT; };
+		6F5ADE23265FE4C20E5DAE8F /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = Nocturne/Resources/PrivacyInfo.xcprivacy; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -141,6 +144,7 @@
 		0D6E4079E36703EBD37C0072 = {
 			isa = PBXGroup;
 			children = (
+				6F5ADE23265FE4C20E5DAE8F /* PrivacyInfo.xcprivacy */,
 				788DD5A81B6E4766D235BDF2 /* Nocturne/App/CarPlaySceneDelegate.swift */,
 				831E54FF662C3D2A826AE8B4 /* aent */,
 				A69F14E58C5F2365A36462CA /* went */,
@@ -266,6 +270,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				618D0A3513FAEA75E288EF1E /* PrivacyInfo.xcprivacy in Resources */,
 				B55E7C0A11C0A55E7C0A11C0 /* Nocturne/Resources/Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -274,6 +279,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0D15B47E6E7F49D134222167 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
