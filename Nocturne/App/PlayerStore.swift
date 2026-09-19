@@ -20,7 +20,7 @@ final class PlayerStore {
     /// Pause at this moment, or when the current track ends (`sleepAtTrackEnd`).
     private(set) var sleepDeadline: Date?
     private(set) var sleepAtTrackEnd = false
-    let network = NetworkMonitor()
+    let network = NetworkMonitor.shared
 
     var current: Song? { queue.current?.song }
     /// Internet radio: a live stream without duration, seeking or scrobbling.
@@ -89,12 +89,26 @@ final class PlayerStore {
 
     // MARK: - Public API
 
+    /// Without a server (offline or on-device mode) only local and downloaded tracks can play.
+    private var offlineOnly: Bool { client == nil || LibraryStore.shared.isOffline }
+    func isPlayable(_ song: Song) -> Bool { !offlineOnly || localFile?(song.id) != nil || directStreams[song.id] != nil }
+
     func play(_ songs: [Song], at index: Int = 0, shuffle: Bool? = nil, client: NavidromeClient?) {
         guard songs.indices.contains(index) else { return }
-        guard let client else { error = MusicError.demo.localizedDescription; return }
-        self.client = client
+        self.client = client ?? self.client
+        var list = songs, start = index
+        if offlineOnly {
+            // Keep only what is on the phone; the tapped track must be one of them.
+            let playable = songs.enumerated().filter { isPlayable($0.element) }
+            guard let selected = playable.firstIndex(where: { $0.offset == index }) else {
+                if client == nil && LibraryStore.shared.isDemo { error = MusicError.demo.localizedDescription }
+                else { show(String(localized: "Трек не скачан — недоступен без сети")) }
+                return
+            }
+            list = playable.map(\.element); start = selected
+        }
         let repeatMode = queue.repeatMode
-        queue = PlaybackQueue(songs: songs, startAt: index, shuffle: shuffle ?? queue.shuffle)
+        queue = PlaybackQueue(songs: list, startAt: start, shuffle: shuffle ?? queue.shuffle)
         queue.repeatMode = repeatMode
         startCurrent(at: 0, autoplay: true)
     }
@@ -245,7 +259,8 @@ final class PlayerStore {
     func restore(client: NavidromeClient) {
         guard current == nil, let data = try? Data(contentsOf: Self.snapshotURL),
               let snapshot = try? JSONDecoder().decode(QueueSnapshot.self, from: data),
-              snapshot.account == client.credentials.account, let restored = snapshot.queue.current,
+              snapshot.account == client.credentials.account || snapshot.account == Self.onDeviceAccount,
+              let restored = snapshot.queue.current,
               !restored.song.id.hasPrefix("radio-") else { return }
         self.client = client
         queue = snapshot.queue
@@ -253,10 +268,24 @@ final class PlayerStore {
         elapsed = min(snapshot.elapsed, duration)
     }
 
+    /// Snapshot owner when playing without a server.
+    static let onDeviceAccount = "on-device"
+
+    /// Restores the last queue in on-device mode (no server).
+    func restoreOnDevice() {
+        guard current == nil, let data = try? Data(contentsOf: Self.snapshotURL),
+              let snapshot = try? JSONDecoder().decode(QueueSnapshot.self, from: data),
+              snapshot.account == Self.onDeviceAccount, snapshot.queue.current != nil else { return }
+        queue = snapshot.queue
+        duration = current?.duration ?? 0
+        elapsed = min(snapshot.elapsed, duration)
+    }
+
     func save(force: Bool = false) {
-        guard let client, !queue.isEmpty, force || Date().timeIntervalSince(lastSaved) > 10 else { return }
+        guard !queue.isEmpty, force || Date().timeIntervalSince(lastSaved) > 10 else { return }
         lastSaved = Date()
-        let snapshot = QueueSnapshot(account: client.credentials.account, queue: queue, elapsed: elapsed)
+        let account = client?.credentials.account ?? Self.onDeviceAccount
+        let snapshot = QueueSnapshot(account: account, queue: queue, elapsed: elapsed)
         guard let data = try? JSONEncoder().encode(snapshot) else { return }
         try? FileManager.default.createDirectory(at: Self.snapshotURL.deletingLastPathComponent(), withIntermediateDirectories: true)
         try? data.write(to: Self.snapshotURL, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
@@ -412,17 +441,45 @@ final class PlayerStore {
     // Last.fm rules: a play counts after half the track or 4 minutes, and only for tracks longer than 30 s.
     private func submitScrobbleIfNeeded() {
         guard let entry = queue.current, scrobbledEntry != entry.id, !isLive, duration > 30,
-              elapsed >= min(duration / 2, 240), let client else { return }
+              elapsed >= min(duration / 2, 240) else { return }
         scrobbledEntry = entry.id
         StatsStore.shared.record(entry.song, seconds: duration)
-        let id = entry.song.id
-        Task { try? await client.scrobble(songID: id, submission: true) }
+        // On-device files aren't on the server; server tracks played offline are sent later.
+        guard !LocalLibrary.isLocal(entry.song.id) else { return }
+        let play = PendingScrobble(songID: entry.song.id, date: Date())
+        guard let client, !offlineOnly else { pendingScrobbles.append(play); return }
+        Task {
+            do { try await client.scrobble(songID: play.songID, submission: true) }
+            catch { pendingScrobbles.append(play) }
+        }
+    }
+
+    struct PendingScrobble: Codable, Sendable { var songID: String; var date: Date }
+    private static let pendingURL = URL.applicationSupportDirectory.appendingPathComponent("pending-scrobbles.json")
+    @ObservationIgnored private var pendingScrobbles: [PendingScrobble] = PlayerStore.loadPending() {
+        didSet { if let data = try? JSONEncoder().encode(pendingScrobbles) { try? data.write(to: Self.pendingURL, options: .atomic) } }
+    }
+    private static func loadPending() -> [PendingScrobble] {
+        (try? Data(contentsOf: pendingURL)).flatMap { try? JSONDecoder().decode([PendingScrobble].self, from: $0) } ?? []
+    }
+
+    /// Sends plays collected offline with their original time; stops at the first failure.
+    func flushPendingScrobbles() {
+        guard let client, !pendingScrobbles.isEmpty else { return }
+        let batch = pendingScrobbles
+        Task {
+            var sent = 0
+            for play in batch {
+                do { try await client.scrobble(songID: play.songID, submission: true, time: play.date); sent += 1 } catch { break }
+            }
+            if sent > 0 { pendingScrobbles.removeFirst(min(sent, pendingScrobbles.count)) }
+        }
     }
 
     private func reportNowPlaying() {
         applyReplayGain()
         publishWidget(resetCover: true)
-        guard let client, let id = current?.id, !isLive else { return }
+        guard let client, let id = current?.id, !isLive, !LocalLibrary.isLocal(id), !offlineOnly else { return }
         scrobbledEntry = nil
         Task { try? await client.scrobble(songID: id, submission: false) }
     }
@@ -448,6 +505,7 @@ final class PlayerStore {
     }
 
     private func networkRestored() {
+        flushPendingScrobbles()
         guard waitingForNetwork, current != nil else { return }
         Log.player.notice("Network restored, resuming at \(self.elapsed, privacy: .public)s")
         startCurrent(at: elapsed, autoplay: true, isRetry: true)
@@ -575,10 +633,14 @@ final class PlayerStore {
 
     private func loadArtwork(for song: Song) {
         artworkTask?.cancel()
-        guard let client, let id = song.coverArt else { Appearance.shared.coverColor = nil; return }
+        guard let id = song.coverArt, LocalLibrary.isLocal(id) || client != nil else { Appearance.shared.coverColor = nil; return }
+        let client = client
         artworkTask = Task {
-            guard let image = await ArtworkCache.shared.image(id: id, bucket: 640, client: client),
-                  !Task.isCancelled, self.current?.id == song.id else { return }
+            let image: UIImage?
+            if LocalLibrary.isLocal(id) { image = await ArtworkCache.shared.localImage(id: id, bucket: 640) }
+            else if let client { image = await ArtworkCache.shared.image(id: id, bucket: 640, client: client) }
+            else { image = nil }
+            guard let image, !Task.isCancelled, self.current?.id == song.id else { return }
             artwork = Self.makeArtwork(image)
             Appearance.shared.coverColor = CoverPalette.vibrantColor(of: image)
             updateNowPlaying()

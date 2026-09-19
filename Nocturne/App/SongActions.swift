@@ -9,9 +9,15 @@ struct SongActions: View {
     @Environment(DownloadStore.self) private var downloads
 
     var body: some View {
+        let onDevice = songs.allSatisfy { LocalLibrary.isLocal($0.id) }
         Button { player.playNext(songs, client: library.client) } label: { Label(String(localized: "Играть следующим"), systemImage: "text.line.first.and.arrowtriangle.forward") }
         Button { player.addToQueue(songs, client: library.client) } label: { Label(String(localized: "В конец очереди"), systemImage: "text.append") }
-        if songs.count == 1, let song = songs.first, let client = library.client {
+        if onDevice {
+            Button(role: .destructive) { LocalLibrary.shared.remove(songs) } label: {
+                Label(String(localized: "Удалить с iPhone"), systemImage: "trash")
+            }
+        }
+        if !onDevice, songs.count == 1, let song = songs.first, let client = library.client {
             Button {
                 Task {
                     do {
@@ -48,7 +54,7 @@ struct SongActions: View {
                 }
             } label: { Label(String(localized: "Поделиться"), systemImage: "square.and.arrow.up") }
         }
-        if songs.count == 1, let song = songs.first {
+        if !onDevice, songs.count == 1, let song = songs.first {
             let starred = library.isStarred(song)
             Button {
                 Task {
@@ -57,8 +63,10 @@ struct SongActions: View {
                 }
             } label: { Label(starred ? String(localized: "Убрать из любимых") : String(localized: "В любимые"), systemImage: starred ? "heart.slash" : "heart") }
         }
-        Button { addToPlaylist = true } label: { Label(String(localized: "Добавить в плейлист…"), systemImage: "music.note.list") }
-        if library.client != nil {
+        if !onDevice {
+            Button { addToPlaylist = true } label: { Label(String(localized: "Добавить в плейлист…"), systemImage: "music.note.list") }
+        }
+        if library.client != nil, !onDevice {
             let missing = songs.filter { !downloads.isDownloaded($0) }
             if !missing.isEmpty {
                 Button { downloads.download(missing); player.show(missing.count == 1 ? String(localized: "Загрузка началась") : String(localized: "Загружается треков: \(missing.count)")) } label: {

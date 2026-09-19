@@ -11,7 +11,9 @@ struct Cover: View {
     @State private var loaded: (key: String, image: UIImage)?
 
     private var cacheKey: String? {
-        guard let id, !id.hasPrefix("demo-"), let client = library.client else { return nil }
+        guard let id, !id.hasPrefix("demo-") else { return nil }
+        if LocalLibrary.isLocal(id) { return ArtworkCache.key(account: "local", id: id, bucket: ArtworkCache.bucket(for: size, scale: displayScale)) }
+        guard let client = library.client else { return nil }
         return ArtworkCache.key(account: client.credentials.account, id: id, bucket: ArtworkCache.bucket(for: size, scale: displayScale))
     }
 
@@ -30,9 +32,13 @@ struct Cover: View {
         }
         .frame(width: size, height: size).clipped().clipShape(RoundedRectangle(cornerRadius: size > 100 ? 12 : 7))
         .task(id: key) {
-            guard let key, image == nil, let id, let client = library.client else { return }
+            guard let key, image == nil, let id else { return }
             let bucket = ArtworkCache.bucket(for: size, scale: displayScale)
-            guard let fetched = await ArtworkCache.shared.image(id: id, bucket: bucket, client: client), !Task.isCancelled else { return }
+            if LocalLibrary.isLocal(id) {
+                if let fetched = await ArtworkCache.shared.localImage(id: id, bucket: bucket) { loaded = (key, fetched) }
+                return
+            }
+            guard let client = library.client, let fetched = await ArtworkCache.shared.image(id: id, bucket: bucket, client: client), !Task.isCancelled else { return }
             loaded = (key, fetched)
         }
         .accessibilityHidden(true)
@@ -100,7 +106,8 @@ struct SongRow: View {
     @Environment(PlayerStore.self) private var player
     @Environment(DownloadStore.self) private var downloads
     var body: some View {
-        Button(action: action) {
+        let unavailable = !player.isPlayable(song)
+        Button { unavailable ? player.show(String(localized: "Трек не скачан — недоступен без сети")) : action() } label: {
             HStack(spacing: 12) {
                 Cover(id: song.coverArt, size: 48)
                 VStack(alignment: .leading, spacing: 5) {
@@ -112,8 +119,10 @@ struct SongRow: View {
                 DownloadBadge(state: downloads.state(of: song), downloaded: downloads.isDownloaded(song))
                 Text(timeLabel(song.duration ?? 0)).font(.caption.monospacedDigit()).foregroundStyle(Theme.secondary)
             }.padding(.vertical, 5).contentShape(Rectangle())
+                .opacity(unavailable ? 0.4 : 1)
         }.buttonStyle(.plain)
             .songActions([song])
+            .accessibilityHint(unavailable ? String(localized: "Недоступен без сети") : "")
     }
 }
 

@@ -138,8 +138,11 @@ struct NavidromeClient: Sendable {
                               repeated: indexes.map { URLQueryItem(name: "songIndexToRemove", value: String($0)) })
     }
     /// `submission == false` reports "now playing"; `true` records the play (Last.fm / ListenBrainz via Navidrome).
-    func scrobble(songID: String, submission: Bool) async throws {
-        _ = try await request("scrobble", parameters: ["id": songID, "submission": submission ? "true" : "false"])
+    /// `time` backdates a play that was queued while offline.
+    func scrobble(songID: String, submission: Bool, time: Date? = nil) async throws {
+        var parameters = ["id": songID, "submission": submission ? "true" : "false"]
+        if let time { parameters["time"] = String(Int64(time.timeIntervalSince1970 * 1000)) }
+        _ = try await request("scrobble", parameters: parameters)
     }
 
     /// "Instant mix": tracks similar to the seed (needs Last.fm integration on the server).

@@ -24,7 +24,7 @@ struct RootView: View {
     var body: some View {
         @Bindable var player = player
         Group {
-            if library.isConnected || library.isDemo {
+            if library.isConnected || library.isDemo || library.onDeviceOnly {
                 TabView(selection: $selectedTab) {
                     NavigationStack { HomeView(settings: $settings) }
                         .safeAreaInset(edge: .bottom, spacing: 0) { miniPlayer }
@@ -55,18 +55,33 @@ struct RootView: View {
         .task(id: library.client?.credentials.account) {
             downloads.use(library.client)
             if downloads.network == nil { downloads.network = player.network }
-            player.localFile = { [downloads] id in downloads.localURL(for: id) }
-            if let client = library.client { player.restore(client: client) }
+            // Files on the phone first, then offline copies of server tracks.
+            player.localFile = { [downloads] id in LocalLibrary.shared.url(for: id) ?? downloads.localURL(for: id) }
+            if let client = library.client { player.restore(client: client) } else if library.onDeviceOnly { player.restoreOnDevice() }
         }
         .task { await ArtworkCache.shared.trim() }
+        .task { await LocalLibrary.shared.scan() }
         .onOpenURL { url in
+            // Audio files shared to the app ("Open in Nocturne") go to the on-device library.
+            if url.isFileURL {
+                Task {
+                    let added = await LocalLibrary.shared.importItems([url])
+                    player.show(added > 0 ? String(localized: "Добавлено на iPhone: \(added)") : String(localized: "Новых треков не найдено"))
+                }
+                return
+            }
             // nocturne://player — from the widget and Siri results.
             if url.scheme == "nocturne", url.host() == "player", player.current != nil { fullPlayer = true }
         }
         .onChange(of: library.starredSongs) { _, songs in
             if UserDefaults.standard.bool(forKey: DownloadStore.autoFavoritesKey) { downloads.download(songs) }
         }
-        .onChange(of: scenePhase) { _, phase in if phase != .active { player.save(force: true) } }
+        .onChange(of: scenePhase) { _, phase in
+            guard phase == .active else { player.save(force: true); return }
+            // Files may have been added in Finder/Files meanwhile; the server may be back.
+            Task { await LocalLibrary.shared.scan() }
+            if library.isOffline { Task { await library.refresh() } }
+        }
         #if DEBUG
         .task {
             // Threading self-check (`--check-threading`): SwiftUI's async renderer resolves dynamic colours
@@ -156,6 +171,8 @@ struct ConnectionView: View {
                     if adding {
                         EmptyView()
                     } else if !library.isConnected {
+                        Button(String(localized: "Слушать музыку с iPhone")) { player.stop(); library.useOnDevice(); dismiss() }
+                            .frame(maxWidth: .infinity).padding(.vertical, 8).disabled(busy)
                         Button(String(localized: "Посмотреть демоверсию")) { player.stop(); library.useDemo(); dismiss() }
                             .frame(maxWidth: .infinity).padding(.vertical, 8).disabled(busy)
                     } else {

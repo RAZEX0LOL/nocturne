@@ -24,8 +24,9 @@ struct HomeView: View {
                             }.padding(16).background(Theme.surface, in: RoundedRectangle(cornerRadius: 17))
                         }.buttonStyle(.plain)
                     }
-                    if library.isLoading && library.albums.isEmpty { ProgressView().frame(maxWidth: .infinity).padding(40) }
-                    if let error = library.error {
+                    if library.isOffline || library.onDeviceOnly { OnDeviceHomeSection() }
+                    if library.isLoading && library.albums.isEmpty && !library.isOffline { ProgressView().frame(maxWidth: .infinity).padding(40) }
+                    if let error = library.error, !library.isOffline {
                         VStack(alignment: .leading, spacing: 12) {
                             Text(error).foregroundStyle(Theme.secondary)
                             Button(String(localized: "Повторить")) { Task { await library.refresh() } }
@@ -34,7 +35,7 @@ struct HomeView: View {
                     ForEach(Appearance.shared.visibleHome) { section in
                         homeSection(section, width: width, columns: columns, carouselWidth: carouselWidth)
                     }
-                    if library.albums.isEmpty && !library.isLoading && library.error == nil {
+                    if library.albums.isEmpty && !library.isLoading && library.error == nil && library.client != nil && !library.isOffline {
                         ContentUnavailableView(String(localized: "Здесь пока тихо"), systemImage: "music.note", description: Text(String(localized: "Добавь музыку в Navidrome и обнови медиатеку.")))
                     }
                 }.padding(24)
@@ -112,7 +113,14 @@ struct AlbumCarousel: View {
 }
 
 struct LibraryView: View {
-    enum Category: String, CaseIterable { case albums = "Альбомы", artists = "Артисты", playlists = "Плейлисты", songs = "Любимое", downloads = "Загрузки", radio = "Радио", genres = "Жанры" }
+    enum Category: String, CaseIterable { case albums = "Альбомы", artists = "Артисты", playlists = "Плейлисты", songs = "Любимое", downloads = "Загрузки", device = "На iPhone", radio = "Радио", genres = "Жанры" }
+    /// Tabs that make sense right now: without a server only the phone's own music.
+    private var categories: [Category] {
+        if library.client == nil && !library.isDemo { return [.device] }
+        if library.isOffline { return [.downloads, .device, .songs, .playlists] }
+        return Category.allCases
+    }
+    private var current: Category { categories.contains(category) ? category : categories[0] }
     enum AlbumSort: String, CaseIterable {
         case newest, alphabeticalByName, alphabeticalByArtist, recent, frequent, random
         var title: String {
@@ -138,16 +146,17 @@ struct LibraryView: View {
             VStack(alignment: .leading, spacing: 20) {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
-                        ForEach(Category.allCases, id: \.self) { item in
+                        ForEach(categories, id: \.self) { item in
                             Button { category = item } label: {
                                 Text(LocalizedStringKey(item.rawValue)).font(.subheadline.weight(.medium)).padding(.horizontal, 14).padding(.vertical, 8)
-                                    .background(category == item ? Theme.accent : Theme.surface, in: Capsule())
-                                    .foregroundStyle(category == item ? Theme.onAccent : Theme.primary)
-                            }.buttonStyle(.plain).accessibilityAddTraits(category == item ? .isSelected : [])
+                                    .background(current == item ? Theme.accent : Theme.surface, in: Capsule())
+                                    .foregroundStyle(current == item ? Theme.onAccent : Theme.primary)
+                            }.buttonStyle(.plain).accessibilityAddTraits(current == item ? .isSelected : [])
                         }
                     }
                 }.scrollClipDisabled()
-                switch category {
+                switch current {
+                case .device: DeviceLibraryView()
                 case .albums: AlbumBrowser(type: sort.rawValue).id(sort)
                 case .artists: artists
                 case .playlists: playlists
@@ -156,7 +165,7 @@ struct LibraryView: View {
                 case .radio: RadioStationsView()
                 case .genres: GenresView()
                 }
-                if let error = library.error { Text(error).foregroundStyle(Theme.secondary) }
+                if let error = library.error, !library.isOffline { Text(error).foregroundStyle(Theme.secondary) }
             }.padding(24)
         }.background(Theme.background).navigationTitle(String(localized: "Медиатека"))
             .refreshable { await library.refresh() }
@@ -540,8 +549,17 @@ struct AlbumDetailView: View {
         loading = true; error = nil
         defer { loading = false }
         if library.isDemo { songs = DemoLibrary.songs(for: album); return }
-        do { songs = try await library.client?.songs(albumID: album.id) ?? [] }
-        catch { self.error = LibraryStore.message(error) }
+        if let cached = library.albumSongs[album.id] { songs = cached }
+        if library.isOffline {
+            if songs.isEmpty { self.error = String(localized: "Альбом не открывался раньше — треклист появится, когда будет связь с сервером.") }
+            return
+        }
+        do {
+            songs = try await library.client?.songs(albumID: album.id) ?? []
+            library.cacheSongs(songs, albumID: album.id)
+        } catch where !songs.isEmpty {
+            // Keep the cached list when the server can't be reached.
+        } catch { self.error = LibraryStore.message(error) }
         if let info = try? await library.client?.albumInfo(id: album.id) { notes = info.notes.map(stripHTML) }
     }
 }
@@ -690,6 +708,7 @@ struct PlaylistDetailView: View {
 struct SearchView: View {
     @Environment(LibraryStore.self) private var library
     @Environment(PlayerStore.self) private var player
+    @Environment(DownloadStore.self) private var downloads
     @State private var query = ""
     @State private var result = SearchResult()
     @State private var loading = false
@@ -763,7 +782,10 @@ struct SearchView: View {
                 do {
                     try await Task.sleep(for: .milliseconds(300))
                     let next: SearchResult
-                    if library.isDemo {
+                    if library.client == nil && !library.isDemo || library.isOffline {
+                        let pool = LocalLibrary.shared.songs + downloads.songs
+                        next = SearchResult(song: pool.filter { "\($0.title) \($0.artist ?? "") \($0.album ?? "")".localizedCaseInsensitiveContains(value) })
+                    } else if library.isDemo {
                         next = SearchResult(album: library.albums.filter { ($0.name + ($0.artist ?? "")).localizedCaseInsensitiveContains(value) },
                                             song: library.albums.flatMap { DemoLibrary.songs(for: $0) }.filter { $0.title.localizedCaseInsensitiveContains(value) })
                     } else { next = try await library.client?.search(value) ?? SearchResult() }

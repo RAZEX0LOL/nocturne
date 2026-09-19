@@ -1,3 +1,4 @@
+import CryptoKit
 import SwiftUI
 import Security
 
@@ -18,13 +19,25 @@ final class LibraryStore {
     var error: String?
     private var generation = UUID()
     var isConnected: Bool { client != nil }
+    /// Server can't be reached although credentials exist (no network, server down).
+    private(set) var serverUnreachable = false
+    var isOffline: Bool { client != nil && (!NetworkMonitor.shared.isOnline || serverUnreachable) }
+    /// Using only music stored on the iPhone, without any server.
+    var onDeviceOnly: Bool { didSet { UserDefaults.standard.set(onDeviceOnly, forKey: "library.onDeviceOnly") } }
+    /// Track lists of albums opened before, so they can be browsed offline.
+    private(set) var albumSongs: [String: [Song]] = [:]
     /// All saved servers (`user@server`), for the switcher in settings.
     private(set) var accounts: [String] = []
 
     init() {
+        onDeviceOnly = UserDefaults.standard.bool(forKey: "library.onDeviceOnly")
         CredentialVault.migrate()
         accounts = CredentialVault.accounts
-        if let credentials = CredentialVault.load() { client = NavidromeClient(credentials: credentials) }
+        if let credentials = CredentialVault.load() { client = NavidromeClient(credentials: credentials); loadCache() }
+        NetworkMonitor.shared.onChange.append { [weak self] in
+            guard let self, NetworkMonitor.shared.isOnline, self.serverUnreachable else { return }
+            Task { await self.refresh() }
+        }
         if ProcessInfo.processInfo.arguments.contains("--demo") { useDemo() }
         #if DEBUG
         // Test hook: `--connect <server> <user> <password>` (simulator keyboards may not type URLs reliably).
@@ -32,6 +45,7 @@ final class LibraryStore {
         if let flag = arguments.firstIndex(of: "--connect"), arguments.count > flag + 3,
            let credentials = try? Credentials(server: arguments[flag + 1], username: arguments[flag + 2], password: arguments[flag + 3]) {
             client = NavidromeClient(credentials: credentials)
+            loadCache()
         }
         #endif
     }
@@ -44,9 +58,17 @@ final class LibraryStore {
         accounts = CredentialVault.accounts
         generation = UUID()
         client = candidate
-        isDemo = false
+        isDemo = false; onDeviceOnly = false
         clearSections()
+        loadCache()
         await refresh()
+    }
+
+    /// Library of files stored on the iPhone only; no server needed.
+    func useOnDevice() {
+        generation = UUID()
+        client = nil; isDemo = false; onDeviceOnly = true
+        clearSections(); error = nil; isLoading = false
     }
 
     func useDemo() {
@@ -81,8 +103,9 @@ final class LibraryStore {
     private func activate(_ credentials: Credentials?) {
         generation = UUID()
         client = credentials.map { NavidromeClient(credentials: $0) }
-        isDemo = false; clearSections()
+        isDemo = false; clearSections(); serverUnreachable = false
         isLoading = false; error = nil
+        loadCache()
     }
 
     func refresh() async {
@@ -108,16 +131,58 @@ final class LibraryStore {
             artists = result.2.artists?.index?.flatMap { $0.artist ?? [] } ?? []
             playlists = result.3.playlists?.playlist ?? []
             recentlyPlayed = personal.0 ?? []; frequent = personal.1 ?? []; discover = personal.2 ?? []
+            if serverUnreachable { PlayerStore.shared.flushPendingScrobbles() }
+            serverUnreachable = false
+            saveCache()
         } catch {
             guard generation == requestGeneration else { return }
             Log.library.error("Refresh failed: \(Log.describe(error), privacy: .public)")
+            // Network trouble: fall back to the cached library and downloads instead of an error screen.
+            if error is URLError { serverUnreachable = true; return }
             self.error = Self.message(error)
         }
     }
 
+    // MARK: - Offline cache
+
+    private struct Cache: Codable {
+        var albums, favorites, recentlyPlayed, frequent, discover: [Album]
+        var artists: [Artist]
+        var playlists: [MusicPlaylist]
+        var starredSongs: [Song]
+        var albumSongs: [String: [Song]]
+    }
+
+    private var cacheURL: URL? {
+        guard let account = client?.credentials.account else { return nil }
+        let name = SHA256.hash(data: Data(account.utf8)).prefix(12).map { String(format: "%02x", $0) }.joined()
+        return URL.applicationSupportDirectory.appendingPathComponent("library-cache-\(name).json")
+    }
+
+    private func loadCache() {
+        guard let cacheURL, let data = try? Data(contentsOf: cacheURL), let cache = try? JSONDecoder().decode(Cache.self, from: data) else { return }
+        albums = cache.albums; favorites = cache.favorites; recentlyPlayed = cache.recentlyPlayed
+        frequent = cache.frequent; discover = cache.discover; artists = cache.artists
+        playlists = cache.playlists; starredSongs = cache.starredSongs; albumSongs = cache.albumSongs
+    }
+
+    private func saveCache() {
+        guard let cacheURL else { return }
+        let cache = Cache(albums: albums, favorites: favorites, recentlyPlayed: recentlyPlayed, frequent: frequent, discover: discover,
+                          artists: artists, playlists: playlists, starredSongs: starredSongs, albumSongs: albumSongs)
+        try? JSONEncoder().encode(cache).write(to: cacheURL, options: .atomic)
+    }
+
+    /// Remembers an album's tracks for offline browsing (bounded to the most recent 300 albums).
+    func cacheSongs(_ songs: [Song], albumID: String) {
+        albumSongs[albumID] = songs
+        if albumSongs.count > 300, let drop = albumSongs.keys.first(where: { $0 != albumID }) { albumSongs[drop] = nil }
+        saveCache()
+    }
+
     private func clearSections() {
         albums = []; favorites = []; artists = []; playlists = []
-        starredSongs = []; recentlyPlayed = []; frequent = []; discover = []
+        starredSongs = []; recentlyPlayed = []; frequent = []; discover = []; albumSongs = [:]
     }
 
     /// Stars or unstars a song and keeps the favourites list in sync.

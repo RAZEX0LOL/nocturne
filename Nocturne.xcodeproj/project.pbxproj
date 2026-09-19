@@ -44,6 +44,8 @@
 		E73F4F43FF05FAF5DE702CAC /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 72B8CC6E0CB3458A44F5748C /* Localizable.xcstrings */; };
 		5F58648F6626F63A71541F60 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 72B8CC6E0CB3458A44F5748C /* Localizable.xcstrings */; };
 		D1328A2F40BB1B9E331407A2 /* AppShortcuts.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 525330C55C345C8A7D4C51F0 /* AppShortcuts.xcstrings */; };
+		A65E8DF4DCC06FF4D32FC41E /* Nocturne/App/LocalLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 792232701517B14A3E3EBD2C /* Nocturne/App/LocalLibrary.swift */; };
+		D2E007F43F451BC80F72FCA5 /* Nocturne/App/DeviceViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1DCFFF070C241B3D871508 /* Nocturne/App/DeviceViews.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -116,6 +118,8 @@
 		6F5ADE23265FE4C20E5DAE8F /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = Nocturne/Resources/PrivacyInfo.xcprivacy; sourceTree = SOURCE_ROOT; };
 		72B8CC6E0CB3458A44F5748C /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Nocturne/Resources/Localizable.xcstrings; sourceTree = SOURCE_ROOT; };
 		525330C55C345C8A7D4C51F0 /* AppShortcuts.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Nocturne/Resources/AppShortcuts.xcstrings; sourceTree = SOURCE_ROOT; };
+		792232701517B14A3E3EBD2C /* Nocturne/App/LocalLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/LocalLibrary.swift; sourceTree = SOURCE_ROOT; };
+		FA1DCFFF070C241B3D871508 /* Nocturne/App/DeviceViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/DeviceViews.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -149,6 +153,8 @@
 		0D6E4079E36703EBD37C0072 = {
 			isa = PBXGroup;
 			children = (
+				FA1DCFFF070C241B3D871508 /* Nocturne/App/DeviceViews.swift */,
+				792232701517B14A3E3EBD2C /* Nocturne/App/LocalLibrary.swift */,
 				525330C55C345C8A7D4C51F0 /* AppShortcuts.xcstrings */,
 				72B8CC6E0CB3458A44F5748C /* Localizable.xcstrings */,
 				6F5ADE23265FE4C20E5DAE8F /* PrivacyInfo.xcprivacy */,
@@ -308,6 +314,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D2E007F43F451BC80F72FCA5 /* Nocturne/App/DeviceViews.swift in Sources */,
+				A65E8DF4DCC06FF4D32FC41E /* Nocturne/App/LocalLibrary.swift in Sources */,
 				F311A0F0AD4F5DF5A36F43B9 /* Nocturne/App/CarPlaySceneDelegate.swift in Sources */,
 				4770F704DE92F6622D6A27F2 /* WidgetIntents.swift in Sources */,
 				BDEE8310D9AFC01D83686B9E /* NowPlayingSnapshot.swift in Sources */,

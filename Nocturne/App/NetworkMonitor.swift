@@ -3,6 +3,7 @@ import Network
 
 @MainActor @Observable
 final class NetworkMonitor {
+    static let shared = NetworkMonitor()
     private(set) var isOnline = true
     /// Cellular or personal hotspot: stream quality switches to the cellular preset.
     private(set) var isExpensive = false

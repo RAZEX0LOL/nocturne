@@ -58,6 +58,15 @@ actor ArtworkCache {
         return image
     }
 
+    /// Artwork extracted from an on-device track's tags.
+    func localImage(id: String, bucket: Int) -> UIImage? {
+        let key = Self.key(account: "local", id: id, bucket: bucket)
+        if let image = Self.memoryImage(key) { return image }
+        guard let data = try? Data(contentsOf: LocalLibrary.artworkURL(for: id)), let image = Self.decode(data, maxPixels: bucket) else { return nil }
+        Self.memory.setObject(image, forKey: key as NSString, cost: Int(image.size.width * image.size.height * image.scale * image.scale * 4))
+        return image
+    }
+
     func diskUsage() -> Int {
         files().reduce(0) { $0 + $1.size }
     }
