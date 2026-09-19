@@ -48,7 +48,19 @@ struct PlayerView: View {
     private var appearance: Appearance { Appearance.shared }
     @State private var addToPlaylist = false
     // Height taken by everything except the cover; scales with Dynamic Type so the layout still fits.
-    @ScaledMetric(relativeTo: .body) private var reservedHeight: CGFloat = 465
+    /// Height of everything except the cover, measured from the laid-out content
+    /// (so new controls, Dynamic Type or live mode never push the screen into scrolling).
+    @State private var reservedHeight: CGFloat = 470
+    /// Free space the flexible gap above the bottom row currently takes.
+    @State private var slack: CGFloat = 0
+    @State private var contentHeight: CGFloat = 0
+
+    /// Both measurements can arrive in any order, so recompute from the latest pair.
+    private func updateReserved(cover: CGFloat) {
+        guard contentHeight > 0 else { return }
+        let other = (contentHeight - cover - slack).rounded(.up)
+        if abs(other - reservedHeight) > 0.5 { reservedHeight = other }
+    }
 
     private func coverSize(in geometry: GeometryProxy) -> CGFloat {
         let byWidth = min(geometry.size.width - 56, 370)
@@ -159,7 +171,11 @@ struct PlayerView: View {
                         }.accessibilityLabel("Повтор: \(player.repeatMode == .off ? "выключен" : player.repeatMode == .one ? "один трек" : "вся очередь")")
                     }.buttonStyle(.plain)
                     VolumeSlider().frame(height: 30).accessibilityLabel("Громкость")
-                    Spacer(minLength: 0)
+                    Color.clear.frame(maxHeight: .infinity)
+                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: {
+                            slack = $0
+                            updateReserved(cover: coverSize(in: geometry))
+                        }
                     HStack {
                         Button { showLyrics = true } label: { Image(systemName: "quote.bubble").frame(width: 44, height: 44) }
                             .accessibilityLabel("Текст песни")
@@ -172,6 +188,11 @@ struct PlayerView: View {
                             .accessibilityLabel("Очередь")
                     }.font(.title3).foregroundStyle(Theme.secondary)
                 }.padding(.horizontal, 28).padding(.top, 34).padding(.bottom, 12)
+                    // Natural height before the min-height frame; the cover is subtracted, the rest is what it must leave room for.
+                    .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
+                        contentHeight = height
+                        updateReserved(cover: coverSize(in: geometry))
+                    }
                     .frame(minHeight: geometry.size.height, alignment: .top)
             }.scrollBounceBehavior(.basedOnSize).background {
                 ZStack(alignment: .top) {
