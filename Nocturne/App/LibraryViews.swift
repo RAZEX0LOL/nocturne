@@ -116,14 +116,33 @@ struct AlbumCarousel: View {
 }
 
 struct LibraryView: View {
-    enum Category: String, CaseIterable { case albums = "Альбомы", artists = "Артисты", playlists = "Плейлисты", songs = "Любимое", downloads = "Загрузки", device = "На iPhone", radio = "Радио", genres = "Жанры" }
+    enum Category: String, CaseIterable {
+        case device = "На iPhone", downloads = "Загрузки", albums = "Альбомы", artists = "Артисты", playlists = "Плейлисты",
+             songs = "Любимое", radio = "Радио", genres = "Жанры"
+        var icon: String? {
+            switch self {
+            case .device: "iphone"
+            case .downloads: "arrow.down.circle"
+            default: nil
+            }
+        }
+    }
     /// Tabs that make sense right now: without a server only the phone's own music.
     private var categories: [Category] {
         if library.client == nil && !library.isDemo { return [.device] }
-        if library.isOffline { return [.downloads, .device, .songs, .playlists] }
+        if library.isOffline { return [.device, .downloads, .songs, .playlists] }
         return Category.allCases
     }
     private var current: Category { categories.contains(category) ? category : categories[0] }
+    @Environment(DownloadStore.self) private var downloads
+    /// Track counts on the phone-storage chips, so it's obvious where the music is.
+    private func count(for item: Category) -> Int? {
+        switch item {
+        case .device: LocalLibrary.shared.tracks.count
+        case .downloads: downloads.items.count
+        default: nil
+        }
+    }
     enum AlbumSort: String, CaseIterable {
         case newest, alphabeticalByName, alphabeticalByArtist, recent, frequent, random
         var title: String {
@@ -151,7 +170,13 @@ struct LibraryView: View {
                     HStack(spacing: 8) {
                         ForEach(categories, id: \.self) { item in
                             Button { category = item } label: {
-                                Text(LocalizedStringKey(item.rawValue)).font(.subheadline.weight(.medium)).padding(.horizontal, 14).padding(.vertical, 8)
+                                HStack(spacing: 5) {
+                                    if let icon = item.icon { Image(systemName: icon) }
+                                    Text(LocalizedStringKey(item.rawValue))
+                                    if let count = count(for: item), count > 0 {
+                                        Text("\(count)").font(.caption.weight(.semibold).monospacedDigit()).opacity(0.7)
+                                    }
+                                }.font(.subheadline.weight(.medium)).padding(.horizontal, 14).padding(.vertical, 8)
                                     .background(current == item ? Theme.accent : Theme.surface, in: Capsule())
                                     .foregroundStyle(current == item ? Theme.onAccent : Theme.primary)
                             }.buttonStyle(.plain).accessibilityAddTraits(current == item ? .isSelected : [])
