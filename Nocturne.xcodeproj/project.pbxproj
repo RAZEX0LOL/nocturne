@@ -46,6 +46,8 @@
 		D1328A2F40BB1B9E331407A2 /* AppShortcuts.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 525330C55C345C8A7D4C51F0 /* AppShortcuts.xcstrings */; };
 		A65E8DF4DCC06FF4D32FC41E /* Nocturne/App/LocalLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 792232701517B14A3E3EBD2C /* Nocturne/App/LocalLibrary.swift */; };
 		D2E007F43F451BC80F72FCA5 /* Nocturne/App/DeviceViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1DCFFF070C241B3D871508 /* Nocturne/App/DeviceViews.swift */; };
+		27F48A8FA3BB743F5EFB5A9B /* Nocturne/App/AddMusic.swift in Sources */ = {isa = PBXBuildFile; fileRef = F184813B74E2F7059B6BDA7A /* Nocturne/App/AddMusic.swift */; };
+		0850149335D4E7B5290E8B5A /* Nocturne/App/WebImport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F3FB8E7B8F949CBA10A5F44 /* Nocturne/App/WebImport.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -120,6 +122,8 @@
 		525330C55C345C8A7D4C51F0 /* AppShortcuts.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Nocturne/Resources/AppShortcuts.xcstrings; sourceTree = SOURCE_ROOT; };
 		792232701517B14A3E3EBD2C /* Nocturne/App/LocalLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/LocalLibrary.swift; sourceTree = SOURCE_ROOT; };
 		FA1DCFFF070C241B3D871508 /* Nocturne/App/DeviceViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/DeviceViews.swift; sourceTree = SOURCE_ROOT; };
+		F184813B74E2F7059B6BDA7A /* Nocturne/App/AddMusic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/AddMusic.swift; sourceTree = SOURCE_ROOT; };
+		6F3FB8E7B8F949CBA10A5F44 /* Nocturne/App/WebImport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/WebImport.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -153,6 +157,8 @@
 		0D6E4079E36703EBD37C0072 = {
 			isa = PBXGroup;
 			children = (
+				6F3FB8E7B8F949CBA10A5F44 /* Nocturne/App/WebImport.swift */,
+				F184813B74E2F7059B6BDA7A /* Nocturne/App/AddMusic.swift */,
 				FA1DCFFF070C241B3D871508 /* Nocturne/App/DeviceViews.swift */,
 				792232701517B14A3E3EBD2C /* Nocturne/App/LocalLibrary.swift */,
 				525330C55C345C8A7D4C51F0 /* AppShortcuts.xcstrings */,
@@ -314,6 +320,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0850149335D4E7B5290E8B5A /* Nocturne/App/WebImport.swift in Sources */,
+				27F48A8FA3BB743F5EFB5A9B /* Nocturne/App/AddMusic.swift in Sources */,
 				D2E007F43F451BC80F72FCA5 /* Nocturne/App/DeviceViews.swift in Sources */,
 				A65E8DF4DCC06FF4D32FC41E /* Nocturne/App/LocalLibrary.swift in Sources */,
 				F311A0F0AD4F5DF5A36F43B9 /* Nocturne/App/CarPlaySceneDelegate.swift in Sources */,

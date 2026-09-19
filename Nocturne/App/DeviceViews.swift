@@ -6,24 +6,22 @@ struct DeviceLibraryView: View {
     @Environment(PlayerStore.self) private var player
     @Environment(LibraryStore.self) private var library
     private var local: LocalLibrary { .shared }
-    @State private var importing = false
 
     var body: some View {
         let songs = local.songs
         VStack(alignment: .leading, spacing: 18) {
-            HStack(spacing: 12) {
-                Button { importing = true } label: {
-                    Label(String(localized: "Добавить из «Файлов»"), systemImage: "folder.badge.plus").fontWeight(.semibold)
-                        .frame(maxWidth: .infinity).padding(14)
-                        .background(Theme.surface, in: RoundedRectangle(cornerRadius: 14))
-                }.buttonStyle(.plain).disabled(local.isImporting)
-                if local.isImporting { ProgressView() }
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
+                addButton(String(localized: "Файлы"), "doc.badge.plus", .files)
+                addButton(String(localized: "Папка"), "folder.badge.plus", .folder)
+                addButton(String(localized: "По ссылке"), "link.badge.plus", .link)
+                addButton(String(localized: "Браузер"), "safari", .browser)
             }
+            if local.isImporting { HStack { ProgressView(); Text(String(localized: "Добавляю музыку…")).font(.caption).foregroundStyle(Theme.secondary) } }
             if songs.isEmpty {
                 ContentUnavailableView {
                     Label(String(localized: "На iPhone пока нет музыки"), systemImage: "iphone")
                 } description: {
-                    Text(String(localized: "Добавь файлы кнопкой выше, через «Поделиться → Nocturne» из любого приложения или скопируй их с Mac в Finder: iPhone → Файлы → Nocturne → Music. Поддерживаются MP3, M4A, AAC, ALAC, FLAC, WAV."))
+                    Text(String(localized: "Добавь файлы или папку кнопками выше, скачай по ссылке или через браузер, отправь через «Поделиться → Nocturne» из любого приложения или скопируй с Mac в Finder: iPhone → Файлы → Nocturne → Music. Поддерживаются MP3, M4A, AAC, ALAC, FLAC, WAV."))
                 }
             } else {
                 Text(String(localized: "\(songs.count) треков · \(ByteCountFormatter.string(fromByteCount: Int64(local.totalSize), countStyle: .file))"))
@@ -32,13 +30,13 @@ struct DeviceLibraryView: View {
                 DeviceAlbumGrid(albums: DeviceAlbum.group(songs))
             }
         }
-        .fileImporter(isPresented: $importing, allowedContentTypes: [.audio, .folder], allowsMultipleSelection: true) { result in
-            guard case .success(let urls) = result else { return }
-            Task {
-                let added = await local.importItems(urls)
-                player.show(added > 0 ? String(localized: "Добавлено на iPhone: \(added)") : String(localized: "Новых треков не найдено"))
-            }
-        }
+    }
+
+    private func addButton(_ title: String, _ icon: String, _ source: AddMusicCoordinator.Source) -> some View {
+        Button { AddMusicCoordinator.shared.request = source } label: {
+            Label(title, systemImage: icon).font(.subheadline.weight(.semibold)).frame(maxWidth: .infinity).padding(12)
+                .background(Theme.surface, in: RoundedRectangle(cornerRadius: 12))
+        }.buttonStyle(.plain).disabled(local.isImporting)
     }
 }
 
@@ -111,7 +109,7 @@ struct OnDeviceHomeSection: View {
                     ContentUnavailableView {
                         Label(String(localized: "Добавь свою музыку"), systemImage: "music.note.house")
                     } description: {
-                        Text(String(localized: "Медиатека → На iPhone → «Добавить из «Файлов»». Или подключи сервер Navidrome в настройках."))
+                        Text(String(localized: "Нажми «+» вверху: файлы, папка, ссылка или браузер. Или подключи сервер Navidrome в настройках."))
                     }
                 }
             } else {

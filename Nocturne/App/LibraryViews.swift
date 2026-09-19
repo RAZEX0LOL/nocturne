@@ -42,9 +42,12 @@ struct HomeView: View {
             }.refreshable { await library.refresh() }
                 .background(Theme.background)
                 .navigationTitle(String(localized: "Главная"))
-                .toolbar { ToolbarItem(placement: .topBarTrailing) {
-                    Button { settings = true } label: { Image(systemName: "gearshape").foregroundStyle(Theme.primary) }.accessibilityLabel(String(localized: "Настройки"))
-                } }
+                .toolbar {
+                    ToolbarItem(placement: .topBarLeading) { AddMusicMenu() }
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button { settings = true } label: { Image(systemName: "gearshape").foregroundStyle(Theme.primary) }.accessibilityLabel(String(localized: "Настройки"))
+                    }
+                }
                 .navigationDestination(for: Album.self) { AlbumDetailView(album: $0) }
         }.background(Theme.background)
     }
@@ -171,7 +174,8 @@ struct LibraryView: View {
             .refreshable { await library.refresh() }
             .navigationDestination(for: Album.self) { AlbumDetailView(album: $0) }
             .toolbar {
-                if category == .albums {
+                ToolbarItem(placement: .topBarLeading) { AddMusicMenu() }
+                if current == .albums {
                     ToolbarItem(placement: .topBarTrailing) {
                         Menu {
                             Picker(String(localized: "Сортировка"), selection: $sort) { ForEach(AlbumSort.allCases, id: \.self) { Text($0.title).tag($0) } }
@@ -179,7 +183,7 @@ struct LibraryView: View {
                         } label: { Image(systemName: "arrow.up.arrow.down") }.accessibilityLabel(String(localized: "Сортировка альбомов"))
                     }
                 }
-                if category == .playlists && library.isConnected {
+                if current == .playlists && library.isConnected {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button { playlistName = ""; creatingPlaylist = true } label: { Image(systemName: "plus") }.accessibilityLabel(String(localized: "Новый плейлист"))
                     }

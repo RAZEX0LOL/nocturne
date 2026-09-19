@@ -84,6 +84,14 @@ struct RootView: View {
         }
         #if DEBUG
         .task {
+            // UI check of web import without typing: `--open-browser <url>`.
+            let arguments = ProcessInfo.processInfo.arguments
+            guard let flag = arguments.firstIndex(of: "--open-browser"), arguments.count > flag + 1,
+                  let url = URL(string: arguments[flag + 1]) else { return }
+            AddMusicCoordinator.shared.browserStart = url
+            AddMusicCoordinator.shared.request = .browser
+        }
+        .task {
             // Threading self-check (`--check-threading`): SwiftUI's async renderer resolves dynamic colours
             // off the main thread; doing the same here must not trip Swift's isolation checks.
             guard ProcessInfo.processInfo.arguments.contains("--check-threading") else { return }
@@ -103,6 +111,7 @@ struct RootView: View {
         }
         #endif
         .sheet(isPresented: $settings) { SettingsView() }
+        .addMusicPresenter()
         .sheet(isPresented: $fullPlayer) { PlayerView().presentationDragIndicator(.visible) }
         .alert(String(localized: "Воспроизведение"), isPresented: Binding(get: { player.error != nil }, set: { if !$0 { player.error = nil } })) {
             Button(String(localized: "Понятно")) { player.error = nil }
