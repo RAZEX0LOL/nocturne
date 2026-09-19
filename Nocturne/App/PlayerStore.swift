@@ -286,12 +286,20 @@ final class PlayerStore {
 
     private func makeItem(for song: Song) -> AVPlayerItem? {
         if let direct = directStreams[song.id] { return AVPlayerItem(url: direct) }
-        if let local = localFile?(song.id) { return AVPlayerItem(url: local) }
+        let item: AVPlayerItem
+        if let local = localFile?(song.id) { item = AVPlayerItem(url: local) } else {
+            guard let url = streamURL(for: song) else { return nil }
+            item = AVPlayerItem(url: url)
+        }
+        AudioEffects.shared.attach(to: item, duration: song.duration)
+        return item
+    }
+
+    private func streamURL(for song: Song) -> URL? {
         guard let client else { return nil }
         let quality = PlaybackSettings.quality(expensive: network.isExpensive)
         let parameters = quality.streamParameters.merging(["id": song.id]) { $1 }
-        guard let url = try? client.url("stream", parameters: parameters) else { return nil }
-        return AVPlayerItem(url: url)
+        return try? client.url("stream", parameters: parameters)
     }
 
     /// Keeps exactly one preloaded item after the current one, matching the queue's next position.

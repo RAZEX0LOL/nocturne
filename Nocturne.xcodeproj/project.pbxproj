@@ -30,6 +30,8 @@
 		1DF57C4B51D0F23F195FB43C /* Nocturne/App/StatsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EE4DF7186F349BAC4D5A532 /* Nocturne/App/StatsStore.swift */; };
 		F2F35E08546F89A8C4A29AE8 /* Nocturne/App/StatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7171064AA73188A248019ED9 /* Nocturne/App/StatsView.swift */; };
 		10AC574E8ABD15AB22190D57 /* Nocturne/App/AppIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02B6B373835CAAA78174B882 /* Nocturne/App/AppIntents.swift */; };
+		A38F968096DAB93D9E4EC532 /* Nocturne/App/AudioEffects.swift in Sources */ = {isa = PBXBuildFile; fileRef = 152612EC5D62A85448DC369B /* Nocturne/App/AudioEffects.swift */; };
+		8EC0F1632945AD905D04ABB4 /* Nocturne/App/EqualizerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD7729DE46A3696169A1A255 /* Nocturne/App/EqualizerView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -68,6 +70,8 @@
 		8EE4DF7186F349BAC4D5A532 /* Nocturne/App/StatsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/StatsStore.swift; sourceTree = SOURCE_ROOT; };
 		7171064AA73188A248019ED9 /* Nocturne/App/StatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/StatsView.swift; sourceTree = SOURCE_ROOT; };
 		02B6B373835CAAA78174B882 /* Nocturne/App/AppIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/AppIntents.swift; sourceTree = SOURCE_ROOT; };
+		152612EC5D62A85448DC369B /* Nocturne/App/AudioEffects.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/AudioEffects.swift; sourceTree = SOURCE_ROOT; };
+		DD7729DE46A3696169A1A255 /* Nocturne/App/EqualizerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/EqualizerView.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -93,6 +97,8 @@
 		0D6E4079E36703EBD37C0072 = {
 			isa = PBXGroup;
 			children = (
+				DD7729DE46A3696169A1A255 /* Nocturne/App/EqualizerView.swift */,
+				152612EC5D62A85448DC369B /* Nocturne/App/AudioEffects.swift */,
 				02B6B373835CAAA78174B882 /* Nocturne/App/AppIntents.swift */,
 				7171064AA73188A248019ED9 /* Nocturne/App/StatsView.swift */,
 				8EE4DF7186F349BAC4D5A532 /* Nocturne/App/StatsStore.swift */,
@@ -208,6 +214,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8EC0F1632945AD905D04ABB4 /* Nocturne/App/EqualizerView.swift in Sources */,
+				A38F968096DAB93D9E4EC532 /* Nocturne/App/AudioEffects.swift in Sources */,
 				10AC574E8ABD15AB22190D57 /* Nocturne/App/AppIntents.swift in Sources */,
 				F2F35E08546F89A8C4A29AE8 /* Nocturne/App/StatsView.swift in Sources */,
 				1DF57C4B51D0F23F195FB43C /* Nocturne/App/StatsStore.swift in Sources */,

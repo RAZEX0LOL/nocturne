@@ -10,6 +10,7 @@ struct SettingsView: View {
     @Environment(DownloadStore.self) private var downloads
     @State private var confirmRemoveDownloads = false
     @AppStorage(PlaybackSettings.replayGainKey) private var replayGain = ReplayGainMode.off
+    @AppStorage(AudioEffects.fadeKey) private var fade = 0.0
     @AppStorage(DownloadStore.wifiOnlyKey) private var wifiOnly = false
     @AppStorage(DownloadStore.autoFavoritesKey) private var autoFavorites = false
     @AppStorage(DownloadStore.limitKey) private var limitGB = 0.0
@@ -72,8 +73,13 @@ struct SettingsView: View {
                     Text("Скачанные треки играют без сети и не расходуют трафик. Загрузка идёт, пока приложение открыто или играет музыка.")
                 }
                 Section {
+                    NavigationLink { EqualizerView() } label: { Label("Эквалайзер", systemImage: "slider.vertical.3") }
                     Picker("Выравнивание громкости", selection: $replayGain) {
                         ForEach(ReplayGainMode.allCases) { Text($0.title).tag($0) }
+                    }
+                    Picker("Затухание между треками", selection: $fade) {
+                        Text("Выключено").tag(0.0)
+                        ForEach([2.0, 4, 6, 8], id: \.self) { Text("\(Int($0)) с").tag($0) }
                     }
                 } header: { Text("Звук") } footer: {
                     Text("ReplayGain выравнивает громкость по тегам файлов: «по треку» для перемешанных очередей, «по альбому» сохраняет задуманную разницу между треками. Применяется со следующего трека.")
