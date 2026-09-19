@@ -399,6 +399,8 @@
 		73EBF6644258C120893E685D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				STRIP_INSTALLED_PRODUCT = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				MARKETING_VERSION = 0.1.0;
 				CLANG_ENABLE_MODULES = YES;

@@ -184,9 +184,8 @@ final class PlayerStore {
             return
         }
         if finished { seek(0) }
-        guard activateSession() else { return }
         isPlaying = true
-        player.play()
+        activateAndPlay()
         updateNowPlaying()
         publishWidget()
     }
@@ -205,7 +204,7 @@ final class PlayerStore {
         if let next = nextItem, next.position == position, player.items().contains(next.item) {
             isPlaying = true
             player.advanceToNextItem()
-            player.play()
+            activateAndPlay()
             syncCurrentItem()
         } else {
             queue.jump(to: position)
@@ -238,7 +237,7 @@ final class PlayerStore {
         queue = PlaybackQueue(); elapsed = 0; duration = 0; client = nil; artwork = nil
         MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
         publishWidget()
-        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        Self.sessionQueue.async { try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation) }
         try? FileManager.default.removeItem(at: Self.snapshotURL)
     }
 
@@ -270,7 +269,6 @@ final class PlayerStore {
         Log.player.notice("Start \(song.id, privacy: .public) at \(time, privacy: .public)s, retry \(isRetry, privacy: .public)")
         if !isRetry { retryCount = 0 }
         waitingForNetwork = false
-        if autoplay, !activateSession() { return }
         player.removeAllItems()
         itemObservations = [:]
         currentItem = item
@@ -281,7 +279,7 @@ final class PlayerStore {
         elapsed = time
         duration = song.duration ?? 0
         isPlaying = autoplay
-        if autoplay { player.play() }
+        if autoplay { activateAndPlay() }
         if !isRetry { artwork = nil; loadArtwork(for: song); reportNowPlaying() }
         prepareNext()
         updateNowPlaying()
@@ -480,16 +478,34 @@ final class PlayerStore {
         }
     }
 
-    private func activateSession() -> Bool {
-        do {
-            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, policy: .longFormAudio)
-            try AVAudioSession.sharedInstance().setActive(true)
-            return true
-        } catch {
-            Log.player.error("Audio session: \(Log.describe(error), privacy: .public)")
-            self.error = String(localized: "Не удалось запустить аудио. Попробуй ещё раз.")
-            return false
+    /// Audio session calls can block for hundreds of milliseconds (calls, Bluetooth, AirPlay routing),
+    /// so they run on a private serial queue; playback starts on the main actor once the session is active.
+    private static let sessionQueue = DispatchQueue(label: "app.nocturne.audio-session", qos: .userInitiated)
+
+    private func activateAndPlay() {
+        Self.sessionQueue.async { [weak self] in
+            var failure: String?
+            do {
+                let session = AVAudioSession.sharedInstance()
+                try session.setCategory(.playback, mode: .default, policy: .longFormAudio)
+                try session.setActive(true)
+            } catch { failure = Log.describe(error) }
+            let result = failure
+            Task { @MainActor in self?.sessionActivated(failure: result) }
         }
+    }
+
+    private func sessionActivated(failure: String?) {
+        guard let failure else {
+            // The user may have paused while the session was activating.
+            if isPlaying { player.play() }
+            return
+        }
+        Log.player.error("Audio session: \(failure, privacy: .public)")
+        isPlaying = false
+        error = String(localized: "Не удалось запустить аудио. Попробуй ещё раз.")
+        updateNowPlaying()
+        publishWidget()
     }
 
     // MARK: - Observation (callbacks arrive on arbitrary queues, so closures are built outside the actor)

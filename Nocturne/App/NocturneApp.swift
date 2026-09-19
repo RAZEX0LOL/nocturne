@@ -72,7 +72,7 @@ struct RootView: View {
             // Threading self-check (`--check-threading`): SwiftUI's async renderer resolves dynamic colours
             // off the main thread; doing the same here must not trip Swift's isolation checks.
             guard ProcessInfo.processInfo.arguments.contains("--check-threading") else { return }
-            nonisolated(unsafe) let colors = [Theme.background, Theme.surface, Theme.primary, Theme.secondary, Theme.onAccent, Theme.accent].map { UIColor($0) }
+            let colors = [Theme.background, Theme.surface, Theme.primary, Theme.secondary, Theme.onAccent, Theme.accent].map { UIColor($0) }
             DispatchQueue.global().async {
                 for color in colors {
                     for style in [UIUserInterfaceStyle.light, .dark] { _ = color.resolvedColor(with: UITraitCollection(userInterfaceStyle: style)) }
