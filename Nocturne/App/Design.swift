@@ -162,6 +162,12 @@ struct RoutePicker: UIViewRepresentable {
     func updateUIView(_ uiView: AVRoutePickerView, context: Context) {}
 }
 
+#if targetEnvironment(macCatalyst)
+/// macOS controls the system volume itself; MPVolumeView doesn't exist there.
+struct VolumeSlider: View {
+    var body: some View { EmptyView() }
+}
+#else
 struct VolumeSlider: UIViewRepresentable {
     func makeUIView(context: Context) -> MPVolumeView {
         let view = MPVolumeView()
@@ -170,3 +176,4 @@ struct VolumeSlider: UIViewRepresentable {
     }
     func updateUIView(_ uiView: MPVolumeView, context: Context) {}
 }
+#endif

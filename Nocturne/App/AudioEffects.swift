@@ -1,4 +1,5 @@
 import AVFoundation
+import CoreAudio // UnsafeMutableAudioBufferListPointer: re-exported by AVFoundation on iOS, not on Catalyst.
 import MediaToolbox
 import os
 

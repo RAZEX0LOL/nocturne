@@ -15,7 +15,7 @@ final class AddMusicCoordinator {
 struct AddMusicMenu: View {
     var body: some View {
         Menu {
-            Button { AddMusicCoordinator.shared.request = .files } label: { Label(String(localized: "Файлы с iPhone"), systemImage: "doc.badge.plus") }
+            Button { AddMusicCoordinator.shared.request = .files } label: { Label(String(localized: "Файлы с \(Device.name)"), systemImage: "doc.badge.plus") }
             Button { AddMusicCoordinator.shared.request = .folder } label: { Label(String(localized: "Папка целиком"), systemImage: "folder.badge.plus") }
             Divider()
             Button { AddMusicCoordinator.shared.request = .link } label: { Label(String(localized: "Скачать по ссылке"), systemImage: "link.badge.plus") }
@@ -28,6 +28,8 @@ struct AddMusicMenu: View {
 
 struct AddMusicPresenter: ViewModifier {
     @Environment(PlayerStore.self) private var player
+    @Environment(LibraryStore.self) private var library
+    @Environment(DownloadStore.self) private var downloads
     @Bindable private var coordinator = AddMusicCoordinator.shared
 
     func body(content: Content) -> some View {
@@ -41,14 +43,14 @@ struct AddMusicPresenter: ViewModifier {
                 guard case .success(let urls) = result else { return }
                 Task {
                     let added = await LocalLibrary.shared.importItems(urls)
-                    player.show(added > 0 ? String(localized: "Добавлено на iPhone: \(added)") : String(localized: "Новых треков не найдено"))
+                    player.show(added > 0 ? String(localized: "Добавлено на \(Device.name): \(added)") : String(localized: "Новых треков не найдено"))
                 }
             }
             .sheet(isPresented: Binding(get: { coordinator.request == .link }, set: { if !$0 { coordinator.request = nil } })) {
-                LinkImportView()
+                LinkImportView().appStores(library, player, downloads)
             }
             .fullScreenCover(isPresented: Binding(get: { coordinator.request == .browser }, set: { if !$0 { coordinator.request = nil } })) {
-                BrowserView()
+                BrowserView().appStores(library, player, downloads)
             }
     }
 }

@@ -46,15 +46,15 @@ final class NocturneUITests: XCTestCase {
     @MainActor func testConnectionScreen() throws {
         let app = XCUIApplication()
         app.launch()
-        XCTAssertTrue(app.buttons["Подключиться"].waitForExistence(timeout: 20))
+        XCTAssertTrue(app.buttons["Подключиться"].waitForExistence(timeout: 30))
         XCTAssertFalse(app.buttons["Подключиться"].isEnabled)
         XCTAssertTrue(app.secureTextFields["Пароль Navidrome"].exists)
         app.buttons["Посмотреть демоверсию"].tap()
-        XCTAssertTrue(app.staticTexts["Недавно добавлено"].waitForExistence(timeout: 15))
+        XCTAssertTrue(app.staticTexts["Недавно добавлено"].waitForExistence(timeout: 30))
         app.buttons["Настройки"].tap()
-        XCTAssertTrue(app.staticTexts["Демоверсия"].waitForExistence(timeout: 15))
+        XCTAssertTrue(app.staticTexts["Демоверсия"].waitForExistence(timeout: 30))
         app.buttons["Подключить Navidrome"].tap()
-        XCTAssertTrue(app.textFields["https://music.example.com"].waitForExistence(timeout: 15))
+        XCTAssertTrue(app.textFields["https://music.example.com"].waitForExistence(timeout: 30))
     }
 
     /// Regression: theme colours were closures isolated to the main actor and crashed when

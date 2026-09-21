@@ -1,3078 +1,3019 @@
 {
-  "sourceLanguage" : "ru",
-  "strings" : {
-    "«Из обложки» подбирает цвет под текущий трек." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "“From cover” matches the colour to the current track."
+  "sourceLanguage": "ru",
+  "strings": {
+    "%lld": {},
+    "%lld ГБ": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld GB"
           }
         }
       }
     },
-    "%lld" : {
-
-    },
-    "%lld ГБ" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld GB"
+    "%lld мин": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld min"
           }
         }
       }
     },
-    "%lld мин" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld min"
+    "%lld прослуш.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld plays"
           }
         }
       }
     },
-    "%lld прослуш." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld plays"
+    "%lld с": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld s"
           }
         }
       }
     },
-    "%lld с" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld s"
+    "%lld треков · %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld tracks · %@"
           }
         }
       }
     },
-    "%lld треков · %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld tracks · %@"
+    "%lld ч %lld мин": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld h %lld min"
           }
         }
       }
     },
-    "%lld ч %lld мин" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld h %lld min"
+    "%lldк": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lldk"
           }
         }
       }
     },
-    "%lldк" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lldk"
+    "HTTP без шифрования разрешён только для адресов домашней сети: 192.168.x.x, 10.x.x.x, *.local.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unencrypted HTTP is allowed only for home network addresses: 192.168.x.x, 10.x.x.x, *.local."
           }
         }
       }
     },
-    "HTTP без шифрования разрешён только для адресов домашней сети: 192.168.x.x, 10.x.x.x, *.local." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unencrypted HTTP is allowed only for home network addresses: 192.168.x.x, 10.x.x.x, *.local."
+    "NOCTURNE": {},
+    "Navidrome не нашёл текст для этого трека.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Navidrome has no lyrics for this track."
           }
         }
       }
-    },
-    "https://…" : {
-
-    },
-    "https://music.example.com" : {
-
     },
-    "Navidrome не нашёл текст для этого трека." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Navidrome has no lyrics for this track."
+    "Nocturne сохраняет только аудиофайлы": {},
+    "OpenSubsonic API": {},
+    "ReplayGain выравнивает громкость по тегам файлов: «по треку» для перемешанных очередей, «по альбому» сохраняет задуманную разницу между треками. Применяется со следующего трека.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ReplayGain evens out loudness using file tags: “Track” suits shuffled queues, “Album” keeps the intended differences between tracks. Applies from the next track."
           }
         }
       }
-    },
-    "NOCTURNE" : {
-
-    },
-    "Nocturne сохраняет только аудиофайлы" : {
-
-    },
-    "OpenSubsonic API" : {
-
     },
-    "ReplayGain выравнивает громкость по тегам файлов: «по треку» для перемешанных очередей, «по альбому» сохраняет задуманную разницу между треками. Применяется со следующего трека." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ReplayGain evens out loudness using file tags: “Track” suits shuffled queues, “Album” keeps the intended differences between tracks. Applies from the next track."
+    "Wi-Fi": {},
+    "https://music.example.com": {},
+    "https://…": {},
+    "«Из обложки» подбирает цвет под текущий трек.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“From cover” matches the colour to the current track."
           }
         }
       }
     },
-    "Wi-Fi" : {
-
-    },
-    "Адрес или поиск" : {
-
-    },
-    "Адрес сервера" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Server address"
+    "Адрес или поиск": {},
+    "Адрес сервера": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server address"
           }
         }
       }
     },
-    "Акцентный цвет" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Accent colour"
+    "Акцентный цвет": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accent colour"
           }
         }
       }
-    },
-    "Альбом не открывался раньше — треклист появится, когда будет связь с сервером." : {
-
     },
-    "Альбомов нет" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No albums"
+    "Альбом не открывался раньше — треклист появится, когда будет связь с сервером.": {},
+    "Альбомов нет": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No albums"
           }
         }
       }
     },
-    "Альбомов: %lld" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Albums: %lld"
+    "Альбомов: %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Albums: %lld"
           }
         }
       }
     },
-    "Альбомы" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Albums"
+    "Альбомы": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Albums"
           }
         }
       }
     },
-    "Альбомы сеткой" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Albums as grid"
+    "Альбомы сеткой": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Albums as grid"
           }
         }
       }
     },
-    "Альбомы, исполнители и любимые треки." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Albums, artists and favourite tracks."
+    "Альбомы, исполнители и любимые треки.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Albums, artists and favourite tracks."
           }
         }
       }
     },
-    "Артисты" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Artists"
+    "Артисты": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artists"
           }
         }
       }
     },
-    "Без альбома" : {
-
-    },
-    "Без лимита" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No limit"
+    "Без альбома": {},
+    "Без лимита": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No limit"
           }
         }
       }
     },
-    "Без оценки" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No rating"
+    "Без оценки": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No rating"
           }
         }
       }
     },
-    "Больше баса" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bass boost"
+    "Больше баса": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bass boost"
           }
         }
       }
     },
-    "Больше верхов" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Treble boost"
+    "Больше верхов": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Treble boost"
           }
         }
       }
-    },
-    "Браузер" : {
-
     },
-    "В избранное" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add to favourites"
+    "Браузер": {},
+    "В избранное": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to favourites"
           }
         }
       }
     },
-    "В избранном пока нет треков." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "There are no favourite tracks yet."
+    "В избранном пока нет треков.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There are no favourite tracks yet."
           }
         }
       }
     },
-    "В конец очереди" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add to queue"
+    "В конец очереди": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to queue"
           }
         }
       }
     },
-    "В конце трека" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "End of track"
+    "В конце трека": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "End of track"
           }
         }
       }
     },
-    "В любимые" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Love"
+    "В любимые": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Love"
           }
         }
       }
     },
-    "В очереди на загрузку" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Waiting to download"
+    "В очереди на загрузку": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waiting to download"
           }
         }
       }
     },
-    "В плейлист" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add to playlist"
+    "В плейлист": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to playlist"
           }
         }
       }
     },
-    "Вернуть по умолчанию" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Restore defaults"
+    "Вернуть по умолчанию": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore defaults"
           }
         }
       }
     },
-    "Версия" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Version"
+    "Версия": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version"
           }
         }
       }
     },
-    "Виброотклик" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Haptics"
+    "Виброотклик": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Haptics"
           }
         }
       }
     },
-    "Включает похожие треки на тот, что играет сейчас." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Plays tracks similar to the one playing now."
+    "Включает похожие треки на тот, что играет сейчас.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plays tracks similar to the one playing now."
           }
         }
       }
     },
-    "Включить любимые треки" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Play favourite tracks"
+    "Включить любимые треки": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Play favourite tracks"
           }
         }
       }
     },
-    "Вокал" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vocal"
+    "Вокал": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vocal"
           }
         }
       }
     },
-    "Воспроизведение" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Playback"
+    "Воспроизведение": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Playback"
           }
         }
       }
     },
-    "Воспроизвести" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Play"
+    "Воспроизвести": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Play"
           }
         }
       }
     },
-    "Вперёд" : {
-
-    },
-    "Вперёд на 15 с" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Forward 15 s"
+    "Вперёд": {},
+    "Вперёд на 15 с": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forward 15 s"
           }
         }
       }
     },
-    "Вперёд на 15 секунд" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Forward 15 seconds"
+    "Вперёд на 15 секунд": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forward 15 seconds"
           }
         }
       }
     },
-    "Все" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "All"
+    "Все": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All"
           }
         }
       }
     },
-    "Всё" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "All"
+    "Все альбомы": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All albums"
           }
         }
       }
     },
-    "Все альбомы" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "All albums"
+    "Всё": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All"
           }
         }
       }
     },
-    "Выбрать аудиоустройство" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose audio output"
+    "Выбрать аудиоустройство": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose audio output"
           }
         }
       }
     },
-    "Выключено" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Off"
+    "Выключено": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Off"
           }
         }
       }
     },
-    "Выключить перемешивание" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Turn off shuffle"
+    "Выключить перемешивание": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn off shuffle"
           }
         }
       }
     },
-    "Выключить таймер" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Turn off timer"
+    "Выключить таймер": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn off timer"
           }
         }
       }
     },
-    "Выравнивание громкости" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Volume levelling"
+    "Выравнивание громкости": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volume levelling"
           }
         }
       }
     },
-    "Высокое · MP3 320" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "High · MP3 320"
+    "Высокое · MP3 320": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "High · MP3 320"
           }
         }
       }
     },
-    "Главная" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Home"
+    "Главная": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Home"
           }
         }
       }
     },
-    "Готово" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Done"
+    "Готово": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
           }
         }
       }
     },
-    "Градиент" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gradient"
+    "Градиент": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gradient"
           }
         }
       }
     },
-    "Громкость" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Volume"
+    "Громкость": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volume"
           }
         }
       }
     },
-    "Громкость (V-образный)" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Loudness (V-shape)"
+    "Громкость (V-образный)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loudness (V-shape)"
           }
         }
       }
     },
-    "Далее" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Up next"
+    "Далее": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Up next"
           }
         }
       }
     },
-    "Дальше ничего нет" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nothing up next"
+    "Дальше ничего нет": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing up next"
           }
         }
       }
     },
-    "Действия с альбомом" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Album actions"
+    "Действия с альбомом": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Album actions"
           }
         }
       }
     },
-    "Действия с треком" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Track actions"
+    "Действия с треком": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Track actions"
           }
         }
       }
     },
-    "Демоверсия" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Demo"
+    "Демоверсия": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Demo"
           }
         }
       }
     },
-    "Демоверсия · Подключить Navidrome" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Demo · Connect Navidrome"
+    "Демоверсия · Подключить Navidrome": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Demo · Connect Navidrome"
           }
         }
       }
     },
-    "День" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Day"
+    "День": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Day"
           }
         }
       }
     },
-    "Добавить в плейлист…" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add to playlist…"
+    "Добавить в плейлист…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to playlist…"
           }
         }
       }
-    },
-    "Добавить музыку" : {
-
     },
-    "Добавить сервер" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add server"
+    "Добавить музыку": {},
+    "Добавить сервер": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add server"
           }
         }
       }
     },
-    "Добавлено в «%@»" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Added to “%@”"
+    "Добавлено в «%@»": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Added to “%@”"
           }
         }
       }
     },
-    "Добавлено в любимые" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Added to favourites"
+    "Добавлено в любимые": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Added to favourites"
           }
         }
       }
     },
-    "Добавлено в очередь" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Added to queue"
+    "Добавлено в очередь": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Added to queue"
           }
         }
       }
     },
-    "Добавлено в очередь: %lld" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Added to queue: %lld"
+    "Добавлено в очередь: %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Added to queue: %lld"
           }
         }
       }
     },
-    "Добавлено на iPhone: %lld" : {
-
-    },
-    "Добавляю музыку…" : {
-
-    },
-    "Добавь музыку в Navidrome и обнови медиатеку." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add music to Navidrome and refresh the library."
+    "Добавлено на %@: %lld": {},
+    "Добавляю музыку…": {},
+    "Добавь музыку в Navidrome и обнови медиатеку.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add music to Navidrome and refresh the library."
           }
         }
       }
-    },
-    "Добавь свою музыку" : {
-
     },
-    "Добавь станции в Navidrome: Настройки → Интернет-радио." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add stations in Navidrome: Settings → Internet radio."
+    "Добавь свою музыку": {},
+    "Добавь станции в Navidrome: Настройки → Интернет-радио.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add stations in Navidrome: Settings → Internet radio."
           }
         }
       }
     },
-    "Добавь файлы или папку кнопками выше, скачай по ссылке или через браузер, отправь через «Поделиться → Nocturne» из любого приложения или скопируй с Mac в Finder: iPhone → Файлы → Nocturne → Music. Поддерживаются MP3, M4A, AAC, ALAC, FLAC, WAV." : {
-
-    },
-    "Долгое нажатие на трек или меню альбома → «Скачать». Скачанное играет без сети." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Long-press a track or open the album menu → “Download”. Downloads play offline."
+    "Добавь файлы или папку кнопками выше, скачай по ссылке или через браузер, или положи файлы в папку Nocturne → Music в Finder. Поддерживаются MP3, M4A, AAC, ALAC, FLAC, WAV.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add files or a folder with the buttons above, download by link or through the browser, or drop files into the Nocturne → Music folder in Finder. MP3, M4A, AAC, ALAC, FLAC and WAV are supported."
           }
         }
       }
     },
-    "Доступно без сети" : {
-
-    },
-    "Жанров нет" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No genres"
+    "Добавь файлы или папку кнопками выше, скачай по ссылке или через браузер, отправь через «Поделиться → Nocturne» из любого приложения или скопируй с Mac в Finder: %@ → Файлы → Nocturne → Music. Поддерживаются MP3, M4A, AAC, ALAC, FLAC, WAV.": {},
+    "Долгое нажатие на трек или меню альбома → «Скачать». Скачанное играет без сети.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Long-press a track or open the album menu → “Download”. Downloads play offline."
           }
         }
       }
     },
-    "Жанры" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Genres"
+    "Доступно без сети": {},
+    "Жанров нет": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No genres"
           }
         }
       }
     },
-    "Жанры берутся из тегов файлов." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Genres come from file tags."
+    "Жанры": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Genres"
           }
         }
       }
     },
-    "За всё время" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "All time"
+    "Жанры берутся из тегов файлов.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Genres come from file tags."
           }
         }
       }
     },
-    "За месяц" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This month"
+    "За всё время": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All time"
           }
         }
       }
     },
-    "Загружается" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Downloading"
+    "За месяц": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This month"
           }
         }
       }
     },
-    "Загружается треков: %lld" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Downloading tracks: %lld"
+    "Загружается": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloading"
           }
         }
       }
     },
-    "Загрузка началась" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Download started"
+    "Загружается треков: %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloading tracks: %lld"
           }
         }
       }
-    },
-    "Загрузка не удалась" : {
-
     },
-    "Загрузка отменена." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Loading cancelled."
+    "Загрузка началась": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download started"
           }
         }
       }
     },
-    "Загрузки" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Downloads"
+    "Загрузка не удалась": {},
+    "Загрузка отменена.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loading cancelled."
           }
         }
       }
     },
-    "Загрузок нет" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No downloads"
+    "Загрузки": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloads"
           }
         }
       }
     },
-    "Закрыть" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Close"
+    "Загрузок нет": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No downloads"
           }
         }
       }
     },
-    "Затухание между треками" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fade between tracks"
+    "Закрыть": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close"
           }
         }
       }
     },
-    "Звук" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sound"
+    "Затухание между треками": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fade between tracks"
           }
         }
       }
     },
-    "Здесь пока тихо" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "It’s quiet here"
+    "Звук": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sound"
           }
         }
       }
     },
-    "Играть следующим" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Play next"
+    "Здесь пока тихо": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It’s quiet here"
           }
         }
       }
     },
-    "Из обложки" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "From cover"
+    "Играть следующим": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Play next"
           }
         }
       }
     },
-    "Иконка %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Icon %@"
+    "Из обложки": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "From cover"
           }
         }
       }
     },
-    "Иконка приложения" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "App icon"
+    "Иконка %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Icon %@"
           }
         }
       }
     },
-    "Имя пользователя" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Username"
+    "Иконка приложения": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App icon"
           }
         }
       }
     },
-    "Интернет-радио" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Internet radio"
+    "Имя пользователя": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Username"
           }
         }
       }
     },
-    "Исполнители" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Artists"
+    "Интернет-радио": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Internet radio"
           }
         }
       }
     },
-    "Исполнители месяца" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Artists of the month"
+    "Исполнители": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artists"
           }
         }
       }
     },
-    "Как в системе" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "System"
+    "Исполнители месяца": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artists of the month"
           }
         }
       }
     },
-    "Качество загрузок" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Download quality"
+    "Как в системе": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System"
           }
         }
       }
     },
-    "Качество потока" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Streaming quality"
+    "Качество": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quality"
           }
         }
       }
     },
-    "Кнопка мини-плеера" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mini player button"
+    "Качество загрузок": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download quality"
           }
         }
       }
     },
-    "Коралл" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Coral"
+    "Качество потока": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Streaming quality"
           }
         }
       }
     },
-    "Кэш обложек" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Artwork cache"
+    "Кнопка мини-плеера": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mini player button"
           }
         }
       }
     },
-    "Лаванда" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lavender"
+    "Коралл": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coral"
           }
         }
       }
     },
-    "Лайм" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lime"
+    "Кэш обложек": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Artwork cache"
           }
         }
       }
     },
-    "Лимит места" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Storage limit"
+    "Лаванда": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lavender"
           }
         }
       }
     },
-    "Логин" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Username"
+    "Лайм": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lime"
           }
         }
       }
     },
-    "Логин и пароль будут удалены с устройства. Загрузки этого сервера останутся." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The username and password will be removed from this device. Downloads from this server stay."
+    "Лимит места": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Storage limit"
           }
         }
       }
     },
-    "Любимое" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Favourites"
+    "Логин": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Username"
           }
         }
       }
     },
-    "Любимые альбомы" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Favourite albums"
+    "Логин и пароль будут удалены с устройства. Загрузки этого сервера останутся.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The username and password will be removed from this device. Downloads from this server stay."
           }
         }
       }
     },
-    "Любимые треки" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Favourite tracks"
+    "Любимое": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Favourites"
           }
         }
       }
     },
-    "Любимых треков нет" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No favourite tracks"
+    "Любимые альбомы": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Favourite albums"
           }
         }
       }
     },
-    "Медиатека" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Library"
+    "Любимые треки": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Favourite tracks"
           }
         }
       }
     },
-    "Микс по текущему треку" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mix from current track"
+    "Любимых треков нет": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No favourite tracks"
           }
         }
       }
     },
-    "Микс по треку" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Track mix"
+    "Медиатека": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Library"
           }
         }
       }
     },
-    "Микс: %lld треков" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mix: %lld tracks"
+    "Микс по текущему треку": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mix from current track"
           }
         }
       }
     },
-    "Минут прослушивания по дням" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Listening minutes per day"
+    "Микс по треку": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Track mix"
           }
         }
       }
     },
-    "Минуты" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minutes"
+    "Микс: %lld треков": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mix: %lld tracks"
           }
         }
       }
     },
-    "Моно" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mono"
+    "Минут прослушивания по дням": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listening minutes per day"
           }
         }
       }
     },
-    "Моя музыка" : {
-
-    },
-    "Мята" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mint"
+    "Минуты": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minutes"
           }
         }
       }
-    },
-    "На iPhone пока нет музыки" : {
-
-    },
-    "Нажми «+» вверху: файлы, папка, ссылка или браузер. Или подключи сервер Navidrome в настройках." : {
-
     },
-    "Назад" : {
-
-    },
-    "Название" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Name"
+    "Моно": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mono"
           }
         }
       }
     },
-    "Найди своё звучание" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Find your sound"
+    "Моя музыка": {},
+    "Мята": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mint"
           }
         }
       }
     },
-    "Настройки" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Settings"
+    "На %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On %@"
           }
         }
       }
     },
-    "Не удалось воспроизвести трек. Проверь сеть, формат файла и транскодирование в Navidrome." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Couldn’t play the track. Check the network, the file format and transcoding in Navidrome."
+    "На %@ пока нет музыки": {},
+    "Нажми «+» вверху: файлы, папка, ссылка или браузер. Или подключи сервер Navidrome в настройках.": {},
+    "Назад": {},
+    "Название": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name"
           }
         }
       }
     },
-    "Не удалось загрузить текст" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Couldn’t load lyrics"
+    "Найди своё звучание": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find your sound"
           }
         }
       }
     },
-    "Не удалось запустить аудио. Попробуй ещё раз." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Couldn’t start audio. Try again."
+    "Настройки": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings"
           }
         }
       }
     },
-    "Не удалось связаться с сервером. Проверь подключение и адрес Navidrome." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Couldn’t reach the server. Check the connection and the Navidrome address."
+    "Не удалось воспроизвести трек. Проверь сеть, формат файла и транскодирование в Navidrome.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t play the track. Check the network, the file format and transcoding in Navidrome."
           }
         }
       }
-    },
-    "Не удалось скачать файл. Проверь ссылку и сеть." : {
-
     },
-    "Не удалось создать ссылку. Проверь, что в Navidrome включён общий доступ (EnableSharing)." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Couldn’t create a link. Make sure sharing (EnableSharing) is on in Navidrome."
+    "Не удалось загрузить текст": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t load lyrics"
           }
         }
       }
     },
-    "Не удалось сохранить данные в Связке ключей." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Couldn’t save to the Keychain."
+    "Не удалось запустить аудио. Попробуй ещё раз.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t start audio. Try again."
           }
         }
       }
     },
-    "Небо" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sky"
+    "Не удалось связаться с сервером. Проверь подключение и адрес Navidrome.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t reach the server. Check the connection and the Navidrome address."
           }
         }
       }
     },
-    "Неверный логин или пароль." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wrong username or password."
+    "Не удалось скачать файл. Проверь ссылку и сеть.": {},
+    "Не удалось создать ссылку. Проверь, что в Navidrome включён общий доступ (EnableSharing).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t create a link. Make sure sharing (EnableSharing) is on in Navidrome."
           }
         }
       }
     },
-    "Недавние запросы" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recent searches"
+    "Не удалось сохранить данные в Связке ключей.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn’t save to the Keychain."
           }
         }
       }
     },
-    "Недавно" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recent"
+    "Небо": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sky"
           }
         }
       }
     },
-    "Недавно добавленные" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recently added"
+    "Неверный логин или пароль.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wrong username or password."
           }
         }
       }
     },
-    "Недавно добавлено" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recently added"
+    "Недавние запросы": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recent searches"
           }
         }
       }
     },
-    "Недавно прослушанные" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recently played"
+    "Недавно": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recent"
           }
         }
       }
     },
-    "Недавно слушал" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recently played"
+    "Недавно добавленные": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recently added"
           }
         }
       }
     },
-    "Недоступен без сети" : {
-
-    },
-    "Неизвестный исполнитель" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unknown artist"
+    "Недавно добавлено": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recently added"
           }
         }
       }
     },
-    "Нет подключения к сети." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No network connection."
+    "Недавно прослушанные": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recently played"
           }
         }
       }
-    },
-    "Нет связи с сервером" : {
-
     },
-    "Нет сети" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Offline"
+    "Недавно слушал": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recently played"
           }
         }
       }
     },
-    "Нет сети · открыть загрузки" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Offline · open downloads"
+    "Недоступен без сети": {},
+    "Неизвестный исполнитель": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown artist"
           }
         }
       }
     },
-    "Ничего не играет" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nothing playing"
+    "Нет подключения к сети.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No network connection."
           }
         }
       }
     },
-    "Новый плейлист" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "New playlist"
+    "Нет связи с сервером": {},
+    "Нет сети": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Offline"
           }
         }
       }
     },
-    "Новых треков не найдено" : {
-
-    },
-    "Ночь" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Night"
+    "Нет сети · открыть загрузки": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Offline · open downloads"
           }
         }
       }
     },
-    "Нужна ссылка, начинающаяся с https://" : {
-
-    },
-    "О приложении" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "About"
+    "Ничего не играет": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing playing"
           }
         }
       }
     },
-    "Об исполнителе" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "About the artist"
+    "Новый плейлист": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New playlist"
           }
         }
       }
-    },
-    "Обновить" : {
-
     },
-    "Однотонный" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Solid"
+    "Новых треков не найдено": {},
+    "Ночь": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Night"
           }
         }
       }
     },
-    "Оригинал (без сжатия)" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Original (lossless)"
+    "Нужна ссылка, начинающаяся с https://": {},
+    "О приложении": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About"
           }
         }
       }
     },
-    "Оригинал передаёт файл без перекодирования: FLAC и ALAC звучат лучше, но занимают в 3–5 раз больше трафика. Форматы, которые iPhone не воспроизводит (например, OGG), выбирай только с MP3. Новое качество применяется со следующего трека." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Original sends the file without transcoding: FLAC and ALAC sound better but use 3–5× more data. For formats iPhone can’t play (such as OGG), choose MP3. The new quality applies from the next track."
+    "Об исполнителе": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About the artist"
           }
         }
       }
     },
-    "Отключить" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Disconnect"
+    "Обновить": {},
+    "Однотонный": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solid"
           }
         }
       }
     },
-    "Отключить сервер" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Disconnect server"
+    "Оригинал (без сжатия)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original (lossless)"
           }
         }
       }
     },
-    "Отключить сервер?" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Disconnect server?"
+    "Оригинал передаёт файл без перекодирования: FLAC и ALAC звучат лучше, но занимают в 3–5 раз больше трафика. Форматы, которые %@ не воспроизводит (например, OGG), выбирай только с MP3. Новое качество применяется со следующего трека.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original sends the file without transcoding: FLAC and ALAC sound better but use 3–5× more data. For formats %@ can’t play (such as OGG), choose MP3. The new quality applies from the next track."
           }
         }
       }
     },
-    "Отключить текущий сервер" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Disconnect current server"
+    "Отключить": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnect"
           }
         }
       }
     },
-    "Открыть плеер: %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open player: %@"
+    "Отключить сервер": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnect server"
           }
         }
       }
     },
-    "Отмена" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cancel"
+    "Отключить сервер?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnect server?"
           }
         }
       }
     },
-    "Отмечай треки сердцем в плеере или через долгое нажатие." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tap the heart in the player or long-press a track."
+    "Отключить текущий сервер": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnect current server"
           }
         }
       }
     },
-    "Оформление" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Appearance"
+    "Открыть плеер: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open player: %@"
           }
         }
       }
     },
-    "Оценка" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rating"
+    "Отмена": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
           }
         }
       }
     },
-    "Оценка снята" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rating removed"
+    "Отмечай треки сердцем в плеере или через долгое нажатие.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap the heart in the player or long-press a track."
           }
         }
       }
     },
-    "Оценка: %lld из 5" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rating: %lld of 5"
+    "Оформление": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appearance"
           }
         }
       }
     },
-    "Очередь" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Queue"
+    "Оценка": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rating"
           }
         }
       }
     },
-    "Очистить" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Clear"
+    "Оценка снята": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rating removed"
           }
         }
       }
     },
-    "Очистить адрес" : {
-
-    },
-    "Очистить кэш обложек" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Clear artwork cache"
+    "Оценка: %lld из 5": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rating: %lld of 5"
           }
         }
       }
     },
-    "Очистить статистику" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Clear statistics"
+    "Очередь": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Queue"
           }
         }
       }
     },
-    "Очистить статистику?" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Clear statistics?"
+    "Очистить": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear"
           }
         }
       }
     },
-    "Ошибка Navidrome (%lld)." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Navidrome error (%lld)."
+    "Очистить адрес": {},
+    "Очистить кэш обложек": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear artwork cache"
           }
         }
       }
     },
-    "Ошибка загрузки" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Download failed"
+    "Очистить статистику": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear statistics"
           }
         }
       }
-    },
-    "Папка" : {
-
-    },
-    "Папка целиком" : {
-
     },
-    "Параллели" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Parallels"
+    "Очистить статистику?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear statistics?"
           }
         }
       }
     },
-    "Пароль" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Password"
+    "Ошибка Navidrome (%lld).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Navidrome error (%lld)."
           }
         }
       }
     },
-    "Пароль Navidrome" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Navidrome password"
+    "Ошибка загрузки": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download failed"
           }
         }
       }
     },
-    "Пароль хранится в Связке ключей на этом устройстве." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The password is stored in this device’s Keychain."
+    "ПРЯМОЙ ЭФИР": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LIVE"
           }
         }
       }
     },
-    "Пауза" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pause"
+    "Папка": {},
+    "Папка целиком": {},
+    "Параллели": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parallels"
           }
         }
       }
     },
-    "Пауза / Продолжить" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pause / Resume"
+    "Пароль": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Password"
           }
         }
       }
     },
-    "Пауза или продолжить" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pause or resume"
+    "Пароль Navidrome": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Navidrome password"
           }
         }
       }
     },
-    "Перемешать" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Shuffle"
+    "Пароль хранится в Связке ключей на этом устройстве.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The password is stored in this device’s Keychain."
           }
         }
       }
     },
-    "Перемешать всё" : {
-
-    },
-    "Перемешивает и включает любимые треки из Navidrome." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Shuffles and plays your favourite tracks from Navidrome."
+    "Пауза": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause"
           }
         }
       }
     },
-    "Перемешивать" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Shuffle"
+    "Пауза / Продолжить": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause / Resume"
           }
         }
       }
     },
-    "Перетащи, чтобы изменить порядок; выключи, чтобы скрыть раздел." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Drag to reorder; switch off to hide a section."
+    "Пауза или продолжить": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause or resume"
           }
         }
       }
     },
-    "Плеер" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Player"
+    "Перемешать": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shuffle"
           }
         }
       }
     },
-    "Плейлист «%@» создан" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Playlist “%@” created"
+    "Перемешать всё": {},
+    "Перемешивает и включает любимые треки из Navidrome.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shuffles and plays your favourite tracks from Navidrome."
           }
         }
       }
     },
-    "Плейлистов пока нет" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No playlists yet"
+    "Перемешивать": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shuffle"
           }
         }
       }
     },
-    "Плейлисты" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Playlists"
+    "Перетащи, чтобы изменить порядок; выключи, чтобы скрыть раздел.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drag to reorder; switch off to hide a section."
           }
         }
       }
     },
-    "По альбому" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Album"
+    "Плеер": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Player"
           }
         }
       }
     },
-    "По исполнителю" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "By artist"
+    "Плейлист «%@» создан": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Playlist “%@” created"
           }
         }
       }
     },
-    "По названию" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "By name"
+    "Плейлистов пока нет": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No playlists yet"
           }
         }
       }
-    },
-    "По ссылке" : {
-
-    },
-    "По ссылке не аудиофайл. Нужна прямая ссылка на сам файл." : {
-
     },
-    "По треку" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Track"
+    "Плейлисты": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Playlists"
           }
         }
       }
     },
-    "Повтор всей очереди" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Repeat all"
+    "По альбому": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Album"
           }
         }
       }
     },
-    "Повтор выключен" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Repeat off"
+    "По исполнителю": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "By artist"
           }
         }
       }
     },
-    "Повтор одного трека" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Repeat one"
+    "По названию": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "By name"
           }
         }
       }
     },
-    "Повторить" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Retry"
+    "По ссылке": {},
+    "По ссылке не аудиофайл. Нужна прямая ссылка на сам файл.": {},
+    "По треку": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Track"
           }
         }
       }
     },
-    "Поделиться" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Share"
+    "Повтор всей очереди": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repeat all"
           }
         }
       }
     },
-    "Подключи Navidrome и забери любимую музыку с собой." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Connect Navidrome and take your music with you."
+    "Повтор выключен": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repeat off"
           }
         }
       }
     },
-    "Подключи сервер в приложении на iPhone" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Connect a server in the iPhone app"
+    "Повтор одного трека": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repeat one"
           }
         }
       }
     },
-    "Подключить Navidrome" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Connect Navidrome"
+    "Повторить": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry"
           }
         }
       }
     },
-    "Подключиться" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Connect"
+    "Поделиться": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share"
           }
         }
       }
     },
-    "Позиция воспроизведения" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Playback position"
+    "Подключи Navidrome и забери любимую музыку с собой.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect Navidrome and take your music with you."
           }
         }
       }
     },
-    "Поиск" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Search"
+    "Подключи сервер в приложении на %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect a server in the %@ app"
           }
         }
       }
     },
-    "Поиск в медиатеке" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Search library"
+    "Подключить Navidrome": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect Navidrome"
           }
         }
       }
     },
-    "Пока пусто" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nothing yet"
+    "Подключиться": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect"
           }
         }
       }
     },
-    "Показано то, что есть на iPhone и в загрузках." : {
-
-    },
-    "Показать описание полностью" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Show full description"
+    "Позиция воспроизведения": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Playback position"
           }
         }
       }
     },
-    "Полоса %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Band %@"
+    "Поиск": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search"
           }
         }
       }
     },
-    "Полосы, дБ" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bands, dB"
+    "Поиск в медиатеке": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search library"
           }
         }
       }
     },
-    "Понятно" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "OK"
+    "Пока пусто": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing yet"
           }
         }
       }
     },
-    "Популярные треки" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Top tracks"
+    "Показано то, что есть на %@ и в загрузках.": {},
+    "Показать описание полностью": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show full description"
           }
         }
       }
     },
-    "Последние 7 дней, минут" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Last 7 days, minutes"
+    "Полоса %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Band %@"
           }
         }
       }
     },
-    "Посмотреть демоверсию" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Try the demo"
+    "Полосы, дБ": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bands, dB"
           }
         }
       }
     },
-    "Похожих треков не нашлось." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No similar tracks found."
+    "Понятно": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
           }
         }
       }
     },
-    "Похожих треков нет — нужен Last.fm в Navidrome" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No similar tracks — Navidrome needs Last.fm"
+    "Популярные треки": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Top tracks"
           }
         }
       }
     },
-    "Предыдущий трек" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Previous track"
+    "Последние 7 дней, минут": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last 7 days, minutes"
           }
         }
       }
     },
-    "Пресет" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Preset"
+    "Посмотреть демоверсию": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try the demo"
           }
         }
       }
-    },
-    "Прямая ссылка на аудиофайл: MP3, M4A, AAC, FLAC, WAV. Файл появится в «На iPhone»." : {
-
     },
-    "ПРЯМОЙ ЭФИР" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "LIVE"
+    "Похожих треков не нашлось.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No similar tracks found."
           }
         }
       }
     },
-    "Работает для потока и скачанных треков. Изменения слышны сразу." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Works for streamed and downloaded tracks. Changes apply instantly."
+    "Похожих треков нет — нужен Last.fm в Navidrome": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No similar tracks — Navidrome needs Last.fm"
           }
         }
       }
     },
-    "Радио" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Radio"
+    "Предыдущий трек": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previous track"
           }
         }
       }
     },
-    "Радиостанций нет" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No radio stations"
+    "Пресет": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preset"
           }
         }
       }
     },
-    "Разделы главной" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Home sections"
+    "Прямая ссылка на аудиофайл: MP3, M4A, AAC, FLAC, WAV. Файл появится в «На %@».": {},
+    "Работает для потока и скачанных треков. Изменения слышны сразу.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Works for streamed and downloaded tracks. Changes apply instantly."
           }
         }
       }
     },
-    "Размер текста песен" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lyrics text size"
+    "Радио": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Radio"
           }
         }
       }
     },
-    "Размытая обложка" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Blurred cover"
+    "Радиостанций нет": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No radio stations"
           }
         }
       }
     },
-    "Рассвет" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dawn"
+    "Разделы главной": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Home sections"
           }
         }
       }
     },
-    "Режим повтора" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Repeat mode"
+    "Размер текста песен": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lyrics text size"
           }
         }
       }
     },
-    "Ровно" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Flat"
+    "Размытая обложка": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blurred cover"
           }
         }
       }
     },
-    "Роза" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rose"
+    "Рассвет": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dawn"
           }
         }
       }
     },
-    "Свайп по обложке — смена трека" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Swipe cover to change track"
+    "Режим повтора": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repeat mode"
           }
         }
       }
     },
-    "Свернуть" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Show less"
+    "Ровно": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flat"
           }
         }
       }
     },
-    "Свернуть описание" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Collapse description"
+    "Роза": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rose"
           }
         }
       }
     },
-    "Свернуть плеер" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Minimise player"
+    "СЕЙЧАС ИГРАЕТ": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NOW PLAYING"
           }
         }
       }
     },
-    "Светлая" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Light"
+    "Свайп по обложке — смена трека": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swipe cover to change track"
           }
         }
       }
     },
-    "Свой" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Custom"
+    "Свернуть": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show less"
           }
         }
       }
     },
-    "Сейчас играет" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Now Playing"
+    "Свернуть описание": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Collapse description"
           }
         }
       }
     },
-    "СЕЙЧАС ИГРАЕТ" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "NOW PLAYING"
+    "Свернуть плеер": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minimise player"
           }
         }
       }
     },
-    "Сейчас ничего не играет." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nothing is playing."
+    "Светлая": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Light"
           }
         }
       }
     },
-    "Сервер вернул HTTP %lld. Проверь адрес и доступность Navidrome." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The server returned HTTP %lld. Check the address and that Navidrome is reachable."
+    "Свой": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Custom"
           }
         }
       }
     },
-    "Сервер вернул неожиданный ответ. Проверь адрес Navidrome." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The server sent an unexpected response. Check the Navidrome address."
+    "Сейчас играет": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Now Playing"
           }
         }
       }
     },
-    "Серверы" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Servers"
+    "Сейчас ничего не играет.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing is playing."
           }
         }
       }
     },
-    "Сеткой" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Grid"
+    "Сервер вернул HTTP %lld. Проверь адрес и доступность Navidrome.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server returned HTTP %lld. Check the address and that Navidrome is reachable."
           }
         }
       }
     },
-    "Скачанные треки играют без сети и не расходуют трафик. Загрузка идёт, пока приложение открыто или играет музыка." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Downloaded tracks play offline and use no data. Downloads continue in the background."
+    "Сервер вернул неожиданный ответ. Проверь адрес Navidrome.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server sent an unexpected response. Check the Navidrome address."
           }
         }
       }
     },
-    "Скачано" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Downloaded"
+    "Серверы": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Servers"
           }
         }
       }
     },
-    "Скачано на iPhone: %@" : {
-
-    },
-    "Скачать" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Download"
+    "Сеткой": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grid"
           }
         }
       }
     },
-    "Скачать все" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Download all"
+    "Скачанные треки играют без сети и не расходуют трафик. Загрузка идёт, пока приложение открыто или играет музыка.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloaded tracks play offline and use no data. Downloads continue in the background."
           }
         }
       }
-    },
-    "Скачать по ссылке" : {
-
     },
-    "Скачивать любимые треки" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Download favourite tracks"
+    "Скачано": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloaded"
           }
         }
       }
     },
-    "Следующий трек" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Next track"
+    "Скачано на %@: %@": {},
+    "Скачать": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download"
           }
         }
       }
     },
-    "Случайные" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Random"
+    "Скачать все": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download all"
           }
         }
       }
     },
-    "Случайные альбомы" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Random albums"
+    "Скачать по ссылке": {},
+    "Скачивать любимые треки": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download favourite tracks"
           }
         }
       }
     },
-    "Слушать" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Play"
+    "Следующий трек": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Next track"
           }
         }
       }
     },
-    "Слушать музыку с iPhone" : {
-
-    },
-    "Сначала подключи сервер Navidrome в приложении." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Connect a Navidrome server in the app first."
+    "Случайные": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Random"
           }
         }
       }
     },
-    "Соединение без шифрования (HTTP). Используй только в домашней сети." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Unencrypted connection (HTTP). Use it only on your home network."
+    "Случайные альбомы": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Random albums"
           }
         }
       }
     },
-    "Создай плейлист кнопкой «+» или через меню трека." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Create a playlist with “+” or from a track’s menu."
+    "Слушать": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Play"
           }
         }
       }
     },
-    "Создать" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Create"
+    "Слушать музыку с %@": {},
+    "Сначала подключи сервер Navidrome в приложении.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect a Navidrome server in the app first."
           }
         }
       }
     },
-    "Сортировка" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sort"
+    "Соединение без шифрования (HTTP). Используй только в домашней сети.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unencrypted connection (HTTP). Use it only on your home network."
           }
         }
       }
     },
-    "Сортировка альбомов" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sort albums"
+    "Создай плейлист кнопкой «+» или через меню трека.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create a playlist with “+” or from a track’s menu."
           }
         }
       }
     },
-    "Сотовая сеть" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cellular"
+    "Создать": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Create"
           }
         }
       }
     },
-    "Среднее · MP3 192" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Medium · MP3 192"
+    "Сортировка": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sort"
           }
         }
       }
     },
-    "Статистика" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Statistics"
+    "Сортировка альбомов": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sort albums"
           }
         }
       }
     },
-    "Статистика прослушиваний" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Listening statistics"
+    "Сотовая сеть": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cellular"
           }
         }
       }
     },
-    "Статистика хранится только на этом устройстве. Прослушивание засчитывается после половины трека или 4 минут." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Statistics stay on this device. A play counts after half the track or 4 minutes."
+    "Среднее · MP3 192": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Medium · MP3 192"
           }
         }
       }
     },
-    "Сыграет следующим" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Plays next"
+    "Статистика": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Statistics"
           }
         }
       }
     },
-    "Сыграют следующими: %lld" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Playing next: %lld"
+    "Статистика прослушиваний": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listening statistics"
           }
         }
       }
     },
-    "Таймер сна" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sleep timer"
+    "Статистика хранится только на этом устройстве. Прослушивание засчитывается после половины трека или 4 минут.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Statistics stay on this device. A play counts after half the track or 4 minutes."
           }
         }
       }
     },
-    "Твоя музыка" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Your music"
+    "Сыграет следующим": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plays next"
           }
         }
       }
     },
-    "Твоя музыка будет здесь" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Your music will be here"
+    "Сыграют следующими: %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Playing next: %lld"
           }
         }
       }
     },
-    "Твоя музыка.\nТвоё пространство." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Your music.\nYour space."
+    "Таймер сна": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sleep timer"
           }
         }
       }
     },
-    "Текст" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lyrics"
+    "Твоя музыка": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your music"
           }
         }
       }
     },
-    "Текст песни" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lyrics"
+    "Твоя музыка будет здесь": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your music will be here"
           }
         }
       }
     },
-    "Текста нет" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No lyrics"
+    "Твоя музыка.\nТвоё пространство.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your music.\nYour space."
           }
         }
       }
     },
-    "Текущий трек Nocturne с кнопками управления." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The current Nocturne track with playback controls."
+    "Текст": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lyrics"
           }
         }
       }
     },
-    "Тема" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Theme"
+    "Текст песни": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lyrics"
           }
         }
       }
     },
-    "Тёмная" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dark"
+    "Текста нет": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No lyrics"
           }
         }
       }
     },
-    "Только по Wi-Fi" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wi-Fi only"
+    "Текущий трек Nocturne с кнопками управления.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The current Nocturne track with playback controls."
           }
         }
       }
     },
-    "Трек не скачан — недоступен без сети" : {
-
-    },
-    "Треки" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tracks"
+    "Тема": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Theme"
           }
         }
       }
     },
-    "Треки месяца" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tracks of the month"
+    "Только по Wi-Fi": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wi-Fi only"
           }
         }
       }
     },
-    "Треки останутся в медиатеке." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The tracks stay in your library."
+    "Трек не скачан — недоступен без сети": {},
+    "Треки": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tracks"
           }
         }
       }
     },
-    "Треков: %lld" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tracks: %lld"
+    "Треки месяца": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tracks of the month"
           }
         }
       }
     },
-    "У станции некорректный адрес потока." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The station has an invalid stream address."
+    "Треки останутся в медиатеке.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The tracks stay in your library."
           }
         }
       }
     },
-    "Убрано из любимых" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Removed from favourites"
+    "Треков: %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tracks: %lld"
           }
         }
       }
     },
-    "Убрать из избранного" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Remove from favourites"
+    "Тёмная": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dark"
           }
         }
       }
     },
-    "Убрать из любимых" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Remove from favourites"
+    "У станции некорректный адрес потока.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The station has an invalid stream address."
           }
         }
       }
     },
-    "Увеличить текст" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Larger text"
+    "Убрано из любимых": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removed from favourites"
           }
         }
       }
     },
-    "Удалить" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete"
+    "Убрать из избранного": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove from favourites"
           }
         }
       }
     },
-    "Удалить «%@»?" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete “%@”?"
+    "Убрать из любимых": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove from favourites"
           }
         }
       }
     },
-    "Удалить все загрузки" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete all downloads"
+    "Увеличить текст": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Larger text"
           }
         }
       }
     },
-    "Удалить все загрузки?" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete all downloads?"
+    "Удалить": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete"
           }
         }
       }
     },
-    "Удалить загрузки" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete downloads"
+    "Удалить «%@»?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete “%@”?"
           }
         }
       }
     },
-    "Удалить загрузку" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete download"
+    "Удалить все загрузки": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete all downloads"
           }
         }
       }
     },
-    "Удалить плейлист" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete playlist"
+    "Удалить все загрузки?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete all downloads?"
           }
         }
       }
-    },
-    "Удалить с iPhone" : {
-
     },
-    "Укажи HTTPS-адрес сервера без логина, параметров и фрагмента. HTTP разрешён только для локальной сети." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Enter the server’s HTTPS address without credentials, parameters or fragment. HTTP is allowed only on a local network."
+    "Удалить загрузки": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete downloads"
           }
         }
       }
     },
-    "Уменьшать обложку на паузе" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Shrink cover when paused"
+    "Удалить загрузку": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete download"
           }
         }
       }
     },
-    "Уменьшить текст" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Smaller text"
+    "Удалить плейлист": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete playlist"
           }
         }
       }
     },
-    "Файл уже есть в медиатеке" : {
-
-    },
-    "Файлы" : {
-
+    "Удалить с %@": {},
+    "Укажи HTTPS-адрес сервера без логина, параметров и фрагмента. HTTP разрешён только для локальной сети.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter the server’s HTTPS address without credentials, parameters or fragment. HTTP is allowed only on a local network."
+          }
+        }
+      }
     },
-    "Файлы с iPhone" : {
-
+    "Уменьшать обложку на паузе": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shrink cover when paused"
+          }
+        }
+      }
     },
-    "Фильтр" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Filter"
+    "Уменьшить текст": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smaller text"
           }
         }
       }
     },
-    "Фон" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Background"
+    "Файл уже есть в медиатеке": {},
+    "Файлы": {},
+    "Файлы с %@": {},
+    "Фильтр": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter"
           }
         }
       }
     },
-    "Хранилище" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Storage"
+    "Фон": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Background"
           }
         }
       }
     },
-    "Часто прослушиваемые" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Most played"
+    "Хранилище": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Storage"
           }
         }
       }
     },
-    "Часто слушаю" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "On repeat"
+    "Часто прослушиваемые": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Most played"
           }
         }
       }
     },
-    "Чёрная (OLED)" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Black (OLED)"
+    "Часто слушаю": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On repeat"
           }
         }
       }
     },
-    "Читать полностью" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Read more"
+    "Читать полностью": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read more"
           }
         }
       }
     },
-    "Эквалайзер" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Equalizer"
+    "Чёрная (OLED)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Black (OLED)"
           }
         }
       }
     },
-    "Экономное · MP3 128" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Data saver · MP3 128"
+    "Эквалайзер": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Equalizer"
           }
         }
       }
     },
-    "Это демомедиатека. Подключи Navidrome, чтобы слушать свою музыку." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This is a demo library. Connect Navidrome to play your own music."
+    "Экономное · MP3 128": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Data saver · MP3 128"
           }
         }
       }
     },
-    "Это не аудиофайл — пропущено" : {
-
+    "Это демомедиатека. Подключи Navidrome, чтобы слушать свою музыку.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is a demo library. Connect Navidrome to play your own music."
+          }
+        }
+      }
     },
-    "Янтарь" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Amber"
+    "Это не аудиофайл — пропущено": {},
+    "Янтарь": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Amber"
           }
         }
       }
     }
   },
-  "version" : "1.0"
+  "version": "1.0"
 }

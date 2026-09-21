@@ -50,10 +50,14 @@
 			</array>
 		</dict>
 	</dict>
+	<!-- Required for the Mac App Store; ignored on iOS. -->
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.music</string>
 	<key>UIFileSharingEnabled</key>
 	<true/>
+	<!-- YES is required on macOS; the importer copies picked files into Music either way. -->
 	<key>LSSupportsOpeningDocumentsInPlace</key>
-	<false/>
+	<true/>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>

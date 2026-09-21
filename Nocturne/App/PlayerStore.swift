@@ -69,6 +69,8 @@ final class PlayerStore {
         }
         observations = Self.observePlayer(player, store: self)
         let center = NotificationCenter.default
+        #if !targetEnvironment(macCatalyst)
+        // macOS has no AVAudioSession: routing, interruptions and activation are handled by the system.
         notifications.append(center.addObserver(forName: AVAudioSession.interruptionNotification, object: nil, queue: .main) { [weak self] note in
             let type = note.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt
             let options = note.userInfo?[AVAudioSessionInterruptionOptionKey] as? UInt ?? 0
@@ -78,6 +80,7 @@ final class PlayerStore {
             let reason = note.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt
             MainActor.assumeIsolated { if reason == AVAudioSession.RouteChangeReason.oldDeviceUnavailable.rawValue { self?.pause() } }
         })
+        #endif
         notifications.append(center.addObserver(forName: AVPlayerItem.failedToPlayToEndTimeNotification, object: nil, queue: .main) { [weak self] note in
             guard let item = note.object as? AVPlayerItem else { return }
             let id = ObjectIdentifier(item)
@@ -251,7 +254,9 @@ final class PlayerStore {
         queue = PlaybackQueue(); elapsed = 0; duration = 0; client = nil; artwork = nil
         MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
         publishWidget()
+        #if !targetEnvironment(macCatalyst)
         Self.sessionQueue.async { try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation) }
+        #endif
         try? FileManager.default.removeItem(at: Self.snapshotURL)
     }
 
@@ -531,9 +536,11 @@ final class PlayerStore {
             let wasPlaying = isPlaying
             pause()
             resumeAfterInterruption = wasPlaying
-        } else if resumeAfterInterruption, AVAudioSession.InterruptionOptions(rawValue: options).contains(.shouldResume) {
-            resume()
+            return
         }
+        #if !targetEnvironment(macCatalyst)
+        if resumeAfterInterruption, AVAudioSession.InterruptionOptions(rawValue: options).contains(.shouldResume) { resume() }
+        #endif
     }
 
     /// Audio session calls can block for hundreds of milliseconds (calls, Bluetooth, AirPlay routing),
@@ -541,6 +548,9 @@ final class PlayerStore {
     private static let sessionQueue = DispatchQueue(label: "app.nocturne.audio-session", qos: .userInitiated)
 
     private func activateAndPlay() {
+        #if targetEnvironment(macCatalyst)
+        if isPlaying { player.play() }
+        #else
         Self.sessionQueue.async { [weak self] in
             var failure: String?
             do {
@@ -551,6 +561,7 @@ final class PlayerStore {
             let result = failure
             Task { @MainActor in self?.sessionActivated(failure: result) }
         }
+        #endif
     }
 
     private func sessionActivated(failure: String?) {

@@ -54,14 +54,21 @@ struct SettingsView: View {
                     NavigationLink { AppearanceSettingsView() } label: { Label(String(localized: "Оформление"), systemImage: "paintpalette") }
                 }
                 Section {
+                    // A Mac has no cellular link, so it only gets the one quality setting.
+                    #if targetEnvironment(macCatalyst)
+                    Picker(String(localized: "Качество"), selection: $wifiQuality) { qualityOptions }
+                    #else
                     Picker("Wi-Fi", selection: $wifiQuality) { qualityOptions }
                     Picker(String(localized: "Сотовая сеть"), selection: $cellularQuality) { qualityOptions }
+                    #endif
                 } header: { Text(String(localized: "Качество потока")) } footer: {
-                    Text(String(localized: "Оригинал передаёт файл без перекодирования: FLAC и ALAC звучат лучше, но занимают в 3–5 раз больше трафика. Форматы, которые iPhone не воспроизводит (например, OGG), выбирай только с MP3. Новое качество применяется со следующего трека."))
+                    Text(String(localized: "Оригинал передаёт файл без перекодирования: FLAC и ALAC звучат лучше, но занимают в 3–5 раз больше трафика. Форматы, которые \(Device.name) не воспроизводит (например, OGG), выбирай только с MP3. Новое качество применяется со следующего трека."))
                 }
                 Section {
                     Picker(String(localized: "Качество загрузок"), selection: $downloadQuality) { qualityOptions }
+                    #if !targetEnvironment(macCatalyst)
                     Toggle(String(localized: "Только по Wi-Fi"), isOn: $wifiOnly)
+                    #endif
                     Toggle(String(localized: "Скачивать любимые треки"), isOn: $autoFavorites)
                     Picker(String(localized: "Лимит места"), selection: $limitGB) {
                         Text(String(localized: "Без лимита")).tag(0.0)

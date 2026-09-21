@@ -2,7 +2,25 @@ import AVFoundation
 import CryptoKit
 import UIKit
 
-/// Music stored on the iPhone itself. Files live in Documents/Music, so they are visible in the Files app
+/// The device the app runs on, for texts like "На iPhone" / "На Mac" — the same build ships to phone, iPad and Mac.
+@MainActor enum Device {   // UIDevice is main-actor isolated
+    static var name: String {
+        #if targetEnvironment(macCatalyst)
+        "Mac"
+        #else
+        UIDevice.current.userInterfaceIdiom == .pad ? "iPad" : "iPhone"
+        #endif
+    }
+    static var icon: String {
+        #if targetEnvironment(macCatalyst)
+        "laptopcomputer"
+        #else
+        UIDevice.current.userInterfaceIdiom == .pad ? "ipad" : "iphone"
+        #endif
+    }
+}
+
+/// Music stored on the device itself. Files live in Documents/Music, so they are visible in the Files app
 /// and in Finder; the index (tags, artwork) lives in Application Support. Song ids are "local:<hash of path>".
 @MainActor @Observable
 final class LocalLibrary {

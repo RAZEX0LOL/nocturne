@@ -37,7 +37,7 @@
 		CDFAACE3C280C2577BB1C25B /* NowPlayingSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50820B4A82DCF7B45C60DE2B /* NowPlayingSnapshot.swift */; };
 		2F50D00DF5F9B5537DED6A7C /* WidgetIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDC6CBE205B46EE8D1D63DF6 /* WidgetIntents.swift */; };
 		8C168313618BE0F9D2048A61 /* NocturneWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = B72DE0D24B2E2CB64D92A750 /* NocturneWidget.swift */; };
-		43E3EF56C042396FD4E8DC78 /* NocturneWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 1CF7607B608A7E6324CD10BC /* NocturneWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		43E3EF56C042396FD4E8DC78 /* NocturneWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 1CF7607B608A7E6324CD10BC /* NocturneWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); };  platformFilters = (ios, ); };
 		F311A0F0AD4F5DF5A36F43B9 /* Nocturne/App/CarPlaySceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788DD5A81B6E4766D235BDF2 /* Nocturne/App/CarPlaySceneDelegate.swift */; };
 		618D0A3513FAEA75E288EF1E /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 6F5ADE23265FE4C20E5DAE8F /* PrivacyInfo.xcprivacy */; };
 		0D15B47E6E7F49D134222167 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 6F5ADE23265FE4C20E5DAE8F /* PrivacyInfo.xcprivacy */; };
@@ -383,7 +383,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CURRENT_PROJECT_VERSION = 1;
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 1.0;
 				CLANG_ENABLE_MODULES = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -398,6 +398,10 @@
 		6C7EFF6369083C8E1F2B1994 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				SUPPORTS_MACCATALYST = YES;
+				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = NO;
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "Nocturne/Resources/Nocturne-Catalyst.entitlements";
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				CODE_SIGN_ENTITLEMENTS = Nocturne/Resources/Nocturne.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 22YK6BV6UY;
@@ -405,8 +409,7 @@
 				INFOPLIST_FILE = Nocturne/Resources/Info.plist; ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIcon-Dawn AppIcon-Mint AppIcon-Mono AppIcon-Light"; ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES; ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				PRODUCT_BUNDLE_IDENTIFIER = app.nocturne.music;
 				PRODUCT_NAME = Nocturne;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
-				SUPPORTS_MACCATALYST = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -418,7 +421,7 @@
 				COPY_PHASE_STRIP = NO;
 				STRIP_INSTALLED_PRODUCT = NO;
 				CURRENT_PROJECT_VERSION = 1;
-				MARKETING_VERSION = 0.1.0;
+				MARKETING_VERSION = 1.0;
 				CLANG_ENABLE_MODULES = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -434,10 +437,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 22YK6BV6UY;
 				GENERATE_INFOPLIST_FILE = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = app.nocturne.music.uitests;
+				SUPPORTS_MACCATALYST = YES;
 				PRODUCT_NAME = NocturneUITests;
-				TARGETED_DEVICE_FAMILY = 1;
+				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_TARGET_NAME = Nocturne;
 			};
 			name = Debug;
@@ -445,6 +450,10 @@
 		DD75E2CB1C510A828AC72D96 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				SUPPORTS_MACCATALYST = YES;
+				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = NO;
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "Nocturne/Resources/Nocturne-Catalyst.entitlements";
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				CODE_SIGN_ENTITLEMENTS = Nocturne/Resources/Nocturne.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 22YK6BV6UY;
@@ -452,8 +461,7 @@
 				INFOPLIST_FILE = Nocturne/Resources/Info.plist; ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIcon-Dawn AppIcon-Mint AppIcon-Mono AppIcon-Light"; ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES; ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				PRODUCT_BUNDLE_IDENTIFIER = app.nocturne.music;
 				PRODUCT_NAME = Nocturne;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
-				SUPPORTS_MACCATALYST = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -463,10 +471,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 22YK6BV6UY;
 				GENERATE_INFOPLIST_FILE = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = app.nocturne.music.uitests;
+				SUPPORTS_MACCATALYST = YES;
 				PRODUCT_NAME = NocturneUITests;
-				TARGETED_DEVICE_FAMILY = 1;
+				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_TARGET_NAME = Nocturne;
 			};
 			name = Release;

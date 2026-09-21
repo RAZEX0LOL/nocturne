@@ -2,7 +2,7 @@
 
 Два отдельных нативных клиента Navidrome:
 
-- **iPhone:** Swift 6, SwiftUI, AVPlayer, MediaPlayer, Keychain. Минимальная версия — iOS 17. Внешних зависимостей нет.
+- **iPhone, iPad и Mac:** Swift 6, SwiftUI, AVPlayer, MediaPlayer, Keychain. Одна сборка на все три платформы: iOS/iPadOS 17 и macOS 14 (Mac Catalyst). Внешних зависимостей нет.
 - **Android:** Kotlin, Jetpack Compose, Media3 ExoPlayer, Android Keystore. Минимальная версия — Android 8. Проект и инструкция — в [`android/`](android/README.md).
 
 Ниже описана iOS-версия. Приложения используют один протокол Navidrome, но имеют отдельные интерфейсы и нативные аудиодвижки.
@@ -12,6 +12,16 @@
 Открой `Nocturne.xcodeproj` в Xcode, выбери схему **Nocturne** и iPhone Simulator, нажми Run. На первом экране можно подключить сервер или открыть демоверсию. Демоверсия содержит вымышленные альбомы и процедурные обложки, аудиофайлов в ней нет.
 
 Для установки на iPhone выбери свою команду Apple Developer в **Signing & Capabilities → Team**, при необходимости замени Bundle Identifier на уникальный, подключи устройство и нажми Run. У приложения пока нет релизной иконки и метаданных App Store; это сборка для разработки.
+
+На iPad — та же схема, просто выбери iPad в списке устройств: сетки перестраиваются под ширину экрана.
+
+Для Mac выбери в списке устройств **My Mac (Mac Catalyst)** и нажми Run, либо собери готовое приложение командой:
+
+```bash
+zsh scripts/release.sh mac
+```
+
+Готовый `build/release/Nocturne.app` можно перетащить в «Программы». На Mac нет CarPlay, системного слайдера громкости и настроек сотовой сети — остальное работает так же, включая папку музыки (Finder → Nocturne → Music).
 
 ## Реализовано
 

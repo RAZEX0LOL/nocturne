@@ -1,3 +1,4 @@
+#if !targetEnvironment(macCatalyst)
 import CarPlay
 import UIKit
 
@@ -29,7 +30,7 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
 
     private func fill(favorites: CPListTemplate, recent: CPListTemplate, playlists: CPListTemplate, radio: CPListTemplate) async {
         guard let client = library.client else {
-            favorites.updateSections([CPListSection(items: [CPListItem(text: String(localized: "Подключи сервер в приложении на iPhone"), detailText: nil)])])
+            favorites.updateSections([CPListSection(items: [CPListItem(text: String(localized: "Подключи сервер в приложении на \(Device.name)"), detailText: nil)])])
             return
         }
         if library.starredSongs.isEmpty { await library.refresh() }
@@ -102,3 +103,4 @@ final class CarPlaySceneDelegate: UIResponder, CPTemplateApplicationSceneDelegat
         }
     }
 }
+#endif

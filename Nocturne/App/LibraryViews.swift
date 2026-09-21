@@ -117,11 +117,15 @@ struct AlbumCarousel: View {
 
 struct LibraryView: View {
     enum Category: String, CaseIterable {
-        case device = "На iPhone", downloads = "Загрузки", albums = "Альбомы", artists = "Артисты", playlists = "Плейлисты",
+        case device, downloads = "Загрузки", albums = "Альбомы", artists = "Артисты", playlists = "Плейлисты",
              songs = "Любимое", radio = "Радио", genres = "Жанры"
-        var icon: String? {
+        /// The phone tab is named after the device it runs on ("На iPad", "На Mac"), the rest are plain keys.
+        @MainActor var title: String {
+            self == .device ? String(localized: "На \(Device.name)") : String(localized: String.LocalizationValue(rawValue))
+        }
+        @MainActor var icon: String? {
             switch self {
-            case .device: "iphone"
+            case .device: Device.icon
             case .downloads: "arrow.down.circle"
             default: nil
             }
@@ -172,7 +176,7 @@ struct LibraryView: View {
                             Button { category = item } label: {
                                 HStack(spacing: 5) {
                                     if let icon = item.icon { Image(systemName: icon) }
-                                    Text(LocalizedStringKey(item.rawValue))
+                                    Text(item.title)
                                     if let count = count(for: item), count > 0 {
                                         Text("\(count)").font(.caption.weight(.semibold).monospacedDigit()).opacity(0.7)
                                     }

@@ -273,7 +273,10 @@ final class LibraryStore {
     }
 
     private static func itemQuery(_ account: String) -> [String: Any] {
-        [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service, kSecAttrAccount as String: account]
+        // kSecUseDataProtectionKeychain: on Mac Catalyst the default is the old file-based keychain,
+        // which a sandboxed app cannot write to; this asks for the same keychain the app uses on iOS.
+        [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service, kSecAttrAccount as String: account,
+         kSecUseDataProtectionKeychain as String: true]
     }
 
     private static func read(_ account: String) -> Credentials? {

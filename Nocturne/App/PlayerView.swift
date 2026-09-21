@@ -3,6 +3,7 @@ import SwiftUI
 struct MiniPlayer: View {
     let open: () -> Void
     @Environment(PlayerStore.self) private var player
+
     var body: some View {
         if let song = player.current {
             HStack(spacing: 12) {
@@ -37,16 +38,17 @@ struct MiniPlayer: View {
 struct PlayerView: View {
     @Environment(PlayerStore.self) private var player
     @Environment(LibraryStore.self) private var library
+    @Environment(DownloadStore.self) private var downloads
     @Environment(\.dismiss) private var dismiss
-    @State private var showQueue = false
+    /// One sheet at a time: Mac Catalyst drops input when several .sheet modifiers sit on one view.
+    enum Modal: String, Identifiable { case queue, lyrics, playlist; var id: String { rawValue } }
+    @State private var modal: Modal?
     @State private var scrubbing = false
     @State private var position: Double = 0
     @State private var starred = false
     @State private var saving = false
-    @State private var showLyrics = false
     @State private var swipeOffset: CGFloat = 0
     private var appearance: Appearance { Appearance.shared }
-    @State private var addToPlaylist = false
     // Height taken by everything except the cover; scales with Dynamic Type so the layout still fits.
     /// Height of everything except the cover, measured from the laid-out content
     /// (so new controls, Dynamic Type or live mode never push the screen into scrolling).
@@ -95,7 +97,7 @@ struct PlayerView: View {
                         }
                         Spacer()
                         Menu {
-                            if let song = player.current { SongActions(songs: [song], addToPlaylist: $addToPlaylist) }
+                            if let song = player.current { SongActions(songs: [song], addToPlaylist: Binding(get: { modal == .playlist }, set: { modal = $0 ? .playlist : nil })) }
                         } label: { Image(systemName: "ellipsis").frame(width: 44, height: 44) }
                             .accessibilityLabel(String(localized: "Действия с треком")).disabled(library.client == nil)
                     }
@@ -105,9 +107,9 @@ struct PlayerView: View {
                         .animation(.spring(duration: 0.45, bounce: 0.3), value: player.isPlaying)
                         .offset(x: swipeOffset)
                         .rotationEffect(.degrees(Double(swipeOffset) / 40))
-                        .onTapGesture { showLyrics = true }
+                        .onTapGesture { modal = .lyrics }
                         .gesture(coverSwipe, including: appearance.coverSwipe ? .all : .none)
-                        .accessibilityAction(named: String(localized: "Текст песни")) { showLyrics = true }
+                        .accessibilityAction(named: String(localized: "Текст песни")) { modal = .lyrics }
                     HStack(alignment: .center) {
                         VStack(alignment: .leading, spacing: 7) {
                             Text(player.current?.title ?? String(localized: "Ничего не играет")).font(.title2.bold()).lineLimit(2)
@@ -177,14 +179,14 @@ struct PlayerView: View {
                             updateReserved(cover: coverSize(in: geometry))
                         }
                     HStack {
-                        Button { showLyrics = true } label: { Image(systemName: "quote.bubble").frame(width: 44, height: 44) }
+                        Button { modal = .lyrics } label: { Image(systemName: "quote.bubble").frame(width: 44, height: 44) }
                             .accessibilityLabel(String(localized: "Текст песни"))
                         Spacer()
                         SleepTimerMenu()
                         Spacer()
                         RoutePicker().frame(width: 44, height: 44).accessibilityLabel(String(localized: "Выбрать аудиоустройство"))
                         Spacer()
-                        Button { showQueue = true } label: { Image(systemName: "list.bullet").frame(width: 44, height: 44) }
+                        Button { modal = .queue } label: { Image(systemName: "list.bullet").frame(width: 44, height: 44) }
                             .accessibilityLabel(String(localized: "Очередь"))
                     }.font(.title3).foregroundStyle(Theme.secondary)
                 }.padding(.horizontal, 28).padding(.top, 34).padding(.bottom, 12)
@@ -214,17 +216,48 @@ struct PlayerView: View {
             }
             .sensoryFeedback(.impact(weight: .light), trigger: player.isPlaying) { _, _ in appearance.haptics }
             .sensoryFeedback(.selection, trigger: player.current?.id) { _, _ in appearance.haptics }
-            .sheet(isPresented: $showQueue) { QueueView() }
-            .sheet(isPresented: $showLyrics) { LyricsView() }
-            .sheet(isPresented: $addToPlaylist) { if let song = player.current { PlaylistPicker(songs: [song]) } }
+            .modalOrPanel($modal) { which, close in
+                Group {
+                    switch which {
+                    case .queue: QueueView(onClose: close)
+                    case .lyrics: LyricsView(onClose: close)
+                    case .playlist: if let song = player.current { PlaylistPicker(songs: [song], onClose: close) }
+                    }
+                }.appStores(library, player, downloads)
+            }
             .overlay(alignment: .top) { if let notice = player.notice { Toast(text: notice).padding(.top, 8) } }
             .animation(.spring(duration: 0.3), value: player.notice)
+    }
+}
+
+extension View {
+    /// A sheet on iOS. On Mac Catalyst a sheet shown from inside another sheet renders but never receives
+    /// clicks, so there the same content slides in as a panel over the presenting view instead.
+    @ViewBuilder func modalOrPanel<Item: Identifiable, Content: View>(
+        _ item: Binding<Item?>, @ViewBuilder content: @escaping (Item, @escaping () -> Void) -> Content
+    ) -> some View {
+        #if targetEnvironment(macCatalyst)
+        overlay {
+            if let value = item.wrappedValue {
+                content(value) { item.wrappedValue = nil }
+                    .background(Theme.background)
+                    .transition(.move(edge: .bottom))
+            }
+        }
+        .animation(.spring(duration: 0.3), value: item.wrappedValue?.id)
+        #else
+        sheet(item: item) { value in content(value) { item.wrappedValue = nil } }
+        #endif
     }
 }
 
 struct QueueView: View {
     @Environment(PlayerStore.self) private var player
     @Environment(\.dismiss) private var dismiss
+    /// Set when the view is shown as a panel instead of a sheet (Mac), where `dismiss` would close the player.
+    var onClose: (() -> Void)?
+    private func close() { if let onClose { onClose() } else { dismiss() } }
+
     var body: some View {
         NavigationStack {
             List {
@@ -255,7 +288,7 @@ struct QueueView: View {
                         }.accessibilityLabel(String(localized: "Режим повтора"))
                     }
                 }
-                ToolbarItem(placement: .topBarTrailing) { Button(String(localized: "Готово")) { dismiss() } }
+                ToolbarItem(placement: .topBarTrailing) { Button(String(localized: "Готово")) { close() } }
             }
         }
     }

@@ -13,6 +13,14 @@ struct NocturneApp: App {
     }
 }
 
+extension View {
+    /// Mac Catalyst does not always carry the observable stores into a presented sheet, so every
+    /// modal gets them handed over explicitly. Harmless on iOS: it re-installs the same objects.
+    func appStores(_ library: LibraryStore, _ player: PlayerStore, _ downloads: DownloadStore) -> some View {
+        environment(library).environment(player).environment(downloads)
+    }
+}
+
 struct RootView: View {
     @Environment(LibraryStore.self) private var library
     @Environment(PlayerStore.self) private var player
@@ -66,7 +74,7 @@ struct RootView: View {
             if url.isFileURL {
                 Task {
                     let added = await LocalLibrary.shared.importItems([url])
-                    player.show(added > 0 ? String(localized: "Добавлено на iPhone: \(added)") : String(localized: "Новых треков не найдено"))
+                    player.show(added > 0 ? String(localized: "Добавлено на \(Device.name): \(added)") : String(localized: "Новых треков не найдено"))
                 }
                 return
             }
@@ -110,9 +118,9 @@ struct RootView: View {
             fullPlayer = true
         }
         #endif
-        .sheet(isPresented: $settings) { SettingsView() }
+        .sheet(isPresented: $settings) { SettingsView().appStores(library, player, downloads) }
         .addMusicPresenter()
-        .sheet(isPresented: $fullPlayer) { PlayerView().presentationDragIndicator(.visible) }
+        .sheet(isPresented: $fullPlayer) { PlayerView().presentationDragIndicator(.visible).appStores(library, player, downloads) }
         .alert(String(localized: "Воспроизведение"), isPresented: Binding(get: { player.error != nil }, set: { if !$0 { player.error = nil } })) {
             Button(String(localized: "Понятно")) { player.error = nil }
         } message: { Text(player.error ?? "") }
@@ -180,7 +188,7 @@ struct ConnectionView: View {
                     if adding {
                         EmptyView()
                     } else if !library.isConnected {
-                        Button(String(localized: "Слушать музыку с iPhone")) { player.stop(); library.useOnDevice(); dismiss() }
+                        Button(String(localized: "Слушать музыку с \(Device.name)")) { player.stop(); library.useOnDevice(); dismiss() }
                             .frame(maxWidth: .infinity).padding(.vertical, 8).disabled(busy)
                         Button(String(localized: "Посмотреть демоверсию")) { player.stop(); library.useDemo(); dismiss() }
                             .frame(maxWidth: .infinity).padding(.vertical, 8).disabled(busy)

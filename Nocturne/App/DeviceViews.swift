@@ -19,9 +19,9 @@ struct DeviceLibraryView: View {
             if local.isImporting { HStack { ProgressView(); Text(String(localized: "Добавляю музыку…")).font(.caption).foregroundStyle(Theme.secondary) } }
             if songs.isEmpty {
                 ContentUnavailableView {
-                    Label(String(localized: "На iPhone пока нет музыки"), systemImage: "iphone")
+                    Label(String(localized: "На \(Device.name) пока нет музыки"), systemImage: Device.icon)
                 } description: {
-                    Text(String(localized: "Добавь файлы или папку кнопками выше, скачай по ссылке или через браузер, отправь через «Поделиться → Nocturne» из любого приложения или скопируй с Mac в Finder: iPhone → Файлы → Nocturne → Music. Поддерживаются MP3, M4A, AAC, ALAC, FLAC, WAV."))
+                    Text(hint)
                 }
             } else {
                 Text(String(localized: "\(songs.count) треков · \(ByteCountFormatter.string(fromByteCount: Int64(local.totalSize), countStyle: .file))"))
@@ -30,6 +30,15 @@ struct DeviceLibraryView: View {
                 DeviceAlbumGrid(albums: DeviceAlbum.group(songs))
             }
         }
+    }
+
+    /// Where the files can come from differs per platform: on a Mac the folder is right there in Finder.
+    private var hint: String {
+        #if targetEnvironment(macCatalyst)
+        String(localized: "Добавь файлы или папку кнопками выше, скачай по ссылке или через браузер, или положи файлы в папку Nocturne → Music в Finder. Поддерживаются MP3, M4A, AAC, ALAC, FLAC, WAV.")
+        #else
+        String(localized: "Добавь файлы или папку кнопками выше, скачай по ссылке или через браузер, отправь через «Поделиться → Nocturne» из любого приложения или скопируй с Mac в Finder: \(Device.name) → Файлы → Nocturne → Music. Поддерживаются MP3, M4A, AAC, ALAC, FLAC, WAV.")
+        #endif
     }
 
     private func addButton(_ title: String, _ icon: String, _ source: AddMusicCoordinator.Source) -> some View {
@@ -97,7 +106,7 @@ struct OnDeviceHomeSection: View {
                     Image(systemName: "wifi.slash").foregroundStyle(.orange)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(String(localized: "Нет связи с сервером")).font(.subheadline.weight(.semibold))
-                        Text(String(localized: "Показано то, что есть на iPhone и в загрузках.")).font(.caption).foregroundStyle(Theme.secondary)
+                        Text(String(localized: "Показано то, что есть на \(Device.name) и в загрузках.")).font(.caption).foregroundStyle(Theme.secondary)
                     }
                     Spacer()
                     Button(String(localized: "Повторить")) { Task { await library.refresh() } }.font(.callout)

@@ -44,7 +44,7 @@ enum WebImport {
             player.show(String(localized: "Это не аудиофайл — пропущено")); return
         }
         let added = await LocalLibrary.shared.importItems([file])
-        player.show(added > 0 ? String(localized: "Скачано на iPhone: \(file.deletingPathExtension().lastPathComponent)")
+        player.show(added > 0 ? String(localized: "Скачано на \(Device.name): \(file.deletingPathExtension().lastPathComponent)")
                               : String(localized: "Файл уже есть в медиатеке"))
     }
 }
@@ -67,7 +67,7 @@ struct LinkImportView: View {
                         if let text = strings.first { address = text.trimmingCharacters(in: .whitespacesAndNewlines) }
                     }.labelStyle(.titleAndIcon)
                 } footer: {
-                    Text(String(localized: "Прямая ссылка на аудиофайл: MP3, M4A, AAC, FLAC, WAV. Файл появится в «На iPhone»."))
+                    Text(String(localized: "Прямая ссылка на аудиофайл: MP3, M4A, AAC, FLAC, WAV. Файл появится в «На \(Device.name)»."))
                 }
                 if let error { Text(error).foregroundStyle(.red) }
                 Section {

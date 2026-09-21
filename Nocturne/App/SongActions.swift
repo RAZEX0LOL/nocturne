@@ -14,7 +14,7 @@ struct SongActions: View {
         Button { player.addToQueue(songs, client: library.client) } label: { Label(String(localized: "В конец очереди"), systemImage: "text.append") }
         if onDevice {
             Button(role: .destructive) { LocalLibrary.shared.remove(songs) } label: {
-                Label(String(localized: "Удалить с iPhone"), systemImage: "trash")
+                Label(String(localized: "Удалить с \(Device.name)"), systemImage: "trash")
             }
         }
         if !onDevice, songs.count == 1, let song = songs.first, let client = library.client {
@@ -91,6 +91,9 @@ struct PlaylistPicker: View {
     @State private var creating = false
     @State private var name = ""
     @State private var busy = false
+    /// Set when shown as a panel instead of a sheet (Mac), where `dismiss` would close the player.
+    var onClose: (() -> Void)?
+    private func close() { if let onClose { onClose() } else { dismiss() } }
 
     var body: some View {
         NavigationStack {
@@ -113,7 +116,7 @@ struct PlaylistPicker: View {
             .scrollContentBackground(.hidden).background(Theme.background)
             .disabled(busy)
             .navigationTitle(String(localized: "В плейлист")).navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .topBarTrailing) { Button(String(localized: "Отмена")) { dismiss() } } }
+            .toolbar { ToolbarItem(placement: .topBarTrailing) { Button(String(localized: "Отмена")) { close() } } }
             .alert(String(localized: "Новый плейлист"), isPresented: $creating) {
                 TextField(String(localized: "Название"), text: $name)
                 Button(String(localized: "Создать")) {
@@ -131,7 +134,7 @@ struct PlaylistPicker: View {
     private func run(_ success: String, _ action: @escaping () async throws -> Void) {
         busy = true
         Task {
-            do { try await action(); player.show(success); dismiss() }
+            do { try await action(); player.show(success); close() }
             catch { player.error = LibraryStore.message(error) }
             busy = false
         }

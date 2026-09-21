@@ -7,6 +7,9 @@ struct LyricsView: View {
     @State private var lyrics: StructuredLyrics?
     @State private var state = LoadState.loading
     private enum LoadState { case loading, loaded, empty, failed }
+    /// Set when shown as a panel instead of a sheet (Mac), where `dismiss` would close the player.
+    var onClose: (() -> Void)?
+    private func close() { if let onClose { onClose() } else { dismiss() } }
 
     var body: some View {
         NavigationStack {
@@ -33,7 +36,7 @@ struct LyricsView: View {
                     Button { Appearance.shared.lyricsScale = min(1.6, Appearance.shared.lyricsScale + 0.1) } label: { Image(systemName: "textformat.size.larger") }
                         .accessibilityLabel(String(localized: "Увеличить текст"))
                 }
-                ToolbarItem(placement: .topBarTrailing) { Button(String(localized: "Готово")) { dismiss() } }
+                ToolbarItem(placement: .topBarTrailing) { Button(String(localized: "Готово")) { close() } }
             }
         }
         .task(id: player.current?.id) { await load() }
