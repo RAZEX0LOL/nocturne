@@ -28,6 +28,8 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
+      # Проверяет, что gradle-wrapper.jar — подлинный дистрибутив Gradle, а не подменённый бинарник.
+      - uses: gradle/actions/wrapper-validation@v4
       - uses: gradle/actions/setup-gradle@v4
       - run: ./gradlew -PcoreOnly :core:test
         working-directory: android

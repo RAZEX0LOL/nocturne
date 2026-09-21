@@ -13,3 +13,6 @@ local.properties
 *.aab
 .swiftpm/
 **/build/
+
+# Gradle Wrapper: нужен в репозитории, иначе сборка не стартует ни у CI, ни после клонирования.
+!android/gradle/wrapper/gradle-wrapper.jar
