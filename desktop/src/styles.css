@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+/* Те же цвета, что в приложении на iPhone: тёмная база и фиолетовый акцент. */
+@theme {
+  --color-base: #0b0b10;
+  --color-surface: #16161f;
+  --color-surface-strong: #1f1f2b;
+  --color-accent: #a78bfa;
+  --color-accent-strong: #8b5cf6;
+  --color-primary: #f4f4f8;
+  --color-secondary: #9a9aad;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-base);
+  color: var(--color-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  /* Выделять текст мышью в плеере незачем — это мешает перетаскиванию. */
+  user-select: none;
+}
+
+input {
+  user-select: text;
+}
+
+/* Полоса прокрутки в тон интерфейсу, иначе на Windows она белая и режет глаз. */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-surface-strong);
+  border-radius: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}

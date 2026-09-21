@@ -1,3 +1,4 @@
+import { md5 } from './md5'
 import { MusicError, type Album, type Artist, type Playlist, type Song } from './models'
 
 /** Правила адресов и подписи описаны в shared/spec/api.md и проверяются shared/cases. */
@@ -67,12 +68,6 @@ export class Credentials {
   }
 }
 
-/** MD5 нужен самим протоколом Subsonic; пароль уходит только как соль с хешем и только по HTTPS. */
-export async function md5(text: string): Promise<string> {
-  const { createHash } = await import('node:crypto')
-  return createHash('md5').update(text, 'utf8').digest('hex')
-}
-
 export class NavidromeClient {
   constructor(readonly credentials: Credentials) {}
 
@@ -86,7 +81,7 @@ export class NavidromeClient {
     const base = this.credentials.server
     const path = `${base.pathname.replace(/\/$/, '')}/rest/${endpoint}.view`
     const url = new URL(path, base.origin)
-    const token = await md5(this.credentials.password + salt)
+    const token = md5(this.credentials.password + salt)
     // Строку запроса собираем сами: URLSearchParams кодирует пробел как «+», и сервер потом не
     // отличит его от настоящего плюса в названии трека. encodeURIComponent даёт %20 и %2B.
     const query: string[] = []

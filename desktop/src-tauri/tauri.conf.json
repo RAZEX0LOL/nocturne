@@ -1,0 +1,48 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Nocturne",
+  "version": "1.0.0",
+  "identifier": "app.nocturne.music",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:1420",
+    "beforeDevCommand": "bun run dev",
+    "beforeBuildCommand": "bun run build"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Nocturne",
+        "width": 1180,
+        "height": 800,
+        "minWidth": 720,
+        "minHeight": 560,
+        "theme": "Dark",
+        "backgroundColor": "#0B0B10"
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; img-src 'self' data: http: https: asset: http://asset.localhost; media-src 'self' blob: http: https: asset: http://asset.localhost; connect-src 'self' http: https: ipc: http://ipc.localhost; style-src 'self' 'unsafe-inline'"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": [
+      "deb",
+      "appimage",
+      "msi",
+      "nsis",
+      "dmg"
+    ],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "category": "Music",
+    "shortDescription": "Клиент Navidrome",
+    "longDescription": "Слушай свою музыку с домашнего сервера Navidrome или прямо с этого компьютера."
+  }
+}

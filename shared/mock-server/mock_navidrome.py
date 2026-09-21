@@ -32,7 +32,16 @@ class Handler(BaseHTTPRequestHandler):
 
     def reply(self, body, ctype="application/json", status=200):
         self.send_response(status); self.send_header("Content-Type", ctype); self.send_header("Content-Length", str(len(body)))
-        self.end_headers(); self.wfile.write(body)
+        self.cors(); self.end_headers(); self.wfile.write(body)
+
+    def cors(self):
+        # Веб-версия ходит сюда с другого порта (Vite), иначе браузер отклонит ответ.
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Headers", "*")
+        self.send_header("Access-Control-Expose-Headers", "Content-Length, Content-Range")
+
+    def do_OPTIONS(self):
+        self.send_response(204); self.cors(); self.send_header("Content-Length", "0"); self.end_headers()
 
     def ok(self, **payload):
         self.reply(json.dumps({"subsonic-response": {"status": "ok", "version": "1.16.1", **payload}}).encode())
@@ -79,9 +88,9 @@ class Handler(BaseHTTPRequestHandler):
                 part = data[start:end + 1]
                 self.send_response(206); self.send_header("Content-Type", "audio/wav"); self.send_header("Accept-Ranges", "bytes")
                 self.send_header("Content-Range", f"bytes {start}-{end}/{len(data)}"); self.send_header("Content-Length", str(len(part)))
-                self.end_headers(); self.wfile.write(part); return
+                self.cors(); self.end_headers(); self.wfile.write(part); return
             self.send_response(200); self.send_header("Content-Type", "audio/wav"); self.send_header("Accept-Ranges", "bytes")
-            self.send_header("Content-Length", str(len(data))); self.end_headers(); self.wfile.write(data); return
+            self.send_header("Content-Length", str(len(data))); self.cors(); self.end_headers(); self.wfile.write(data); return
         self.ok()
 
 ThreadingHTTPServer(("127.0.0.1", 4533), Handler).serve_forever()
