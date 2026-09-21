@@ -60,6 +60,14 @@ fn delete_credentials(account: String) -> Result<(), String> {
     }
 }
 
+/// Журнал событий звука в терминал — только в отладочной сборке, в релизе команда молчит.
+#[tauri::command]
+fn debug_log(line: String) {
+    if cfg!(debug_assertions) {
+        eprintln!("[web] {line}");
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -68,7 +76,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             save_credentials,
             load_credentials,
-            delete_credentials
+            delete_credentials,
+            debug_log
         ])
         .run(tauri::generate_context!())
         .expect("не удалось запустить приложение");

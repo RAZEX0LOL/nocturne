@@ -1,5 +1,6 @@
 import type { Song } from '../core/models'
 import { replayGainVolume, type ReplayGainMode } from '../core/replaygain'
+import { debugLog } from '../debug'
 
 /** Те же полосы, что в приложении на iPhone, чтобы настройки звучали одинаково. */
 export const EQ_BANDS = [60, 150, 400, 1000, 2400, 6000, 15000] as const
@@ -30,6 +31,8 @@ export class AudioEngine {
   private trackVolume = 1
   private fadeSeconds = 0
   private eq: EqSettings = { enabled: false, gains: [...EQ_PRESETS.flat!] }
+  /** Пауза поставлена нами (кнопкой, клавишей, концом очереди), а не движком окна. */
+  private pausedOnPurpose = true
 
   onEnded?: () => void
   onTimeUpdate?: (position: number, duration: number) => void
@@ -45,8 +48,21 @@ export class AudioEngine {
       this.applyFade()
     })
     this.element.addEventListener('playing', () => this.onStateChange?.(true, false))
-    this.element.addEventListener('pause', () => this.onStateChange?.(false, false))
+    this.element.addEventListener('pause', () => {
+      // Движок окна может сам остановить звук — например, когда окно свернули. Музыка при этом
+      // должна продолжаться, поэтому чужую паузу снимаем сразу же.
+      if (!this.pausedOnPurpose && !this.element.ended) {
+        debugLog('unexpected pause, resuming')
+        void this.element.play().catch(() => this.onStateChange?.(false, false))
+        return
+      }
+      this.onStateChange?.(false, false)
+    })
     this.element.addEventListener('waiting', () => this.onStateChange?.(!this.element.paused, true))
+    for (const name of ['play', 'playing', 'pause', 'waiting', 'stalled', 'suspend', 'ended', 'error']) {
+      this.element.addEventListener(name, () => debugLog(`audio ${name} t=${this.element.currentTime.toFixed(1)} ctx=${this.context?.state ?? '-'}`))
+    }
+    document.addEventListener('visibilitychange', () => debugLog(`page ${document.visibilityState}`))
     this.element.addEventListener('error', () => {
       this.onError?.('Не удалось воспроизвести трек. Проверь связь с сервером.')
     })
@@ -72,12 +88,14 @@ export class AudioEngine {
     const chain: AudioNode[] = [source, ...this.filters, gain]
     chain.forEach((node, index) => chain[index + 1] && node.connect(chain[index + 1]!))
     gain.connect(context.destination)
+    context.onstatechange = () => debugLog(`context ${context.state}`)
     this.context = context
     this.gainNode = gain
     this.applyEq()
   }
 
   async load(url: string, song: Song, mode: ReplayGainMode, autoplay: boolean) {
+    this.pausedOnPurpose = true
     this.trackVolume = replayGainVolume(mode, song)
     this.element.src = url
     this.element.load()
@@ -86,6 +104,7 @@ export class AudioEngine {
   }
 
   async play() {
+    this.pausedOnPurpose = false
     this.ensureGraph()
     if (this.context?.state === 'suspended') await this.context.resume()
     try {
@@ -96,6 +115,7 @@ export class AudioEngine {
   }
 
   pause() {
+    this.pausedOnPurpose = true
     this.element.pause()
   }
 

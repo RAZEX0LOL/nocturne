@@ -1,26 +1,85 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { EQ_BANDS, EQ_PRESETS } from './audio/engine'
-import { store, useStore } from './state/store'
+import { store, useStore, type View } from './state/store'
 import { Connect } from './ui/Connect'
-import { Library } from './ui/Library'
 import { Player } from './ui/Player'
+import { QueuePanel } from './ui/QueuePanel'
+import {
+  AlbumsView,
+  AlbumView,
+  ArtistsView,
+  ArtistView,
+  FavoritesView,
+  HomeView,
+  PlaylistsView,
+  PlaylistView,
+  SearchView,
+} from './ui/Views'
+
+const SECTIONS: Array<{ view: View; label: string; icon: string }> = [
+  { view: { kind: 'home' }, label: 'Главная', icon: '⌂' },
+  { view: { kind: 'search' }, label: 'Поиск', icon: '⌕' },
+  { view: { kind: 'albums' }, label: 'Альбомы', icon: '◫' },
+  { view: { kind: 'artists' }, label: 'Артисты', icon: '♫' },
+  { view: { kind: 'playlists' }, label: 'Плейлисты', icon: '≡' },
+  { view: { kind: 'favorites' }, label: 'Избранное', icon: '♥' },
+]
+
+/** Раздел, к которому относится открытая страница: по нему подсвечивается пункт меню. */
+const sectionOf: Record<View['kind'], View['kind']> = {
+  home: 'home',
+  search: 'search',
+  albums: 'albums',
+  album: 'albums',
+  artists: 'artists',
+  artist: 'artists',
+  playlists: 'playlists',
+  playlist: 'playlists',
+  favorites: 'favorites',
+}
+
+function Content({ view }: { view: View }) {
+  switch (view.kind) {
+    case 'home': return <HomeView />
+    case 'search': return <SearchView />
+    case 'albums': return <AlbumsView />
+    case 'album': return <AlbumView album={view.album} />
+    case 'artists': return <ArtistsView />
+    case 'artist': return <ArtistView artist={view.artist} />
+    case 'playlists': return <PlaylistsView />
+    case 'playlist': return <PlaylistView playlist={view.playlist} />
+    case 'favorites': return <FavoritesView />
+  }
+}
 
 export function App() {
-  const { status, error, notice } = useStore()
+  const { status, error, notice, view, history } = useStore()
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [queueOpen, setQueueOpen] = useState(false)
+  const main = useRef<HTMLElement>(null)
 
   useEffect(() => {
     void store.restore()
   }, [])
 
+  // Новая страница открывается сверху, а не с прокруткой предыдущей.
   useEffect(() => {
-    // Пробел ставит паузу, если человек не печатает в поле.
+    main.current?.scrollTo({ top: 0 })
+  }, [view])
+
+  useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null
-      if (target?.tagName === 'INPUT') return
+      if (target?.tagName === 'INPUT' || target?.tagName === 'SELECT') return
+      // Пробел — пауза, Cmd/Ctrl+F — поиск, Alt+← — назад, как в браузере.
       if (event.code === 'Space') {
         event.preventDefault()
         store.toggle()
+      } else if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'f') {
+        event.preventDefault()
+        store.section({ kind: 'search' })
+      } else if (event.altKey && event.key === 'ArrowLeft') {
+        store.back()
       }
     }
     window.addEventListener('keydown', onKey)
@@ -32,33 +91,57 @@ export function App() {
   }
   if (status === 'signed-out') return <Connect />
 
+  const active = sectionOf[view.kind]
+
   return (
     <div className="flex h-full flex-col">
-      <header className="flex items-center justify-between border-b border-surface-strong px-6 py-3">
-        <span className="text-sm font-semibold tracking-widest text-secondary">NOCTURNE</span>
-        <div className="flex items-center gap-3">
-          <button onClick={() => void store.refresh()} className="text-sm text-secondary hover:text-primary">
-            Обновить
+      <div className="flex min-h-0 flex-1">
+        <nav className="flex w-52 shrink-0 flex-col gap-1 border-r border-surface-strong p-3">
+          <div className="px-3 pb-4 pt-1 text-sm font-semibold tracking-widest text-secondary">NOCTURNE</div>
+          {SECTIONS.map((section) => (
+            <button
+              key={section.view.kind}
+              onClick={() => store.section(section.view)}
+              className={`flex items-center gap-3 rounded-lg px-3 py-2 text-left text-sm ${
+                active === section.view.kind ? 'bg-surface-strong text-primary' : 'text-secondary hover:text-primary'
+              }`}
+            >
+              <span className="w-4 text-center">{section.icon}</span>
+              {section.label}
+            </button>
+          ))}
+          <div className="flex-1" />
+          <button onClick={() => void store.refresh()} className="rounded-lg px-3 py-2 text-left text-sm text-secondary hover:text-primary">
+            ↻ Обновить
           </button>
-          <button onClick={() => setSettingsOpen(true)} className="text-sm text-secondary hover:text-primary">
-            Настройки
+          <button onClick={() => setSettingsOpen(true)} className="rounded-lg px-3 py-2 text-left text-sm text-secondary hover:text-primary">
+            ⚙ Настройки
           </button>
-        </div>
-      </header>
+        </nav>
 
-      <main className="flex-1 overflow-y-auto">
-        <Library />
-      </main>
+        <main ref={main} className="min-w-0 flex-1 overflow-y-auto">
+          <div className="space-y-4 p-8">
+            {history.length > 0 && (
+              <button onClick={() => store.back()} className="text-sm text-secondary hover:text-primary">
+                ← Назад
+              </button>
+            )}
+            <Content view={view} />
+          </div>
+        </main>
+
+        {queueOpen && <QueuePanel onClose={() => setQueueOpen(false)} />}
+      </div>
 
       {error && (
         <div className="mx-6 mb-2 flex items-center justify-between rounded-lg bg-red-500/15 px-4 py-2 text-sm text-red-300">
           <span>{error}</span>
-          <button onClick={() => store.dismissError()}>×</button>
+          <button onClick={() => store.dismissError()} aria-label="Закрыть">×</button>
         </div>
       )}
-      {notice && <div className="mx-6 mb-2 rounded-lg bg-surface-strong px-4 py-2 text-sm">{notice}</div>}
+      {notice && <div className="pointer-events-none fixed left-1/2 top-4 -translate-x-1/2 rounded-lg bg-surface-strong px-4 py-2 text-sm shadow-lg">{notice}</div>}
 
-      <Player />
+      <Player queueOpen={queueOpen} onToggleQueue={() => setQueueOpen(!queueOpen)} />
       {settingsOpen && <Settings onClose={() => setSettingsOpen(false)} />}
     </div>
   )

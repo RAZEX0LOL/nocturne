@@ -25,7 +25,8 @@ AUDIO = {s["id"]: wav(330 + 110 * i) for i, s in enumerate(SONGS)}
 SONG_BY_ID = {s["id"]: s for s in SONGS}
 PLAYLISTS = {}
 STARRED = {"t0"}
-ALBUM = {"id": "al-1", "name": "Mock Album", "artist": "Mock Artist", "coverArt": "al-1", "songCount": 3, "year": 2026}
+ALBUM = {"id": "al-1", "name": "Mock Album", "artist": "Mock Artist", "artistId": "ar-1", "coverArt": "al-1", "songCount": 3, "year": 2026}
+ARTIST = {"id": "ar-1", "name": "Mock Artist", "albumCount": 1, "coverArt": "al-1"}
 
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, *args): pass
@@ -49,11 +50,21 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         url = urlparse(self.path); q = {k: v[0] for k, v in parse_qs(url.query).items()}
         endpoint = url.path.rsplit("/", 1)[-1].replace(".view", "")
-        extra = {k: q[k] for k in ("id", "size", "format", "maxBitRate", "offset", "type", "submission", "name", "genre", "playlistId", "songIdToAdd", "songIndexToRemove") if k in q}
+        extra = {k: q[k] for k in ("id", "query", "size", "format", "maxBitRate", "offset", "type", "submission", "name", "genre", "playlistId", "songIdToAdd", "songIndexToRemove") if k in q}
         print(time.strftime("%H:%M:%S"), endpoint, extra, "range=" + self.headers.get("Range", "-"), flush=True)
         if endpoint == "ping": return self.ok()
         if endpoint == "getAlbumList2": return self.ok(albumList2={"album": [] if q.get("offset", "0") != "0" else [ALBUM]})
-        if endpoint == "getArtists": return self.ok(artists={"index": [{"name": "M", "artist": [{"id": "ar-1", "name": "Mock Artist", "albumCount": 1, "coverArt": "al-1"}]}]})
+        if endpoint == "getArtists": return self.ok(artists={"index": [{"name": "M", "artist": [ARTIST]}]})
+        if endpoint == "getArtist": return self.ok(artist={**ARTIST, "album": [ALBUM]})
+        if endpoint == "search3":
+            # Поиск по подстроке без учёта регистра — как у Navidrome для простых запросов.
+            needle = q.get("query", "").lower()
+            match = lambda text: needle in (text or "").lower()
+            return self.ok(searchResult3={
+                "song": [s for s in SONGS if match(s["title"]) or match(s["artist"])],
+                "album": [ALBUM] if match(ALBUM["name"]) or match(ALBUM["artist"]) else [],
+                "artist": [ARTIST] if match(ARTIST["name"]) else [],
+            })
         if endpoint == "getPlaylists":
             return self.ok(playlists={"playlist": [{"id": pid, "name": p["name"], "songCount": len(p["songs"]), "coverArt": "al-1"} for pid, p in PLAYLISTS.items()]})
         if endpoint == "getPlaylist":

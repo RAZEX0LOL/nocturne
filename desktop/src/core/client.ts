@@ -150,6 +150,11 @@ export class NavidromeClient {
     return (response.artists?.index ?? []).flatMap((index: any) => index.artist ?? [])
   }
 
+  async artist(id: string): Promise<{ artist?: Artist; albums: Album[] }> {
+    const response = await this.request('getArtist', { id })
+    return { artist: response.artist, albums: response.artist?.album ?? [] }
+  }
+
   async playlists(): Promise<Playlist[]> {
     const response = await this.request('getPlaylists')
     return response.playlists?.playlist ?? []

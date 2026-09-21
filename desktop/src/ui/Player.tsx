@@ -8,10 +8,11 @@ function time(seconds: number) {
 }
 
 /** Нижняя панель: обложка, название, перемотка и управление. */
-export function Player() {
-  const { queue, playing, buffering, position, duration, settings } = useStore()
+export function Player({ queueOpen, onToggleQueue }: { queueOpen: boolean; onToggleQueue: () => void }) {
+  const { queue, playing, buffering, position, duration, settings, starredIds } = useStore()
   const song = queue?.current?.song
   if (!song) return null
+  const starred = starredIds.has(song.id)
 
   const total = duration || song.duration || 0
 
@@ -23,6 +24,13 @@ export function Player() {
         <div className="truncate text-sm font-medium">{song.title}</div>
         <div className="truncate text-xs text-secondary">{song.artist ?? 'Неизвестный исполнитель'}</div>
       </div>
+      <button
+        onClick={() => void store.toggleStar(song)}
+        className={`px-1 text-lg ${starred ? 'text-accent' : 'text-secondary hover:text-primary'}`}
+        aria-label={starred ? 'Убрать из избранного' : 'В избранное'}
+      >
+        {starred ? '♥' : '♡'}
+      </button>
 
       <div className="flex items-center gap-3">
         <button
@@ -71,6 +79,14 @@ export function Player() {
         <span className="w-10 text-xs tabular-nums text-secondary">{time(total)}</span>
       </div>
 
+      <button
+        onClick={onToggleQueue}
+        className={`px-2 text-lg ${queueOpen ? 'text-accent' : 'text-secondary hover:text-primary'}`}
+        aria-label="Очередь"
+        title="Очередь"
+      >
+        ☰
+      </button>
       <input
         type="range"
         min={0}

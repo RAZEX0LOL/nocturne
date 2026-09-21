@@ -26,6 +26,7 @@ export interface Album {
   id: string
   name: string
   artist?: string
+  artistId?: string
   coverArt?: string
   songCount?: number
   year?: number
