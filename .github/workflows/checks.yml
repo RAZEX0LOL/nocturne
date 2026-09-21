@@ -38,3 +38,16 @@ jobs:
         with:
           name: kotlin-test-report
           path: android/core/build/reports/tests/test
+
+  # Ядро десктопа: тот же контракт третьим раннером плюс строгая проверка типов.
+  typescript:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+        working-directory: desktop
+      - run: bun test
+        working-directory: desktop
+      - run: bun run typecheck
+        working-directory: desktop
