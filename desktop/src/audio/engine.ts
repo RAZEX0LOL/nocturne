@@ -27,6 +27,7 @@ export class AudioEngine {
   private context?: AudioContext
   private filters: BiquadFilterNode[] = []
   private gainNode?: GainNode
+  private analyser?: AnalyserNode
   /** Громкость самого трека после выравнивания: фейды множатся на неё. */
   private trackVolume = 1
   private fadeSeconds = 0
@@ -47,7 +48,10 @@ export class AudioEngine {
       this.onTimeUpdate?.(this.element.currentTime, this.element.duration || 0)
       this.applyFade()
     })
-    this.element.addEventListener('playing', () => this.onStateChange?.(true, false))
+    this.element.addEventListener('playing', () => {
+      this.onStateChange?.(true, false)
+      setTimeout(() => this.logLevel(), 1500)
+    })
     this.element.addEventListener('pause', () => {
       // Движок окна может сам остановить звук — например, когда окно свернули. Музыка при этом
       // должна продолжаться, поэтому чужую паузу снимаем сразу же.
@@ -85,9 +89,13 @@ export class AudioEngine {
       return filter
     })
     const gain = context.createGain()
-    const chain: AudioNode[] = [source, ...this.filters, gain]
+    // Анализатор ничего не меняет в звуке: по нему отладочный журнал видит, что сигнал реально идёт,
+    // а не тишина от источника, который Web Audio счёл чужим.
+    const analyser = context.createAnalyser()
+    this.analyser = analyser
+    const chain: AudioNode[] = [source, ...this.filters, gain, analyser]
     chain.forEach((node, index) => chain[index + 1] && node.connect(chain[index + 1]!))
-    gain.connect(context.destination)
+    analyser.connect(context.destination)
     context.onstatechange = () => debugLog(`context ${context.state}`)
     this.context = context
     this.gainNode = gain
@@ -158,6 +166,16 @@ export class AudioEngine {
   private setGain(value: number) {
     if (this.gainNode) this.gainNode.gain.value = value
     else this.element.volume = Math.min(Math.max(value, 0), 1)
+  }
+
+  /** Уровень сигнала на выходе цепочки — только для отладочного журнала. */
+  private logLevel() {
+    const analyser = this.analyser
+    if (!analyser || this.element.paused) return
+    const samples = new Float32Array(analyser.fftSize)
+    analyser.getFloatTimeDomainData(samples)
+    const rms = Math.sqrt(samples.reduce((sum, value) => sum + value * value, 0) / samples.length)
+    debugLog(`output level rms=${rms.toFixed(4)} src=${this.element.currentSrc.split(':')[0]}`)
   }
 
   /** Затухание в конце и нарастание в начале — только если трек заметно длиннее самого перехода. */

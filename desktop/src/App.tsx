@@ -5,6 +5,8 @@ import { Connect } from './ui/Connect'
 import { Player } from './ui/Player'
 import { QueuePanel } from './ui/QueuePanel'
 import {
+  DownloadsView,
+  LocalView,
   AlbumsView,
   AlbumView,
   ArtistsView,
@@ -16,18 +18,35 @@ import {
   SearchView,
 } from './ui/Views'
 
-const SECTIONS: Array<{ view: View; label: string; icon: string }> = [
-  { view: { kind: 'home' }, label: 'Главная', icon: '⌂' },
-  { view: { kind: 'search' }, label: 'Поиск', icon: '⌕' },
+interface Section {
+  view: View
+  label: string
+  icon: string
+}
+
+const HOME: Section = { view: { kind: 'home' }, label: 'Главная', icon: '⌂' }
+const SEARCH: Section = { view: { kind: 'search' }, label: 'Поиск', icon: '⌕' }
+const LOCAL: Section = { view: { kind: 'local' }, label: 'На компьютере', icon: '▣' }
+const DOWNLOADS: Section = { view: { kind: 'downloads' }, label: 'Загрузки', icon: '⤓' }
+const SERVER: Section[] = [
   { view: { kind: 'albums' }, label: 'Альбомы', icon: '◫' },
   { view: { kind: 'artists' }, label: 'Артисты', icon: '♫' },
   { view: { kind: 'playlists' }, label: 'Плейлисты', icon: '≡' },
   { view: { kind: 'favorites' }, label: 'Избранное', icon: '♥' },
 ]
 
+/** Без сервера — только своя музыка; без связи — то, что на диске; иначе всё. */
+function sectionsFor(serverless: boolean, offline: boolean): Section[] {
+  if (serverless) return [LOCAL, SEARCH]
+  if (offline) return [HOME, LOCAL, DOWNLOADS, SEARCH]
+  return [HOME, SEARCH, LOCAL, DOWNLOADS, ...SERVER]
+}
+
 /** Раздел, к которому относится открытая страница: по нему подсвечивается пункт меню. */
 const sectionOf: Record<View['kind'], View['kind']> = {
   home: 'home',
+  local: 'local',
+  downloads: 'downloads',
   search: 'search',
   albums: 'albums',
   album: 'albums',
@@ -41,6 +60,8 @@ const sectionOf: Record<View['kind'], View['kind']> = {
 function Content({ view }: { view: View }) {
   switch (view.kind) {
     case 'home': return <HomeView />
+    case 'local': return <LocalView />
+    case 'downloads': return <DownloadsView />
     case 'search': return <SearchView />
     case 'albums': return <AlbumsView />
     case 'album': return <AlbumView album={view.album} />
@@ -53,7 +74,7 @@ function Content({ view }: { view: View }) {
 }
 
 export function App() {
-  const { status, error, notice, view, history } = useStore()
+  const { status, error, notice, view, history, serverless, offline } = useStore()
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [queueOpen, setQueueOpen] = useState(false)
   const main = useRef<HTMLElement>(null)
@@ -98,7 +119,7 @@ export function App() {
       <div className="flex min-h-0 flex-1">
         <nav className="flex w-52 shrink-0 flex-col gap-1 border-r border-surface-strong p-3">
           <div className="px-3 pb-4 pt-1 text-sm font-semibold tracking-widest text-secondary">NOCTURNE</div>
-          {SECTIONS.map((section) => (
+          {sectionsFor(serverless, offline).map((section) => (
             <button
               key={section.view.kind}
               onClick={() => store.section(section.view)}
@@ -111,9 +132,14 @@ export function App() {
             </button>
           ))}
           <div className="flex-1" />
-          <button onClick={() => void store.refresh()} className="rounded-lg px-3 py-2 text-left text-sm text-secondary hover:text-primary">
-            ↻ Обновить
-          </button>
+          {!serverless && (
+            <button
+              onClick={() => void (offline ? store.reconnect() : store.refresh())}
+              className="rounded-lg px-3 py-2 text-left text-sm text-secondary hover:text-primary"
+            >
+              ↻ {offline ? 'Проверить связь' : 'Обновить'}
+            </button>
+          )}
           <button onClick={() => setSettingsOpen(true)} className="rounded-lg px-3 py-2 text-left text-sm text-secondary hover:text-primary">
             ⚙ Настройки
           </button>
@@ -148,7 +174,7 @@ export function App() {
 }
 
 function Settings({ onClose }: { onClose: () => void }) {
-  const { settings } = useStore()
+  const { settings, serverless, client } = useStore()
 
   return (
     <div className="fixed inset-0 grid place-items-center bg-black/60 p-6" onClick={onClose}>
@@ -247,9 +273,21 @@ function Settings({ onClose }: { onClose: () => void }) {
           </div>
         </section>
 
-        <button onClick={() => void store.disconnect()} className="text-sm text-red-400">
-          Отключить сервер
-        </button>
+        <section className="space-y-2 border-t border-surface-strong pt-4 text-sm">
+          <h3 className="font-medium">Сервер</h3>
+          {serverless || !client ? (
+            <button onClick={() => { onClose(); store.showConnect() }} className="text-accent">
+              Подключить Navidrome
+            </button>
+          ) : (
+            <>
+              <p className="text-secondary">{client.credentials.account}</p>
+              <button onClick={() => { onClose(); void store.disconnect() }} className="text-red-400">
+                Отключить сервер
+              </button>
+            </>
+          )}
+        </section>
       </div>
     </div>
   )

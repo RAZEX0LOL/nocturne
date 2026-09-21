@@ -55,6 +55,9 @@ export function Connect() {
           {busy ? 'Подключаюсь…' : 'Подключиться →'}
         </button>
         <p className="text-center text-xs text-secondary">Пароль хранится в системном хранилище этого компьютера.</p>
+        <button type="button" onClick={() => void store.useOnDevice()} className="w-full text-center text-sm text-accent hover:underline">
+          Слушать музыку с компьютера — без сервера
+        </button>
       </form>
     </div>
   )

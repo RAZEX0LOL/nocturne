@@ -1,17 +1,18 @@
 import { useEffect, useState } from 'react'
-import { useStore } from '../state/store'
+import { coverUrl, useStore } from '../state/store'
 
 /** Обложка: адрес подписывается токеном, поэтому получается асинхронно и кешируется в памяти. */
 const cache = new Map<string, string>()
 
 export function Cover({ id, size = 180, rounded = 'rounded-xl' }: { id?: string; size?: number; rounded?: string }) {
-  const { client } = useStore()
+  const { client, offline } = useStore()
   const [url, setUrl] = useState<string | undefined>(id ? cache.get(id) : undefined)
 
   useEffect(() => {
-    if (!id || !client || cache.has(id)) return
+    if (!id || cache.has(id)) return
     let cancelled = false
-    void client.cover(id, size > 200 ? 600 : 300).then((address) => {
+    // Свои обложки лежат на диске и доступны всегда, серверные — только при связи.
+    void coverUrl(id, offline ? undefined : client, size > 200 ? 600 : 300).then((address) => {
       if (!address || cancelled) return
       cache.set(id, address)
       setUrl(address)
@@ -19,7 +20,7 @@ export function Cover({ id, size = 180, rounded = 'rounded-xl' }: { id?: string;
     return () => {
       cancelled = true
     }
-  }, [id, client, size])
+  }, [id, client, offline, size])
 
   if (!url) {
     return (

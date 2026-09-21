@@ -4,6 +4,8 @@ import { Credentials, NavidromeClient, type StreamQuality } from '../core/client
 import { MusicError, type Album, type Artist, type Playlist, type Song } from '../core/models'
 import { PlaybackQueue, type RepeatMode } from '../core/queue'
 import type { ReplayGainMode } from '../core/replaygain'
+import { chooseSource, isLocalId, type Availability } from '../core/source'
+import * as platform from '../platform'
 import { forgetCredentials, loadCredentials, saveCredentials } from './vault'
 
 export interface Settings {
@@ -17,6 +19,8 @@ export interface Settings {
 /** Что открыто в основной области окна. */
 export type View =
   | { kind: 'home' }
+  | { kind: 'local' }
+  | { kind: 'downloads' }
   | { kind: 'albums' }
   | { kind: 'album'; album: Album }
   | { kind: 'artists' }
@@ -36,6 +40,10 @@ export interface SearchResults {
 export interface State {
   status: 'connecting' | 'signed-out' | 'ready'
   client?: NavidromeClient
+  /** Сервер сохранён, но сейчас недоступен: работаем с тем, что есть на диске. */
+  offline: boolean
+  /** Человек пользуется только своей музыкой, сервер не подключён вовсе. */
+  serverless: boolean
   error?: string
   notice?: string
   view: View
@@ -51,6 +59,14 @@ export interface State {
   songs: Record<string, Song[]>
   artistAlbums: Record<string, Album[]>
   search?: SearchResults
+  /** Своя музыка из папки на компьютере. */
+  local: Song[]
+  musicFolder?: string
+  /** Скачанные с сервера треки: id → путь к файлу. */
+  downloads: Record<string, string>
+  downloadedSongs: Song[]
+  downloading: Record<string, true>
+  importing: boolean
   queue?: PlaybackQueue
   /** Меняется на каждую правку очереди: сама очередь мутабельна, и React иначе не заметит изменений. */
   queueVersion: number
@@ -63,6 +79,8 @@ export interface State {
 
 const SETTINGS_KEY = 'nocturne.settings'
 const QUEUE_KEY = 'nocturne.queue'
+const SERVERLESS_KEY = 'nocturne.serverless'
+const PENDING_SCROBBLES_KEY = 'nocturne.pendingScrobbles'
 const PAGE = 60
 
 const defaultSettings: Settings = {
@@ -85,6 +103,11 @@ interface QueueSnapshot {
   scrobbled?: boolean
 }
 
+interface PendingScrobble {
+  id: string
+  time: number
+}
+
 /**
  * Маленький стор поверх useSyncExternalStore: состояние плеера живёт вне React,
  * потому что аудиодвижок обновляет позицию по нескольку раз в секунду.
@@ -92,6 +115,8 @@ interface QueueSnapshot {
 class Store {
   private state: State = {
     status: 'connecting',
+    offline: false,
+    serverless: false,
     view: { kind: 'home' },
     history: [],
     recent: [],
@@ -103,6 +128,11 @@ class Store {
     starredIds: new Set(),
     songs: {},
     artistAlbums: {},
+    local: [],
+    downloads: {},
+    downloadedSongs: [],
+    downloading: {},
+    importing: false,
     queueVersion: 0,
     playing: false,
     buffering: false,
@@ -113,6 +143,8 @@ class Store {
 
   private listeners = new Set<() => void>()
   private engine = new AudioEngine()
+  /** Пути своих файлов по id: в состоянии окна они не нужны, только плееру. */
+  private localPaths = new Map<string, string>()
   /** Время начала прослушивания: по нему отправляется отметка, как требует протокол. */
   private startedAt = 0
   private scrobbled = false
@@ -149,6 +181,8 @@ class Store {
   snapshot = () => this.state
 
   private patch(change: Partial<State>) {
+    // Что считается доступным, меняется только вместе с диском или связью.
+    if ('downloads' in change || 'local' in change || 'offline' in change || 'client' in change) this.availability = undefined
     this.state = { ...this.state, ...change }
     this.listeners.forEach((listener) => listener())
   }
@@ -161,17 +195,40 @@ class Store {
   // MARK: - Подключение
 
   async restore() {
+    await this.loadOnDisk()
     const saved = await loadCredentials()
-    if (!saved) return this.patch({ status: 'signed-out' })
+    if (!saved) {
+      if (localStorage.getItem(SERVERLESS_KEY)) {
+        this.patch({ status: 'ready', serverless: true, view: { kind: 'local' } })
+        await this.restoreQueue()
+      } else {
+        this.patch({ status: 'signed-out' })
+      }
+      return
+    }
+    let client: NavidromeClient
     try {
-      const client = new NavidromeClient(new Credentials(saved.server, saved.username, saved.password))
-      await client.ping()
-      this.patch({ client, status: 'ready' })
-      await this.refresh()
-      await this.restoreQueue()
+      client = new NavidromeClient(new Credentials(saved.server, saved.username, saved.password))
     } catch {
-      // Сервер может быть просто выключен: не разлогиниваем, а показываем экран входа с сообщением.
-      this.patch({ status: 'signed-out', error: 'Не удалось связаться с сервером.' })
+      return this.patch({ status: 'signed-out' })
+    }
+    // Недоступный сервер — не повод выкидывать на экран входа: работаем с тем, что на диске.
+    this.patch({ client, status: 'ready' })
+    await this.reconnect()
+    await this.restoreQueue()
+  }
+
+  /** Проверяет связь с сервером; при успехе подтягивает библиотеку и досылает отметки. */
+  async reconnect() {
+    const client = this.state.client
+    if (!client) return
+    try {
+      await client.ping()
+      this.patch({ offline: false })
+      await this.refresh()
+      void this.flushScrobbles()
+    } catch {
+      this.patch({ offline: true })
     }
   }
 
@@ -180,22 +237,40 @@ class Store {
       const client = new NavidromeClient(new Credentials(server, username, password))
       await client.ping()
       await saveCredentials(client.credentials.account, { server, username, password })
-      this.patch({ client, status: 'ready', error: undefined })
+      localStorage.removeItem(SERVERLESS_KEY)
+      this.patch({ client, status: 'ready', offline: false, serverless: false, error: undefined, view: { kind: 'home' }, history: [] })
       await this.refresh()
     } catch (error) {
       this.patch({ error: error instanceof MusicError ? error.message : 'Не удалось подключиться.' })
     }
   }
 
+  /** Режим без сервера: только своя музыка с этого компьютера. */
+  async useOnDevice() {
+    localStorage.setItem(SERVERLESS_KEY, '1')
+    await this.loadOnDisk()
+    this.patch({ status: 'ready', serverless: true, error: undefined, view: { kind: 'local' }, history: [] })
+  }
+
+  /** Из режима без сервера — на экран подключения. */
+  showConnect() {
+    this.engine.pause()
+    this.patch({ status: 'signed-out', serverless: false })
+  }
+
   async disconnect() {
     this.engine.pause()
     await forgetCredentials()
     localStorage.removeItem(QUEUE_KEY)
+    localStorage.removeItem(SERVERLESS_KEY)
     this.patch({
       client: undefined,
       status: 'signed-out',
+      offline: false,
+      serverless: false,
       recent: [],
       albums: [],
+      albumsComplete: false,
       artists: [],
       playlists: [],
       starred: [],
@@ -227,9 +302,14 @@ class Store {
     if (view) this.patch({ view, history })
   }
 
+  private get online() {
+    return !!this.state.client && !this.state.offline
+  }
+
   private async load(view: View) {
+    if (view.kind === 'local' || view.kind === 'downloads') return void this.loadOnDisk()
     const client = this.state.client
-    if (!client) return
+    if (!client || !this.online) return
     try {
       switch (view.kind) {
         case 'album':
@@ -265,7 +345,7 @@ class Store {
     this.patch({ songs: { ...this.state.songs, [id]: songs } })
   }
 
-  // MARK: - Библиотека
+  // MARK: - Библиотека сервера
 
   async refresh() {
     const client = this.state.client
@@ -276,46 +356,49 @@ class Store {
         recent,
         starred: starred.songs,
         starredIds: new Set(starred.songs.map((song) => song.id)),
+        offline: false,
         error: undefined,
       })
       void this.load(this.state.view)
     } catch (error) {
-      this.patch({ error: error instanceof MusicError ? error.message : 'Библиотека недоступна.' })
+      if (error instanceof MusicError && error.kind === 'auth') return this.patch({ error: error.message })
+      this.patch({ offline: true })
     }
   }
 
   /** Все альбомы по алфавиту, порциями: большие библиотеки иначе грузились бы минуту. */
   async moreAlbums() {
     const client = this.state.client
-    if (!client || this.state.albumsComplete) return
+    if (!client || this.state.albumsComplete || !this.online) return
     const page = await client.albums('alphabeticalByName', this.state.albums.length, PAGE)
     this.patch({ albums: [...this.state.albums, ...page], albumsComplete: page.length < PAGE })
   }
 
+  pendingQuery = ''
+
   async search(query: string) {
-    const client = this.state.client
     const text = query.trim()
-    if (!client) return
     if (!text) return this.patch({ search: undefined })
+    // Своя музыка и загрузки ищутся всегда, сервер — когда он доступен.
+    const needle = text.toLowerCase()
+    const matches = (song: Song) =>
+      [song.title, song.artist, song.album].some((field) => field?.toLowerCase().includes(needle))
+    const onDisk = [...this.state.local, ...this.state.downloadedSongs].filter(matches)
+    const client = this.state.client
     try {
-      const result = await client.search(text)
-      // Пока шёл запрос, человек мог допечатать — показываем только ответ на последний.
-      if (this.pendingQuery === query) this.patch({ search: { query: text, ...result } })
+      const remote = client && this.online ? await client.search(text) : { songs: [], albums: [], artists: [] }
+      if (this.pendingQuery !== query) return
+      const known = new Set(remote.songs.map((song) => song.id))
+      this.patch({ search: { query: text, ...remote, songs: [...onDisk.filter((song) => !known.has(song.id)), ...remote.songs] } })
     } catch (error) {
       this.patch({ error: error instanceof MusicError ? error.message : 'Поиск не удался.' })
     }
   }
 
-  pendingQuery = ''
-
-  isStarred(song: Song) {
-    return this.state.starredIds.has(song.id)
-  }
-
   async toggleStar(song: Song) {
     const client = this.state.client
-    if (!client) return
-    const starred = !this.isStarred(song)
+    if (!client || isLocalId(song.id)) return
+    const starred = !this.state.starredIds.has(song.id)
     const ids = new Set(this.state.starredIds)
     if (starred) ids.add(song.id)
     else ids.delete(song.id)
@@ -332,11 +415,126 @@ class Store {
     }
   }
 
+  // MARK: - Своя музыка и загрузки
+
+  /** Перечитывает папку музыки и список загрузок: файлы могли добавить через проводник. */
+  async loadOnDisk() {
+    try {
+      const [library, downloaded] = await Promise.all([platform.localLibrary(), platform.downloads()])
+      this.localPaths = new Map(library.tracks.map((track) => [track.id, track.path]))
+      const local: Song[] = library.tracks
+        .map((track) => ({
+          id: track.id,
+          title: track.title,
+          artist: track.artist,
+          album: track.album,
+          track: track.track,
+          duration: track.duration,
+          coverArt: track.cover ? `file:${track.cover}` : undefined,
+        }))
+        .sort(byAlbumThenTrack)
+      this.patch({
+        local,
+        musicFolder: library.folder,
+        downloads: Object.fromEntries(downloaded.map((item) => [item.id, item.path])),
+        downloadedSongs: downloaded.map((item) => item.song).sort(byAlbumThenTrack),
+      })
+    } catch (error) {
+      this.patch({ error: `Не удалось прочитать папку музыки: ${String(error)}` })
+    }
+  }
+
+  async importMusic(kind: 'files' | 'folder') {
+    const paths = await platform.pick(kind)
+    if (!paths.length) return
+    this.patch({ importing: true })
+    try {
+      const added = await platform.importItems(paths)
+      await this.loadOnDisk()
+      this.showNotice(added ? `Добавлено на компьютер: ${added}` : 'Новых треков не найдено')
+    } catch (error) {
+      this.patch({ error: `Не удалось добавить музыку: ${String(error)}` })
+    } finally {
+      this.patch({ importing: false })
+    }
+  }
+
+  openMusicFolder() {
+    if (this.state.musicFolder) void platform.openFolder(this.state.musicFolder)
+  }
+
+  async removeLocal(song: Song) {
+    const path = this.localPaths.get(song.id)
+    if (!path) return
+    try {
+      await platform.removeLocal(path)
+      await this.loadOnDisk()
+    } catch (error) {
+      this.patch({ error: `Не удалось удалить файл: ${String(error)}` })
+    }
+  }
+
+  /** Скачивает по одному: сервер домашний, и десяток параллельных потоков ему ни к чему. */
+  async download(songs: Song[]) {
+    const client = this.state.client
+    if (!client || !this.online) return
+    const wanted = songs.filter((song) => !isLocalId(song.id) && !this.state.downloads[song.id] && !this.state.downloading[song.id])
+    if (!wanted.length) return this.showNotice('Уже скачано')
+    this.patch({ downloading: { ...this.state.downloading, ...Object.fromEntries(wanted.map((song) => [song.id, true as const])) } })
+    let done = 0
+    for (const song of wanted) {
+      try {
+        const url = await client.stream(song.id, this.state.settings.quality)
+        const saved = await platform.downloadTrack(url, song)
+        done += 1
+        this.patch({
+          downloads: { ...this.state.downloads, [song.id]: saved.path },
+          downloadedSongs: [...this.state.downloadedSongs.filter((one) => one.id !== song.id), song].sort(byAlbumThenTrack),
+        })
+      } catch (error) {
+        this.patch({ error: `Не удалось скачать «${song.title}»: ${String(error)}` })
+      } finally {
+        const { [song.id]: _finished, ...rest } = this.state.downloading
+        this.patch({ downloading: rest })
+      }
+    }
+    if (done) this.showNotice(done === 1 ? 'Трек скачан' : `Скачано треков: ${done}`)
+  }
+
+  async removeDownload(song: Song) {
+    try {
+      await platform.removeDownload(song.id)
+      const { [song.id]: _removed, ...rest } = this.state.downloads
+      this.patch({ downloads: rest, downloadedSongs: this.state.downloadedSongs.filter((one) => one.id !== song.id) })
+    } catch (error) {
+      this.patch({ error: `Не удалось удалить загрузку: ${String(error)}` })
+    }
+  }
+
+  /** Можно ли сыграть трек прямо сейчас — по правилу из shared/cases/source.json. */
+  isPlayable(song: Song) {
+    return this.sourceOf(song.id) !== 'unavailable'
+  }
+
+  private availability?: Availability
+
+  private sourceOf(id: string) {
+    this.availability ??= {
+      local: new Set(this.localPaths.keys()),
+      downloaded: new Set(Object.keys(this.state.downloads)),
+      online: this.online,
+    }
+    return chooseSource(id, this.availability)
+  }
+
   // MARK: - Воспроизведение
 
   async play(songs: Song[], at: number, shuffle = false) {
-    if (!songs.length) return
-    const queue = new PlaybackQueue(songs, at, shuffle)
+    // Без сети из списка играет только то, что лежит на диске.
+    const chosen = songs[at]
+    const playable = songs.filter((song) => this.isPlayable(song))
+    if (!chosen || !this.isPlayable(chosen)) return this.showNotice('Трек не скачан — недоступен без сети')
+    const queue = new PlaybackQueue(playable, playable.indexOf(chosen), shuffle)
     this.patch({ queue })
     this.touchQueue()
     await this.startCurrent(true)
@@ -344,18 +542,22 @@ class Store {
 
   playNext(songs: Song[]) {
     const queue = this.state.queue
-    if (!queue) return void this.play(songs, 0)
-    queue.insertNext(songs)
+    const playable = songs.filter((song) => this.isPlayable(song))
+    if (!playable.length) return
+    if (!queue) return void this.play(playable, 0)
+    queue.insertNext(playable)
     this.touchQueue()
-    this.showNotice(songs.length === 1 ? 'Сыграет следующим' : `Следующими: ${songs.length}`)
+    this.showNotice(playable.length === 1 ? 'Сыграет следующим' : `Следующими: ${playable.length}`)
   }
 
   append(songs: Song[]) {
     const queue = this.state.queue
-    if (!queue) return void this.play(songs, 0)
-    queue.append(songs)
+    const playable = songs.filter((song) => this.isPlayable(song))
+    if (!playable.length) return
+    if (!queue) return void this.play(playable, 0)
+    queue.append(playable)
     this.touchQueue()
-    this.showNotice(songs.length === 1 ? 'Добавлено в очередь' : `В очередь: ${songs.length}`)
+    this.showNotice(playable.length === 1 ? 'Добавлено в очередь' : `В очередь: ${playable.length}`)
   }
 
   removeFromQueue(entryId: string) {
@@ -363,11 +565,28 @@ class Store {
     this.touchQueue()
   }
 
+  private async sourceUrl(song: Song): Promise<string | undefined> {
+    switch (this.sourceOf(song.id)) {
+      case 'local':
+        return platform.fileSource(this.localPaths.get(song.id)!)
+      case 'download':
+        return platform.fileSource(this.state.downloads[song.id]!)
+      case 'stream':
+        return this.state.client!.stream(song.id, this.state.settings.quality)
+      case 'unavailable':
+        return undefined
+    }
+  }
+
   private async startCurrent(autoplay: boolean, from = 0) {
-    const { queue, client, settings } = this.state
+    const { queue, settings } = this.state
     const song = queue?.current?.song
-    if (!song || !client) return
-    const url = await client.stream(song.id, settings.quality)
+    if (!song) return
+    const url = await this.sourceUrl(song)
+    if (!url) {
+      this.engine.pause()
+      return this.showNotice('Трек не скачан — недоступен без сети')
+    }
     this.startedAt = Date.now()
     this.scrobbled = false
     await this.engine.load(url, song, settings.replayGain, autoplay)
@@ -385,12 +604,17 @@ class Store {
   async advance(automatic = false) {
     const queue = this.state.queue
     if (!queue) return
-    const next = queue.nextPosition(automatic)
-    if (next === null) {
-      this.engine.pause()
-      return
+    // Пропускаем то, что стало недоступно (связь пропала, файл удалили), но не по кругу бесконечно.
+    for (let attempt = 0; attempt < queue.items.length; attempt++) {
+      const next = queue.nextPosition(automatic)
+      if (next === null) {
+        this.engine.pause()
+        return
+      }
+      queue.jump(next)
+      if (this.isPlayable(queue.current!.song)) break
+      automatic = false
     }
-    queue.jump(next)
     this.touchQueue()
     await this.startCurrent(true)
   }
@@ -433,24 +657,57 @@ class Store {
     this.touchQueue()
   }
 
+  // MARK: - Отметки о прослушивании
+
   private async scrobble() {
     const song = this.state.queue?.current?.song
-    if (!song || !this.state.client) return
+    if (!song || isLocalId(song.id) || this.state.serverless) return
     this.scrobbled = true
+    const pending: PendingScrobble = { id: song.id, time: this.startedAt }
+    const client = this.state.client
+    if (!client || !this.online) return this.keepScrobble(pending)
     try {
-      await this.state.client.scrobble(song.id, this.startedAt)
+      await client.scrobble(pending.id, pending.time)
     } catch {
-      // Отметка не дошла — не повод прерывать музыку.
+      this.keepScrobble(pending)
     }
+  }
+
+  /** Без связи отметка ждёт на диске и уходит, когда сервер снова доступен. */
+  private keepScrobble(pending: PendingScrobble) {
+    const queue = readPendingScrobbles()
+    if (!queue.some((item) => item.id === pending.id && item.time === pending.time)) queue.push(pending)
+    localStorage.setItem(PENDING_SCROBBLES_KEY, JSON.stringify(queue))
+  }
+
+  private async flushScrobbles() {
+    const client = this.state.client
+    const queue = readPendingScrobbles()
+    if (!client || !queue.length) return
+    const left: PendingScrobble[] = []
+    // По порядку: сервер строит историю прослушиваний по времени.
+    for (const item of queue.sort((a, b) => a.time - b.time)) {
+      try {
+        await client.scrobble(item.id, item.time)
+      } catch {
+        left.push(item)
+      }
+    }
+    localStorage.setItem(PENDING_SCROBBLES_KEY, JSON.stringify(left))
   }
 
   // MARK: - Сохранение очереди
 
+  private get queueOwner() {
+    return this.state.client?.credentials.account ?? (this.state.serverless ? 'on-device' : undefined)
+  }
+
   private saveQueue() {
-    const { queue, client } = this.state
-    if (!queue || !client) return
+    const { queue } = this.state
+    const owner = this.queueOwner
+    if (!queue || !owner) return
     const snapshot: QueueSnapshot = {
-      account: client.credentials.account,
+      account: owner,
       natural: queue.natural.map((entry) => entry.song),
       currentId: queue.current?.song.id,
       shuffle: queue.shuffle,
@@ -468,17 +725,18 @@ class Store {
 
   /** Очередь возвращается на паузе, с того же места: включать звук самовольно при запуске нельзя. */
   private async restoreQueue() {
-    const client = this.state.client
+    const owner = this.queueOwner
     const raw = localStorage.getItem(QUEUE_KEY)
-    if (!client || !raw) return
+    if (!owner || !raw) return
     try {
       const snapshot = JSON.parse(raw) as QueueSnapshot
-      if (snapshot.account !== client.credentials.account || !snapshot.natural.length) return
+      if (snapshot.account !== owner || !snapshot.natural.length) return
       const index = Math.max(snapshot.natural.findIndex((song) => song.id === snapshot.currentId), 0)
       const queue = new PlaybackQueue(snapshot.natural, index, snapshot.shuffle)
       queue.repeatMode = snapshot.repeat
       this.patch({ queue })
       this.touchQueue()
+      if (!queue.current || !this.isPlayable(queue.current.song)) return
       await this.startCurrent(false, snapshot.position)
       if (snapshot.startedAt) this.startedAt = snapshot.startedAt
       this.scrobbled = snapshot.scrobbled ?? false
@@ -510,7 +768,7 @@ class Store {
 
   private async updateNowPlaying(song: Song) {
     if (!('mediaSession' in navigator) || typeof MediaMetadata === 'undefined') return
-    const artwork = await this.state.client?.cover(song.coverArt, 512)
+    const artwork = await coverUrl(song.coverArt, this.online ? this.state.client : undefined, 512)
     navigator.mediaSession.metadata = new MediaMetadata({
       title: song.title,
       artist: song.artist ?? '',
@@ -542,6 +800,29 @@ class Store {
 
   dismissError() {
     this.patch({ error: undefined })
+  }
+}
+
+/** Обложка: своя — файл на диске, серверная — по подписанному адресу. */
+export async function coverUrl(id: string | undefined, client: NavidromeClient | undefined, size: number) {
+  if (!id) return undefined
+  if (id.startsWith('file:')) return platform.fileSource(id.slice('file:'.length))
+  return client?.cover(id, size)
+}
+
+function byAlbumThenTrack(a: Song, b: Song) {
+  return (
+    (a.album ?? '').localeCompare(b.album ?? '', 'ru') ||
+    (a.track ?? 0) - (b.track ?? 0) ||
+    a.title.localeCompare(b.title, 'ru')
+  )
+}
+
+function readPendingScrobbles(): PendingScrobble[] {
+  try {
+    return JSON.parse(localStorage.getItem(PENDING_SCROBBLES_KEY) ?? '[]') as PendingScrobble[]
+  } catch {
+    return []
   }
 }
 

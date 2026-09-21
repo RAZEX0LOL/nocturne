@@ -1,4 +1,5 @@
 import type { Song } from '../core/models'
+import { isLocalId } from '../core/source'
 import { store, useStore } from '../state/store'
 
 export function formatTime(seconds?: number) {
@@ -8,12 +9,25 @@ export function formatTime(seconds?: number) {
 }
 
 /**
- * Список треков: клик запускает воспроизведение с этого места, справа — избранное и
- * действия с очередью. `numbered` — номер в альбоме, иначе порядковый.
+ * Список треков: клик запускает воспроизведение с этого места, справа — действия.
+ * Без сети нескачанные треки видны, но приглушены: понятно, что есть, и что сейчас недоступно.
  */
-export function SongList({ songs, numbered = false, showAlbum = false }: { songs: Song[]; numbered?: boolean; showAlbum?: boolean }) {
-  const { queue, starredIds, playing } = useStore()
+export function SongList({
+  songs,
+  numbered = false,
+  showAlbum = false,
+  onRemove,
+  removeLabel = 'Удалить',
+}: {
+  songs: Song[]
+  numbered?: boolean
+  showAlbum?: boolean
+  onRemove?: (song: Song) => void
+  removeLabel?: string
+}) {
+  const { queue, starredIds, playing, downloads, downloading, client, offline } = useStore()
   const currentId = queue?.current?.song.id
+  const online = !!client && !offline
 
   if (!songs.length) return <p className="px-1 text-sm text-secondary">Здесь пока пусто.</p>
 
@@ -22,9 +36,17 @@ export function SongList({ songs, numbered = false, showAlbum = false }: { songs
       {songs.map((song, index) => {
         const current = song.id === currentId
         const starred = starredIds.has(song.id)
+        const local = isLocalId(song.id)
+        const downloaded = !!downloads[song.id]
+        const playable = store.isPlayable(song)
+        const rowAction = 'rounded px-2 py-1 text-xs text-secondary opacity-0 hover:text-primary group-hover:opacity-100'
         return (
-          <li key={`${song.id}-${index}`} className="group flex items-center hover:bg-surface-strong">
-            <button onClick={() => void store.play(songs, index)} className="flex min-w-0 flex-1 items-center gap-4 px-4 py-2.5 text-left">
+          <li key={`${song.id}-${index}`} className={`group flex items-center hover:bg-surface-strong ${playable ? '' : 'opacity-40'}`}>
+            <button
+              onClick={() => void store.play(songs, index)}
+              className="flex min-w-0 flex-1 items-center gap-4 px-4 py-2.5 text-left"
+              title={playable ? undefined : 'Трек не скачан — недоступен без сети'}
+            >
               <span className={`w-6 text-right text-sm tabular-nums ${current ? 'text-accent' : 'text-secondary'}`}>
                 {current ? (playing ? '♪' : '♫') : numbered ? song.track ?? index + 1 : index + 1}
               </span>
@@ -35,31 +57,45 @@ export function SongList({ songs, numbered = false, showAlbum = false }: { songs
                   {showAlbum && song.album ? ` · ${song.album}` : ''}
                 </span>
               </span>
-              <span className="text-xs tabular-nums text-secondary">{formatTime(song.duration)}</span>
+              {downloaded && <span className="text-xs text-secondary" title="Скачано">⤓</span>}
+              <span className="w-10 text-right text-xs tabular-nums text-secondary">{formatTime(song.duration)}</span>
             </button>
             <div className="flex items-center gap-1 pr-3">
-              <button
-                onClick={() => store.playNext([song])}
-                className="rounded px-2 py-1 text-xs text-secondary opacity-0 hover:text-primary group-hover:opacity-100"
-                title="Сыграть следующим"
-              >
-                ↳
-              </button>
-              <button
-                onClick={() => store.append([song])}
-                className="rounded px-2 py-1 text-xs text-secondary opacity-0 hover:text-primary group-hover:opacity-100"
-                title="В конец очереди"
-              >
-                ＋
-              </button>
-              <button
-                onClick={() => void store.toggleStar(song)}
-                className={`rounded px-2 py-1 ${starred ? 'text-accent' : 'text-secondary opacity-0 group-hover:opacity-100'}`}
-                title={starred ? 'Убрать из избранного' : 'В избранное'}
-                aria-label={starred ? 'Убрать из избранного' : 'В избранное'}
-              >
-                {starred ? '♥' : '♡'}
-              </button>
+              {playable && (
+                <>
+                  <button onClick={() => store.playNext([song])} className={rowAction} title="Сыграть следующим">
+                    ↳
+                  </button>
+                  <button onClick={() => store.append([song])} className={rowAction} title="В конец очереди">
+                    ＋
+                  </button>
+                </>
+              )}
+              {!local && online && !downloaded && (
+                <button
+                  onClick={() => void store.download([song])}
+                  className={downloading[song.id] ? 'rounded px-2 py-1 text-xs text-accent' : rowAction}
+                  title="Скачать для прослушивания без сети"
+                  disabled={!!downloading[song.id]}
+                >
+                  {downloading[song.id] ? '…' : '↓'}
+                </button>
+              )}
+              {onRemove && (
+                <button onClick={() => onRemove(song)} className={rowAction} title={removeLabel} aria-label={removeLabel}>
+                  ✕
+                </button>
+              )}
+              {!local && online && (
+                <button
+                  onClick={() => void store.toggleStar(song)}
+                  className={`rounded px-2 py-1 ${starred ? 'text-accent' : 'text-secondary opacity-0 group-hover:opacity-100'}`}
+                  title={starred ? 'Убрать из избранного' : 'В избранное'}
+                  aria-label={starred ? 'Убрать из избранного' : 'В избранное'}
+                >
+                  {starred ? '♥' : '♡'}
+                </button>
+              )}
             </div>
           </li>
         )

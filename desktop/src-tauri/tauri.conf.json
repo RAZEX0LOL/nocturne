@@ -23,7 +23,15 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; img-src 'self' data: http: https: asset: http://asset.localhost; media-src 'self' blob: http: https: asset: http://asset.localhost; connect-src 'self' http: https: ipc: http://ipc.localhost; style-src 'self' 'unsafe-inline'"
+      "csp": "default-src 'self'; img-src 'self' data: http: https: asset: http://asset.localhost; media-src 'self' blob: http: https: asset: http://asset.localhost; connect-src 'self' http: https: ipc: http://ipc.localhost; style-src 'self' 'unsafe-inline'",
+      "assetProtocol": {
+        "enable": true,
+        "scope": [
+          "$AUDIO/Nocturne/**",
+          "$APPLOCALDATA/downloads/**",
+          "$APPCACHE/covers/**"
+        ]
+      }
     }
   },
   "bundle": {

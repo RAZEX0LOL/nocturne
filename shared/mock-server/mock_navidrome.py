@@ -7,7 +7,9 @@ from urllib.parse import urlparse, parse_qs
 TRACK_SECONDS = float(sys.argv[1]) if len(sys.argv) > 1 else 8
 FAIL_STREAMS = set()  # song ids whose stream returns 500 once (retry check)
 
-def wav(freq, seconds=TRACK_SECONDS, rate=8000):
+# 22 кГц, а не телефонные 8: WebKit пропускает 8-килогерцовый звук через Web Audio тишиной, и
+# десктопная версия с эквалайзером казалась бы немой, хотя с настоящей музыкой всё в порядке.
+def wav(freq, seconds=TRACK_SECONDS, rate=22050):
     buf = io.BytesIO()
     with wave.open(buf, "wb") as w:
         w.setnchannels(1); w.setsampwidth(2); w.setframerate(rate)

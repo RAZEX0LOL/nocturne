@@ -1,3 +1,5 @@
+mod library;
+
 use keyring::Entry;
 use serde::{Deserialize, Serialize};
 
@@ -77,7 +79,13 @@ pub fn run() {
             save_credentials,
             load_credentials,
             delete_credentials,
-            debug_log
+            debug_log,
+            library::local_library,
+            library::import_items,
+            library::remove_local,
+            library::download_track,
+            library::downloads,
+            library::remove_download
         ])
         .run(tauri::generate_context!())
         .expect("не удалось запустить приложение");

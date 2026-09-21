@@ -13,8 +13,11 @@ function Title({ children, action }: { children: React.ReactNode; action?: React
   )
 }
 
-function PlayButtons({ songs }: { songs: Song[] }) {
+function PlayButtons({ songs, downloadable = false }: { songs: Song[]; downloadable?: boolean }) {
+  const { client, offline, downloads, downloading } = useStore()
   if (!songs.length) return null
+  const missing = songs.filter((song) => !downloads[song.id])
+  const busy = songs.some((song) => downloading[song.id])
   return (
     <div className="flex gap-3">
       <button onClick={() => void store.play(songs, 0)} className="rounded-xl bg-accent px-5 py-2 font-medium text-base">
@@ -26,6 +29,16 @@ function PlayButtons({ songs }: { songs: Song[] }) {
       >
         ⇄ Перемешать
       </button>
+      {downloadable && client && !offline && (
+        <button
+          onClick={() => void store.download(songs)}
+          disabled={busy || !missing.length}
+          className="rounded-xl bg-surface-strong px-5 py-2 disabled:opacity-50"
+          title="Скачать для прослушивания без сети"
+        >
+          {busy ? 'Скачиваю…' : missing.length ? '↓ Скачать' : '✓ Скачано'}
+        </button>
+      )}
     </div>
   )
 }
@@ -44,8 +57,35 @@ export function AlbumGrid({ albums }: { albums: Album[] }) {
   )
 }
 
+export function OfflineBanner() {
+  const { offline } = useStore()
+  if (!offline) return null
+  return (
+    <div className="flex items-center gap-3 rounded-xl bg-surface p-4">
+      <span className="text-orange-400">⚠</span>
+      <div className="flex-1">
+        <div className="text-sm font-medium">Нет связи с сервером</div>
+        <div className="text-xs text-secondary">Играет то, что есть на компьютере и в загрузках.</div>
+      </div>
+      <button onClick={() => void store.reconnect()} className="rounded-lg bg-surface-strong px-3 py-1.5 text-sm">
+        Повторить
+      </button>
+    </div>
+  )
+}
+
 export function HomeView() {
-  const { recent, starred } = useStore()
+  const { recent, starred, offline, serverless, local, downloadedSongs } = useStore()
+  if (offline || serverless) {
+    const onDisk = [...local, ...downloadedSongs]
+    return (
+      <div className="space-y-6">
+        <OfflineBanner />
+        <Title action={<PlayButtons songs={onDisk} />}>{offline ? 'Доступно без сети' : 'Моя музыка'}</Title>
+        {onDisk.length ? <SongList songs={onDisk} showAlbum /> : <LocalEmpty />}
+      </div>
+    )
+  }
   return (
     <div className="space-y-8">
       {starred.length > 0 && (
@@ -109,7 +149,7 @@ export function AlbumView({ album }: { album: Album }) {
             {list.length || album.songCount || 0} треков
           </p>
           <div className="pt-2">
-            <PlayButtons songs={list} />
+            <PlayButtons songs={list} downloadable />
           </div>
         </div>
       </div>
@@ -210,7 +250,7 @@ export function PlaylistView({ playlist }: { playlist: Playlist }) {
           <h1 className="text-3xl font-semibold">{playlist.name}</h1>
           <p className="text-sm text-secondary">{list.length || playlist.songCount || 0} треков</p>
           <div className="pt-2">
-            <PlayButtons songs={list} />
+            <PlayButtons songs={list} downloadable />
           </div>
         </div>
       </div>
@@ -276,6 +316,67 @@ export function SearchView() {
           <SongList songs={search.songs} showAlbum />
         </section>
       ) : null}
+    </div>
+  )
+}
+
+function LocalEmpty() {
+  const { musicFolder } = useStore()
+  return (
+    <div className="rounded-xl bg-surface p-6 text-sm text-secondary">
+      <p className="font-medium text-primary">На компьютере пока нет музыки</p>
+      <p className="mt-2">
+        Добавь файлы или папку кнопками выше или положи их в папку{' '}
+        {musicFolder ? <span className="text-primary">{musicFolder}</span> : 'Музыка → Nocturne'} — приложение найдёт их само.
+        Поддерживаются MP3, M4A, AAC, ALAC, FLAC, WAV, AIFF, OGG.
+      </p>
+    </div>
+  )
+}
+
+export function LocalView() {
+  const { local, importing } = useStore()
+  const button = 'rounded-xl bg-surface-strong px-4 py-2 text-sm disabled:opacity-50'
+  return (
+    <div className="space-y-6">
+      <Title action={<PlayButtons songs={local} />}>На компьютере</Title>
+      <div className="flex flex-wrap gap-2">
+        <button onClick={() => void store.importMusic('files')} disabled={importing} className={button}>
+          ＋ Файлы
+        </button>
+        <button onClick={() => void store.importMusic('folder')} disabled={importing} className={button}>
+          ＋ Папка целиком
+        </button>
+        <button onClick={() => store.openMusicFolder()} className={button}>
+          Открыть папку
+        </button>
+        <button onClick={() => void store.loadOnDisk()} className={button}>
+          ↻ Пересканировать
+        </button>
+      </div>
+      {importing && <p className="text-sm text-secondary">Добавляю музыку…</p>}
+      {local.length ? (
+        <>
+          <p className="text-xs text-secondary">Треков: {local.length}</p>
+          <SongList songs={local} showAlbum onRemove={(song) => void store.removeLocal(song)} removeLabel="Удалить файл с компьютера" />
+        </>
+      ) : (
+        <LocalEmpty />
+      )}
+    </div>
+  )
+}
+
+export function DownloadsView() {
+  const { downloadedSongs, downloading } = useStore()
+  const pending = Object.keys(downloading).length
+  return (
+    <div className="space-y-6">
+      <Title action={<PlayButtons songs={downloadedSongs} />}>Загрузки</Title>
+      <p className="text-sm text-secondary">
+        Треки с сервера, сохранённые для прослушивания без сети.{pending ? ` Сейчас скачивается: ${pending}.` : ''}
+      </p>
+      <SongList songs={downloadedSongs} showAlbum onRemove={(song) => void store.removeDownload(song)} removeLabel="Удалить загрузку" />
     </div>
   )
 }

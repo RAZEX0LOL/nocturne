@@ -1,0 +1,12 @@
+{
+  "description": "Откуда играть трек. Файл на устройстве важнее загруженной копии, копия важнее потока: если трек уже на диске, сеть не трогается. Без сети нескачанный трек недоступен — это не ошибка, а понятный отказ.",
+  "cases": [
+    { "name": "свой файл играет с диска", "id": "local:abc", "local": ["local:abc"], "downloaded": [], "online": true, "expected": "local" },
+    { "name": "свой файл играет и без сети", "id": "local:abc", "local": ["local:abc"], "downloaded": [], "online": false, "expected": "local" },
+    { "name": "удалённый из папки файл больше не играет", "id": "local:gone", "local": [], "downloaded": [], "online": true, "expected": "unavailable" },
+    { "name": "скачанный трек не трогает сеть", "id": "s1", "local": [], "downloaded": ["s1"], "online": true, "expected": "download" },
+    { "name": "скачанный трек играет без сети", "id": "s1", "local": [], "downloaded": ["s1"], "online": false, "expected": "download" },
+    { "name": "нескачанный трек идёт потоком", "id": "s2", "local": [], "downloaded": ["s1"], "online": true, "expected": "stream" },
+    { "name": "нескачанный трек без сети недоступен", "id": "s2", "local": [], "downloaded": ["s1"], "online": false, "expected": "unavailable" }
+  ]
+}

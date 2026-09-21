@@ -5,6 +5,7 @@ import { Credentials, NavidromeClient, streamParameters, type StreamQuality } fr
 import { MusicError, type Song } from './models'
 import { PlaybackQueue, type RepeatMode } from './queue'
 import { replayGainVolume, type ReplayGainMode } from './replaygain'
+import { chooseSource } from './source'
 
 /**
  * Общий контракт из shared/cases. Те же файлы исполняют iOS и Android,
@@ -171,6 +172,15 @@ describe('queue', () => {
           }
         }
       }
+    })
+  }
+})
+
+describe('source', () => {
+  for (const item of load('source.json').cases) {
+    test(item.name, () => {
+      const availability = { local: new Set<string>(item.local), downloaded: new Set<string>(item.downloaded), online: item.online }
+      expect(chooseSource(item.id, availability)).toBe(item.expected)
     })
   }
 })
