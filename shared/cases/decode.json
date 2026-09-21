@@ -1,0 +1,57 @@
+{
+  "description": "Разбор ответов сервера. accept=false означает, что ответ обязан быть отклонён с ошибкой, а не принят с пустыми полями.",
+  "cases": [
+    {
+      "name": "ошибка авторизации приходит внутри HTTP 200",
+      "json": "{\"subsonic-response\":{\"status\":\"failed\",\"error\":{\"code\":40,\"message\":\"private detail\"}}}",
+      "accept": false,
+      "error": "auth",
+      "errorMustNotContain": ["private detail"]
+    },
+    {
+      "name": "страница входа прокси вместо ответа",
+      "json": "<html>Proxy login</html>",
+      "accept": false
+    },
+    {
+      "name": "посторонний json",
+      "json": "{\"unrelated\":true}",
+      "accept": false
+    },
+    {
+      "name": "альбом без необязательных полей",
+      "json": "{\"subsonic-response\":{\"status\":\"ok\",\"albumList2\":{\"album\":[{\"id\":\"1\",\"name\":\"Album\"}]}}}",
+      "accept": true,
+      "expect": { "firstAlbumName": "Album", "firstAlbumArtist": null }
+    },
+    {
+      "name": "пустой список альбомов",
+      "json": "{\"subsonic-response\":{\"status\":\"ok\",\"albumList2\":{}}}",
+      "accept": true,
+      "expect": { "albumCount": 0 }
+    },
+    {
+      "name": "дробная длительность трека",
+      "json": "{\"subsonic-response\":{\"status\":\"ok\",\"album\":{\"id\":\"a\",\"name\":\"Album\",\"song\":[{\"id\":\"s\",\"title\":\"Song\",\"duration\":123.5}]}}}",
+      "accept": true,
+      "expect": { "firstSongDuration": 123.5 }
+    },
+    {
+      "name": "избранное, жанры и синхронный текст песни",
+      "json": "{\"subsonic-response\":{\"status\":\"ok\",\"starred2\":{\"song\":[{\"id\":\"s\",\"title\":\"Song\"}]},\"genres\":{\"genre\":[{\"value\":\"Rock\",\"albumCount\":3}]},\"lyricsList\":{\"structuredLyrics\":[{\"lang\":\"xxx\",\"synced\":true,\"line\":[{\"start\":1200,\"value\":\"Hi\"}]}]}}}",
+      "accept": true,
+      "expect": { "firstStarredSongId": "s", "firstGenreValue": "Rock", "firstLyricStart": 1200 }
+    },
+    {
+      "name": "радио, ссылка на обмен и теги громкости",
+      "json": "{\"subsonic-response\":{\"status\":\"ok\",\"internetRadioStations\":{\"internetRadioStation\":[{\"id\":\"r1\",\"name\":\"Jazz\",\"streamUrl\":\"https://radio.example/jazz\"}]},\"shares\":{\"share\":[{\"id\":\"x\",\"url\":\"https://music.example/share/abc\"}]},\"album\":{\"id\":\"a\",\"name\":\"A\",\"song\":[{\"id\":\"s\",\"title\":\"S\",\"userRating\":4,\"replayGain\":{\"trackGain\":-7.5,\"trackPeak\":0.98}}]}}}",
+      "accept": true,
+      "expect": {
+        "firstRadioStreamUrl": "https://radio.example/jazz",
+        "firstShareUrl": "https://music.example/share/abc",
+        "firstSongTrackGain": -7.5,
+        "firstSongRating": 4
+      }
+    }
+  ]
+}

@@ -211,7 +211,7 @@ private val Muted = Color(0xFF9C9CAA)
             Text(song.title, color = if (vm.playback.current?.id == song.id) Accent else Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleSmall)
             Text(song.artist, color = Muted, maxLines = 1, style = MaterialTheme.typography.bodySmall)
         }
-        Text(timeLabel(song.duration * 1000), color = Muted, style = MaterialTheme.typography.bodySmall)
+        Text(timeLabel(((song.duration ?: 0.0) * 1000).toLong()), color = Muted, style = MaterialTheme.typography.bodySmall)
     }
 }
 @Composable private fun SearchScreen(vm: MusicViewModel) {

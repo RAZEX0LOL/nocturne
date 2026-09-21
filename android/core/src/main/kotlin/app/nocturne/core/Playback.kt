@@ -1,0 +1,129 @@
+package app.nocturne.core
+
+import kotlin.math.min
+import kotlin.math.pow
+
+/**
+ * Очередь воспроизведения — общий для всех платформ порядок треков.
+ * Поведение описано в shared/spec/playback.md и проверяется shared/cases/queue.json.
+ */
+class PlaybackQueue(songs: List<Song>, startAt: Int, shuffle: Boolean) {
+    enum class Repeat { off, all, one }
+
+    data class Entry(val id: String, val song: Song)
+
+    private var entries: List<Entry> = songs.mapIndexed { index, song -> Entry("$index:${song.id}", song) }
+    /** Порядок, каким он был до перемешивания: по нему восстанавливается список и считается «дальше». */
+    private var naturalEntries: List<Entry> = entries
+
+    var position: Int = startAt.coerceIn(0, maxOf(entries.lastIndex, 0))
+        private set
+    var repeatMode: Repeat = Repeat.off
+    var shuffle: Boolean = false
+        private set
+
+    /** Треки, которые в самом деле играли, в порядке проигрывания: по ним работает «назад». */
+    private val history = ArrayDeque<String>()
+
+    init { if (shuffle) setShuffle(true) }
+
+    val items: List<Entry> get() = entries
+    val natural: List<Entry> get() = naturalEntries
+    val current: Entry? get() = entries.getOrNull(position)
+    val upcoming: List<Entry> get() = if (position in entries.indices) entries.drop(position + 1) else emptyList()
+
+    fun setShuffle(enabled: Boolean) {
+        if (enabled == shuffle) return
+        val playing = current
+        shuffle = enabled
+        entries = if (enabled) {
+            listOfNotNull(playing) + entries.filter { it.id != playing?.id }.shuffled()
+        } else {
+            naturalEntries
+        }
+        position = entries.indexOfFirst { it.id == playing?.id }.coerceAtLeast(0)
+        history.clear()
+    }
+
+    fun nextPosition(automatic: Boolean): Int? {
+        if (automatic && repeatMode == Repeat.one) return position
+        if (position + 1 < entries.size) return position + 1
+        return if (repeatMode == Repeat.all) 0 else null
+    }
+
+    fun previousPosition(): Int? {
+        if (history.isNotEmpty()) {
+            val id = history.last()
+            val index = entries.indexOfFirst { it.id == id }
+            if (index >= 0) return index
+        }
+        if (position - 1 >= 0) return position - 1
+        return if (repeatMode == Repeat.all) entries.lastIndex else null
+    }
+
+    fun jump(to: Int) {
+        if (to !in entries.indices) return
+        val leaving = current?.id
+        if (history.lastOrNull() == entries[to].id) history.removeLast() else if (leaving != null) history.addLast(leaving)
+        position = to
+    }
+
+    fun insertNext(songs: List<Song>) {
+        val added = songs.map { Entry(newId(it), it) }
+        entries = entries.toMutableList().apply { addAll(min(position + 1, size), added) }
+        if (!shuffle) naturalEntries = entries
+    }
+
+    fun append(songs: List<Song>) {
+        val added = songs.map { Entry(newId(it), it) }
+        entries = entries + added
+        if (!shuffle) naturalEntries = entries
+    }
+
+    /** Играющий трек удалить нельзя: иначе непонятно, что должно зазвучать вместо него. */
+    fun remove(id: String) {
+        val index = entries.indexOfFirst { it.id == id }
+        if (index < 0 || index == position) return
+        entries = entries.filterIndexed { i, _ -> i != index }
+        if (!shuffle) naturalEntries = entries
+        if (index < position) position -= 1
+        history.remove(id)
+    }
+
+    fun moveUpcoming(from: List<Int>, to: Int) {
+        val base = position + 1
+        if (base >= entries.size) return
+        val tail = entries.drop(base).toMutableList()
+        val moving = from.sorted().mapNotNull { tail.getOrNull(it) }
+        tail.removeAll(moving)
+        tail.addAll(to.coerceIn(0, tail.size), moving)
+        entries = entries.take(base) + tail
+        if (!shuffle) naturalEntries = entries
+    }
+
+    private var counter = 0
+    private fun newId(song: Song) = "n${counter++}:${song.id}"
+}
+
+/** Профили потока. Оригинал отдаётся без перекодирования, остальные — MP3 с заданным потолком. */
+enum class StreamQuality(val parameters: Map<String, String>) {
+    original(mapOf("format" to "raw")),
+    mp3High(mapOf("format" to "mp3", "maxBitRate" to "320")),
+    mp3Medium(mapOf("format" to "mp3", "maxBitRate" to "192")),
+    mp3Low(mapOf("format" to "mp3", "maxBitRate" to "128")),
+}
+
+/** Выравнивание громкости по тегам ReplayGain: усиливать выше 1 нельзя, пик защищает от перегрузки. */
+enum class ReplayGainMode {
+    off, track, album;
+
+    fun volume(song: Song, preamp: Double = 0.0): Float {
+        if (this == off) return 1f
+        val gain = song.replayGain ?: return 1f
+        val decibels = (if (this == album) gain.albumGain ?: gain.trackGain else gain.trackGain ?: gain.albumGain) ?: 0.0
+        val peak = (if (this == album) gain.albumPeak ?: gain.trackPeak else gain.trackPeak ?: gain.albumPeak) ?: 0.0
+        var linear = 10.0.pow((decibels + preamp) / 20.0)
+        if (peak > 0) linear = min(linear, 1.0 / peak)
+        return min(maxOf(linear, 0.0), 1.0).toFloat()
+    }
+}

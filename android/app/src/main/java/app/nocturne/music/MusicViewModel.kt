@@ -153,7 +153,7 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
         val player = controller ?: run { error = "Аудиосервис ещё подключается. Попробуй через секунду."; return }
         if (index !in songs.indices) return
         val items = songs.map { song ->
-            val extras = Bundle().apply { putString("coverId", song.coverArt); putLong("durationSeconds", song.duration) }
+            val extras = Bundle().apply { putString("coverId", song.coverArt); putLong("durationMillis", ((song.duration ?: 0.0) * 1000).toLong()) }
             MediaItem.Builder().setMediaId(song.id).setUri(api.stream(song.id)).setMediaMetadata(
                 MediaMetadata.Builder().setTitle(song.title).setArtist(song.artist).setAlbumTitle(song.album)
                     .setArtworkUri(api.cover(song.coverArt)?.let(Uri::parse)).setExtras(extras).build()
@@ -172,10 +172,10 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
         val player = controller ?: return
         val songs = (0 until player.mediaItemCount).map { index ->
             val item = player.getMediaItemAt(index); val meta = item.mediaMetadata
-            Song(item.mediaId, meta.title?.toString().orEmpty(), meta.artist?.toString().orEmpty(), meta.albumTitle?.toString().orEmpty(), meta.extras?.getString("coverId"), meta.extras?.getLong("durationSeconds") ?: 0)
+            Song(item.mediaId, meta.title?.toString().orEmpty(), meta.artist?.toString().orEmpty(), meta.albumTitle?.toString().orEmpty(), meta.extras?.getString("coverId"), meta.extras?.getLong("durationMillis")?.takeIf { it > 0 }?.div(1000.0))
         }
         playback = Playback(songs.getOrNull(player.currentMediaItemIndex), player.isPlaying, player.playbackState == Player.STATE_BUFFERING,
-            player.currentPosition.coerceAtLeast(0), player.duration.takeIf { it != C.TIME_UNSET && it > 0 } ?: ((songs.getOrNull(player.currentMediaItemIndex)?.duration ?: 0) * 1000),
+            player.currentPosition.coerceAtLeast(0), player.duration.takeIf { it != C.TIME_UNSET && it > 0 } ?: ((songs.getOrNull(player.currentMediaItemIndex)?.duration ?: 0.0) * 1000).toLong(),
             player.shuffleModeEnabled, player.repeatMode, songs)
     }
     private fun report(error: Exception) { if (error !is CancellationException) this.error = if (error is MusicException) error.message else "Не удалось выполнить действие. Проверь подключение." }

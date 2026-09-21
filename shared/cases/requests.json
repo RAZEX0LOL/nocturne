@@ -1,0 +1,82 @@
+{
+  "description": "Сборка адреса запроса к серверу. Соль задана явно, чтобы токен был воспроизводим; в бою соль случайная на каждый запрос.",
+  "constants": {
+    "apiVersion": "1.16.1",
+    "clientNamePrefix": "Nocturne",
+    "format": "json"
+  },
+  "cases": [
+    {
+      "name": "официальный пример Subsonic: токен считается как md5(пароль + соль)",
+      "server": "https://music.example.com",
+      "username": "joe",
+      "password": "sesame",
+      "salt": "c19b2d",
+      "endpoint": "ping",
+      "expect": {
+        "path": "/rest/ping.view",
+        "query": { "u": "joe", "t": "26719a1196d2a940705a59634eb18eab", "s": "c19b2d", "v": "1.16.1", "f": "json" },
+        "clientNameStartsWith": "Nocturne",
+        "absentParameters": ["p"],
+        "absentSubstrings": ["sesame"]
+      }
+    },
+    {
+      "name": "подпуть сервера и юникод сохраняются, плюс не превращается в пробел",
+      "server": "https://music.example.com/navidrome/",
+      "username": "Иван + &",
+      "password": "test-only",
+      "salt": "abc123",
+      "endpoint": "search3",
+      "parameters": { "query": "a&b + ночь" },
+      "expect": {
+        "path": "/navidrome/rest/search3.view",
+        "query": { "u": "Иван + &", "query": "a&b + ночь" },
+        "absentSubstrings": ["+"]
+      }
+    },
+    {
+      "name": "повторяющиеся параметры сохраняют порядок",
+      "server": "https://host",
+      "username": "test",
+      "password": "test-only",
+      "salt": "abc123",
+      "endpoint": "createPlaylist",
+      "parameters": { "name": "Mix" },
+      "repeated": [
+        { "name": "songId", "value": "a" },
+        { "name": "songId", "value": "b" }
+      ],
+      "expect": {
+        "path": "/rest/createPlaylist.view",
+        "repeated": { "songId": ["a", "b"] }
+      }
+    },
+    {
+      "name": "скробблинг передаёт отметку времени в миллисекундах",
+      "server": "https://host",
+      "username": "test",
+      "password": "test-only",
+      "salt": "abc123",
+      "endpoint": "scrobble",
+      "parameters": { "id": "s1", "submission": "true", "time": "1758300000000" },
+      "expect": {
+        "path": "/rest/scrobble.view",
+        "query": { "id": "s1", "submission": "true", "time": "1758300000000" }
+      }
+    }
+  ],
+  "streamQuality": [
+    { "name": "оригинал передаётся без перекодирования", "quality": "original", "parameters": { "format": "raw" } },
+    { "name": "mp3 320", "quality": "mp3High", "parameters": { "format": "mp3", "maxBitRate": "320" } },
+    { "name": "mp3 192", "quality": "mp3Medium", "parameters": { "format": "mp3", "maxBitRate": "192" } },
+    { "name": "mp3 128", "quality": "mp3Low", "parameters": { "format": "mp3", "maxBitRate": "128" } }
+  ],
+  "freshSalt": {
+    "name": "каждый запрос подписывается новой солью",
+    "server": "https://host",
+    "username": "test",
+    "password": "test-only",
+    "endpoint": "ping"
+  }
+}

@@ -22,15 +22,7 @@ class NavidromeClientTest {
         val client = NavidromeClient(Credentials("https://music.example.com", "test", "test-only"))
         assertEquals("/rest/ping.view", client.url("ping").toHttpUrl().encodedPath)
     }
-    @Test fun rejectsInsecureOrAmbiguousAddresses() {
-        listOf("http://host", "https://", "https://joe:secret@host", "https://host?x=1", "https://host/#secret").forEach {
-            assertFailsWith<MusicException> { Credentials(it, "test", "test-only") }
-        }
-    }
-    @Test fun rejectsEmptyCredentials() {
-        assertFailsWith<MusicException> { Credentials("https://host", " ", "test-only") }
-        assertFailsWith<MusicException> { Credentials("https://host", "test", "") }
-    }
+    // Адреса и учётные данные целиком проверяет общий контракт: shared/cases/credentials.json.
     @Test fun saltsAreUnique() { assertNotEquals(client().url("ping"), client().url("ping")) }
     @Test fun rejectsApiFailureWithoutLeakingMessage() {
         val error = assertFailsWith<MusicException> {

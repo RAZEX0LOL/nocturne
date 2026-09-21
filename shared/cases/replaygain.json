@@ -1,0 +1,36 @@
+{
+  "description": "Выравнивание громкости по ReplayGain. Громкость линейная, 1 — без изменений. Усиливать выше 1 нельзя: плееры этого не умеют, а пик защищает от перегрузки.",
+  "tolerance": 0.01,
+  "cases": [
+    {
+      "name": "выключено — громкость не трогаем",
+      "mode": "off",
+      "replayGain": { "trackGain": -6.02, "albumGain": -3, "trackPeak": 0.9, "albumPeak": 1.6 },
+      "expected": 1
+    },
+    {
+      "name": "по треку: -6.02 дБ это половина громкости",
+      "mode": "track",
+      "replayGain": { "trackGain": -6.02, "albumGain": -3, "trackPeak": 0.9, "albumPeak": 1.6 },
+      "expected": 0.5
+    },
+    {
+      "name": "по альбому: пик ограничивает усиление",
+      "mode": "album",
+      "replayGain": { "trackGain": -6.02, "albumGain": -3, "trackPeak": 0.9, "albumPeak": 1.6 },
+      "expected": 0.625
+    },
+    {
+      "name": "положительное усиление не поднимает громкость выше 1",
+      "mode": "track",
+      "replayGain": { "trackGain": 4 },
+      "expected": 1
+    },
+    {
+      "name": "трек без тегов играет как есть",
+      "mode": "track",
+      "replayGain": null,
+      "expected": 1
+    }
+  ]
+}

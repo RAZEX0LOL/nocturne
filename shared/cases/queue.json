@@ -1,0 +1,101 @@
+{
+  "description": "Очередь воспроизведения. Каждый случай начинается со списка треков и выполняет шаги по порядку.",
+  "operations": {
+    "jump": "перейти на позицию pos (номер в текущем порядке)",
+    "jumpNext": "перейти на nextPosition(automatic) — шаг падает, если следующей позиции нет",
+    "jumpPrevious": "перейти на previousPosition() — шаг падает, если предыдущей позиции нет",
+    "setShuffle": "включить или выключить перемешивание",
+    "setRepeat": "off | all | one",
+    "insertNext": "вставить треки сразу после текущего",
+    "append": "добавить треки в конец",
+    "removeAt": "удалить элемент, стоящий на позиции pos",
+    "moveUpcoming": "перенести элементы из «дальше» с позиций from на позицию to"
+  },
+  "checks": {
+    "currentId": "идентификатор играющего трека",
+    "position": "позиция играющего трека",
+    "itemIds": "порядок всей очереди",
+    "upcomingIds": "порядок того, что дальше",
+    "nextPositionAutomatic": "nextPosition(automatic: true); null означает конец очереди",
+    "nextPositionManual": "nextPosition(automatic: false)",
+    "count": "число элементов в очереди",
+    "isPermutationOfNatural": "очередь остаётся перестановкой исходного списка",
+    "currentIsFirst": "играющий трек стоит в начале перемешанного порядка"
+  },
+  "cases": [
+    {
+      "name": "линейный порядок и конец очереди",
+      "songs": ["s0", "s1", "s2", "s3", "s4", "s5"],
+      "startAt": 4,
+      "shuffle": false,
+      "steps": [
+        { "expect": { "currentId": "s4", "nextPositionAutomatic": 5 } },
+        { "op": "jump", "pos": 5 },
+        { "expect": { "nextPositionAutomatic": null } },
+        { "op": "setRepeat", "mode": "all" },
+        { "expect": { "nextPositionAutomatic": 0 } }
+      ]
+    },
+    {
+      "name": "повтор одного трека срабатывает только автоматически",
+      "songs": ["s0", "s1", "s2", "s3", "s4", "s5"],
+      "startAt": 2,
+      "shuffle": false,
+      "steps": [
+        { "op": "setRepeat", "mode": "one" },
+        { "expect": { "nextPositionAutomatic": 2, "nextPositionManual": 3 } }
+      ]
+    },
+    {
+      "name": "перемешивание — перестановка, играющий трек первый",
+      "songs": ["s0", "s1", "s2", "s3", "s4", "s5"],
+      "startAt": 3,
+      "shuffle": true,
+      "steps": [
+        { "expect": { "currentId": "s3", "position": 0, "count": 6, "isPermutationOfNatural": true, "currentIsFirst": true } }
+      ]
+    },
+    {
+      "name": "назад возвращает к треку, который в самом деле играл",
+      "songs": ["s0", "s1", "s2", "s3", "s4", "s5"],
+      "startAt": 3,
+      "shuffle": true,
+      "steps": [
+        { "op": "remember", "as": "second", "atPosition": 1 },
+        { "op": "jumpNext" },
+        { "op": "jumpNext" },
+        { "op": "jumpPrevious" },
+        { "expect": { "currentIdIsRemembered": "second" } }
+      ]
+    },
+    {
+      "name": "выключение перемешивания возвращает исходный порядок и не прерывает трек",
+      "songs": ["s0", "s1", "s2", "s3", "s4", "s5"],
+      "startAt": 0,
+      "shuffle": true,
+      "steps": [
+        { "op": "jump", "pos": 3 },
+        { "op": "remember", "as": "playing", "atCurrent": true },
+        { "op": "setShuffle", "enabled": false },
+        { "expect": { "itemIds": ["s0", "s1", "s2", "s3", "s4", "s5"], "currentIdIsRemembered": "playing" } }
+      ]
+    },
+    {
+      "name": "вставка следующим, добавление в конец, перенос и удаление",
+      "songs": ["s0", "s1", "s2"],
+      "startAt": 1,
+      "shuffle": false,
+      "steps": [
+        { "op": "insertNext", "songs": ["n"] },
+        { "op": "append", "songs": ["a"] },
+        { "expect": { "itemIds": ["s0", "s1", "n", "s2", "a"] } },
+        { "op": "moveUpcoming", "from": [2], "to": 0 },
+        { "expect": { "upcomingIds": ["a", "n", "s2"] } },
+        { "op": "removeAt", "pos": 0 },
+        { "expect": { "currentId": "s1", "comment": "удаление уже сыгранного не сбивает текущий трек" } },
+        { "op": "removeCurrent" },
+        { "expect": { "count": 4, "comment": "играющий трек удалить нельзя" } }
+      ]
+    }
+  ]
+}
