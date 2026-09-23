@@ -1,8 +1,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Уведомление плеера на Android 13+: без него музыка играет, но управлять ей из шторки нельзя. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
-    <application android:allowBackup="false" android:fullBackupContent="false" android:dataExtractionRules="@xml/data_extraction_rules" android:label="Nocturne" android:theme="@style/Theme.Nocturne" android:usesCleartextTraffic="false" android:icon="@drawable/ic_nocturne">
+    <!-- Обычный HTTP разрешён платформой, но само приложение пускает его только в домашнюю сеть:
+         проверка адреса живёт в ядре и покрыта общим контрактом (shared/cases/credentials.json). -->
+    <application android:allowBackup="false" android:fullBackupContent="false" android:dataExtractionRules="@xml/data_extraction_rules" android:label="Nocturne" android:theme="@style/Theme.Nocturne" android:usesCleartextTraffic="true" android:icon="@drawable/ic_nocturne">
         <activity android:name=".MainActivity" android:exported="true">
             <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
         </activity>

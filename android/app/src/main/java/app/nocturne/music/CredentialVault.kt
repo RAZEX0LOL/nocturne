@@ -15,6 +15,12 @@ import kotlinx.serialization.json.*
 
 class CredentialVault(context: Context) {
     private val file = AtomicFile(File(context.noBackupFilesDir, "navidrome.bin"))
+    private val flags = context.getSharedPreferences("vault", Context.MODE_PRIVATE)
+
+    /** Человек выбрал слушать только свою музыку — запоминаем, чтобы не показывать вход каждый раз. */
+    fun prefersOnDevice() = flags.getBoolean("onDevice", false)
+    fun rememberOnDevice(value: Boolean) = flags.edit().putBoolean("onDevice", value).apply()
+
     private fun key(): SecretKey {
         val store = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
         (store.getKey("nocturne.navidrome", null) as? SecretKey)?.let { return it }

@@ -72,8 +72,12 @@ class NavidromeClient(
         }.build().toString()
     }
 
-    suspend fun request(endpoint: String, parameters: Map<String, String> = emptyMap()): JsonObject = suspendCancellableCoroutine { continuation ->
-        val call = http.newCall(Request.Builder().url(url(endpoint, parameters)).build())
+    suspend fun request(
+        endpoint: String,
+        parameters: Map<String, String> = emptyMap(),
+        repeated: List<Pair<String, String>> = emptyList(),
+    ): JsonObject = suspendCancellableCoroutine { continuation ->
+        val call = http.newCall(Request.Builder().url(url(endpoint, parameters, repeated)).build())
         continuation.invokeOnCancellation { call.cancel() }
         call.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
@@ -106,6 +110,27 @@ class NavidromeClient(
         val data = request("search3", mapOf("query" to query, "songCount" to "50", "albumCount" to "30", "artistCount" to "20")).obj("searchResult3")
         return SearchResult(data.objects("album").map(::album), data.objects("song").map(::song), data.objects("artist").map(::artist))
     }
+    /** Избранные треки: их же показывает раздел «Избранное» и по ним работает автозагрузка. */
+    suspend fun starredSongs(): List<Song> = request("getStarred2").obj("starred2").objects("song").map(::song)
+
+    /** Отметка о прослушивании: время начала в миллисекундах, как требует протокол. */
+    suspend fun scrobble(id: String, startedAt: Long) {
+        request("scrobble", mapOf("id" to id, "submission" to "true", "time" to "$startedAt"))
+    }
+
+    suspend fun lyrics(id: String): List<LyricLine> =
+        request("getLyricsBySongId", mapOf("id" to id)).obj("lyricsList").objects("structuredLyrics")
+            .firstOrNull()?.objects("line")?.map { LyricLine(it["start"]?.jsonPrimitive?.intOrNull, it.text("value")) }
+            ?: emptyList()
+
+    suspend fun createPlaylist(name: String, songIds: List<String>) {
+        request("createPlaylist", mapOf("name" to name), songIds.map { "songId" to it })
+    }
+
+    suspend fun addToPlaylist(playlistId: String, songIds: List<String>) {
+        request("updatePlaylist", mapOf("playlistId" to playlistId), songIds.map { "songIdToAdd" to it })
+    }
+
     suspend fun favorite(id: String, starred: Boolean, isAlbum: Boolean = false) {
         request(if (starred) "star" else "unstar", mapOf((if (isAlbum) "albumId" else "id") to id))
     }

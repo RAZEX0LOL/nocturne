@@ -134,6 +134,18 @@ class ContractTest {
         }
     }
 
+    @Test fun source() {
+        for (case in cases("source.json")) {
+            val name = case.str("name") ?: "?"
+            val availability = Availability(
+                local = case["local"]!!.jsonArray.map { it.jsonPrimitive.content }.toSet(),
+                downloaded = case["downloaded"]!!.jsonArray.map { it.jsonPrimitive.content }.toSet(),
+                online = case.bool("online") ?: true,
+            )
+            assertEquals(SourceKind.valueOf(case.str("expected")!!), chooseSource(case.str("id")!!, availability), name)
+        }
+    }
+
     @Test fun queue() {
         for (case in cases("queue.json")) {
             val name = case.str("name") ?: "?"

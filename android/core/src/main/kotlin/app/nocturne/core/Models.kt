@@ -22,6 +22,9 @@ data class Artist(val id: String, val name: String, val albumCount: Int = 0, val
 data class Playlist(val id: String, val name: String, val songCount: Int = 0, val coverArt: String? = null)
 data class SearchResult(val albums: List<Album> = emptyList(), val songs: List<Song> = emptyList(), val artists: List<Artist> = emptyList())
 
+/** Строка текста песни; start в миллисекундах, если текст синхронный. */
+data class LyricLine(val start: Int?, val value: String)
+
 class MusicException(message: String) : Exception(message)
 
 object DemoLibrary {
