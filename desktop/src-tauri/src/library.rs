@@ -308,16 +308,19 @@ async fn save_cover(target: &Path, url: &str) -> Option<String> {
 
 #[tauri::command]
 pub fn downloads(app: AppHandle) -> Result<Vec<Download>, String> {
-    let folder = downloads_folder(&app)?;
+    collect_downloads(&downloads_folder(&app)?)
+}
+
+fn collect_downloads(folder: &Path) -> Result<Vec<Download>, String> {
     // Приложение могли закрыть посреди загрузки: такой огрызок никому не нужен и место занимает.
-    for leftover in fs::read_dir(&folder).into_iter().flatten().flatten() {
+    for leftover in fs::read_dir(folder).into_iter().flatten().flatten() {
         let path = leftover.path();
         if path.extension().is_some_and(|extension| extension == "part") {
             let _ = fs::remove_file(path);
         }
     }
     let mut result = Vec::new();
-    let entries = fs::read_dir(&folder).map_err(|e| error("загрузки", e))?;
+    let entries = fs::read_dir(folder).map_err(|e| error("загрузки", e))?;
     let files: Vec<PathBuf> = entries.flatten().map(|entry| entry.path()).collect();
     let audio: HashSet<&PathBuf> =
         files.iter().filter(|p| p.extension().is_some_and(|e| e != "json" && e != "part" && e != "cover")).collect();
@@ -367,6 +370,30 @@ mod tests {
         assert_eq!(stable_hash("Album/01 Song.mp3"), stable_hash("Album/01 Song.mp3"));
         assert_ne!(stable_hash("a.mp3"), stable_hash("b.mp3"));
         assert_eq!(file_stem_for("al-1/../../etc"), "al-1_______etc");
+    }
+
+    /// Обложка лежит рядом с треком и не должна сойти за сам трек: расширения у них разные.
+    #[test]
+    fn a_download_reports_the_cover_next_to_it() {
+        let folder = std::env::temp_dir().join(format!("nocturne-downloads-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&folder);
+        fs::create_dir_all(&folder).unwrap();
+        fs::write(folder.join("t1.json"), r#"{"id":"t1","title":"Песня","coverArt":"al-1"}"#).unwrap();
+        fs::write(folder.join("t1.mp3"), b"audio").unwrap();
+        fs::write(folder.join("t1.cover"), b"image").unwrap();
+        fs::write(folder.join("t2.json"), r#"{"id":"t2","title":"Без обложки"}"#).unwrap();
+        fs::write(folder.join("t2.mp3"), b"audio").unwrap();
+        fs::write(folder.join("t3.part"), "половина").unwrap();
+
+        let mut found = collect_downloads(&folder).unwrap();
+        found.sort_by(|a, b| a.id.cmp(&b.id));
+        assert_eq!(found.len(), 2);
+        assert!(found[0].path.ends_with("t1.mp3"));
+        assert!(found[0].cover.as_ref().is_some_and(|cover| cover.ends_with("t1.cover")));
+        assert!(found[1].path.ends_with("t2.mp3"));
+        assert_eq!(found[1].cover, None);
+        assert!(!folder.join("t3.part").exists(), "оборванная загрузка должна быть убрана");
+        let _ = fs::remove_dir_all(&folder);
     }
 
     #[test]
