@@ -1,0 +1,9 @@
+{
+  "description": "Какое качество потока брать. На телефоне профиль для мобильной сети отдельный: трафик там считают. На десктопе профиль один, поэтому оба значения совпадают.",
+  "defaults": { "wifi": "mp3High", "cellular": "mp3Medium" },
+  "cases": [
+    { "name": "по Wi-Fi берём профиль Wi-Fi", "expensive": false, "wifi": "original", "cellular": "mp3Low", "expected": "original" },
+    { "name": "по мобильной сети — мобильный профиль", "expensive": true, "wifi": "original", "cellular": "mp3Low", "expected": "mp3Low" },
+    { "name": "одинаковые профили — сеть ничего не меняет", "expensive": true, "wifi": "mp3High", "cellular": "mp3High", "expected": "mp3High" }
+  ]
+}

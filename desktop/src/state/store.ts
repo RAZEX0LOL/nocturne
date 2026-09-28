@@ -4,6 +4,7 @@ import { Credentials, NavidromeClient, type StreamQuality } from '../core/client
 import { MusicError, type Album, type Artist, type Playlist, type Song } from '../core/models'
 import { PlaybackQueue, type RepeatMode } from '../core/queue'
 import type { ReplayGainMode } from '../core/replaygain'
+import { keepScrobble, orderedScrobbles, remainingScrobbles, type ScrobblePlay } from '../core/scrobbles'
 import { chooseSource, isLocalId, type Availability } from '../core/source'
 import * as platform from '../platform'
 import { forgetCredentials, loadCredentials, saveCredentials } from './vault'
@@ -101,11 +102,6 @@ interface QueueSnapshot {
   /** Начало и отметка текущего прослушивания: перезапуск продолжает его, а не начинает новое. */
   startedAt?: number
   scrobbled?: boolean
-}
-
-interface PendingScrobble {
-  id: string
-  time: number
 }
 
 /**
@@ -663,7 +659,7 @@ class Store {
     const song = this.state.queue?.current?.song
     if (!song || isLocalId(song.id) || this.state.serverless) return
     this.scrobbled = true
-    const pending: PendingScrobble = { id: song.id, time: this.startedAt }
+    const pending: ScrobblePlay = { id: song.id, time: this.startedAt }
     const client = this.state.client
     if (!client || !this.online) return this.keepScrobble(pending)
     try {
@@ -674,26 +670,25 @@ class Store {
   }
 
   /** Без связи отметка ждёт на диске и уходит, когда сервер снова доступен. */
-  private keepScrobble(pending: PendingScrobble) {
-    const queue = readPendingScrobbles()
-    if (!queue.some((item) => item.id === pending.id && item.time === pending.time)) queue.push(pending)
-    localStorage.setItem(PENDING_SCROBBLES_KEY, JSON.stringify(queue))
+  private keepScrobble(pending: ScrobblePlay) {
+    localStorage.setItem(PENDING_SCROBBLES_KEY, JSON.stringify(keepScrobble(readPendingScrobbles(), pending)))
   }
 
   private async flushScrobbles() {
     const client = this.state.client
     const queue = readPendingScrobbles()
     if (!client || !queue.length) return
-    const left: PendingScrobble[] = []
+    const sent: ScrobblePlay[] = []
     // По порядку: сервер строит историю прослушиваний по времени.
-    for (const item of queue.sort((a, b) => a.time - b.time)) {
+    for (const item of orderedScrobbles(queue)) {
       try {
         await client.scrobble(item.id, item.time)
+        sent.push(item)
       } catch {
-        left.push(item)
+        // Не дошла — останется ждать следующей попытки.
       }
     }
-    localStorage.setItem(PENDING_SCROBBLES_KEY, JSON.stringify(left))
+    localStorage.setItem(PENDING_SCROBBLES_KEY, JSON.stringify(remainingScrobbles(queue, sent)))
   }
 
   // MARK: - Сохранение очереди
@@ -818,9 +813,9 @@ function byAlbumThenTrack(a: Song, b: Song) {
   )
 }
 
-function readPendingScrobbles(): PendingScrobble[] {
+function readPendingScrobbles(): ScrobblePlay[] {
   try {
-    return JSON.parse(localStorage.getItem(PENDING_SCROBBLES_KEY) ?? '[]') as PendingScrobble[]
+    return JSON.parse(localStorage.getItem(PENDING_SCROBBLES_KEY) ?? '[]') as ScrobblePlay[]
   } catch {
     return []
   }

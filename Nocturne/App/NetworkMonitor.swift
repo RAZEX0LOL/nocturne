@@ -40,12 +40,14 @@ final class NetworkMonitor {
 enum PlaybackSettings {
     static let wifiQualityKey = "quality.wifi"
     static let cellularQualityKey = "quality.cellular"
-    static let defaultWifi = StreamQuality.mp3High
-    static let defaultCellular = StreamQuality.mp3Medium
+    static let defaultWifi = StreamQuality.defaultWifi
+    static let defaultCellular = StreamQuality.defaultCellular
     static let replayGainKey = "playback.replayGain"
 
     static func quality(expensive: Bool) -> StreamQuality {
-        let key = expensive ? cellularQualityKey : wifiQualityKey
-        return UserDefaults.standard.string(forKey: key).flatMap(StreamQuality.init) ?? (expensive ? defaultCellular : defaultWifi)
+        let saved = { (key: String) in UserDefaults.standard.string(forKey: key).flatMap(StreamQuality.init) }
+        return StreamQuality.forNetwork(expensive: expensive,
+                                        wifi: saved(wifiQualityKey) ?? defaultWifi,
+                                        cellular: saved(cellularQualityKey) ?? defaultCellular)
     }
 }

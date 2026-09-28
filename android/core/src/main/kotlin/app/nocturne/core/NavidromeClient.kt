@@ -5,6 +5,7 @@ import java.security.MessageDigest
 import java.util.UUID
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.serialization.json.*
 import okhttp3.*
@@ -49,6 +50,8 @@ class NavidromeClient(
     val credentials: Credentials,
     private val http: OkHttpClient = OkHttpClient.Builder()
         .callTimeout(java.time.Duration.ofSeconds(25)).followRedirects(false).followSslRedirects(false).build(),
+    /** Паузы перед повторами; в тестах их обнуляют, чтобы не ждать по-настоящему. */
+    private val retryDelaysSeconds: List<Double> = listOf(0.5, 2.0),
 ) {
     /** `repeated` — параметры, которые встречаются несколько раз, например songId в createPlaylist. */
     fun url(
@@ -72,16 +75,40 @@ class NavidromeClient(
         }.build().toString()
     }
 
+    /**
+     * Чтения идемпотентны, поэтому оборванную связь переспрашиваем с растущей паузой.
+     * Ответ сервера (неверный пароль, 500) не повторяем: второй раз он будет таким же.
+     */
     suspend fun request(
         endpoint: String,
         parameters: Map<String, String> = emptyMap(),
         repeated: List<Pair<String, String>> = emptyList(),
+    ): JsonObject {
+        var attempt = 0
+        while (true) {
+            try {
+                return perform(endpoint, parameters, repeated)
+            } catch (failure: NetworkFailure) {
+                if (attempt >= retryDelaysSeconds.size) throw MusicException("Не удалось связаться с сервером. Проверь сеть и адрес Navidrome.")
+                delay((retryDelaysSeconds[attempt] * 1000).toLong())
+                attempt += 1
+            }
+        }
+    }
+
+    /** Обрыв связи: единственная причина, по которой запрос стоит повторить. */
+    private class NetworkFailure : Exception()
+
+    private suspend fun perform(
+        endpoint: String,
+        parameters: Map<String, String>,
+        repeated: List<Pair<String, String>>,
     ): JsonObject = suspendCancellableCoroutine { continuation ->
         val call = http.newCall(Request.Builder().url(url(endpoint, parameters, repeated)).build())
         continuation.invokeOnCancellation { call.cancel() }
         call.enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                if (!continuation.isCancelled) continuation.resumeWithException(MusicException("Не удалось связаться с сервером. Проверь сеть и адрес Navidrome."))
+                if (!continuation.isCancelled) continuation.resumeWithException(NetworkFailure())
             }
             override fun onResponse(call: Call, response: Response) {
                 response.use {
@@ -159,6 +186,18 @@ class NavidromeClient(
             o["track"]?.jsonPrimitive?.intOrNull, o.optional("starred") != null,
             o["userRating"]?.jsonPrimitive?.intOrNull, replayGain(o["replayGain"] as? JsonObject),
         )
+
+        /** Обратная операция к [song]: в таком виде трек ложится на диск и читается обратно. */
+        fun describe(song: Song) = buildJsonObject {
+            put("id", song.id)
+            put("title", song.title)
+            put("artist", song.artist)
+            put("album", song.album)
+            song.coverArt?.let { put("coverArt", it) }
+            song.duration?.let { put("duration", it) }
+            song.track?.let { put("track", it) }
+            if (song.starred) put("starred", true)
+        }
 
         private fun replayGain(o: JsonObject?) = o?.let {
             ReplayGain(it.decimal("trackGain"), it.decimal("albumGain"), it.decimal("trackPeak"), it.decimal("albumPeak"))

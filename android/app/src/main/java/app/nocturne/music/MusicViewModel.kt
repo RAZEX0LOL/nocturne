@@ -75,6 +75,9 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
     private val localLibrary = LocalLibrary(application)
     private val downloads = DownloadStore(application)
     private val scrobbles = PendingScrobbles(application)
+    private val snapshots = QueueSnapshots(application)
+    /** Очередь возвращаем один раз за запуск — и только когда плеер и диск уже готовы. */
+    private var restored = false
     private var queue: PlaybackQueue? = null
     private var sessionVersion = 0
     private var detailJob: Job? = null
@@ -103,12 +106,20 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
                     })
                 }
                 updatePlayback()
+                restoreQueue()
             } catch (_: Exception) { error = "Аудиосервис недоступен. Перезапусти приложение." }
         }, ContextCompat.getMainExecutor(application))
         viewModelScope.launch {
+            var lastSavedSecond = -1L
             while (isActive) {
                 updatePlayback()
                 checkScrobble()
+                // Позицию сохраняем раз в несколько секунд: чаще незачем, реже — потеряется место.
+                val second = playback.position / 5000
+                if (second != lastSavedSecond) {
+                    lastSavedSecond = second
+                    saveQueue()
+                }
                 delay(500)
             }
         }
@@ -151,7 +162,7 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
     }
 
     fun disconnect() {
-        try { vault.clear(); vault.rememberOnDevice(false); resetSession(); client = null; demo = false; offline = false }
+        try { snapshots.clear(); vault.clear(); vault.rememberOnDevice(false); resetSession(); client = null; demo = false; offline = false }
         catch (_: Exception) { error = "Не удалось удалить сохранённый вход." }
     }
 
@@ -315,6 +326,8 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
     suspend fun reloadOnDisk() {
         local = runCatching { localLibrary.scan() }.getOrDefault(emptyList())
         downloaded = runCatching { downloads.load() }.getOrDefault(emptyList())
+        // Что играбельно, теперь известно — можно вернуть сохранённую очередь.
+        restoreQueue()
     }
 
     fun importMusic(uris: List<Uri>) {
@@ -425,11 +438,12 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
      * Порядок треков задаёт общая очередь из ядра, а ExoPlayer только проигрывает готовый список:
      * своё перемешивание у него другое, и «назад» после него ведёт не туда.
      */
-    private fun pushQueue(prepared: PlaybackQueue, play: Boolean, keepPosition: Boolean = false) {
+    private fun pushQueue(prepared: PlaybackQueue, play: Boolean, keepPosition: Boolean = false, startAtMillis: Long = 0) {
         val api = client
         val player = controller ?: run { error = "Аудиосервис ещё подключается. Попробуй через секунду."; return }
         val items = prepared.items.map { entry -> mediaItem(entry.song, api) }
-        val position = if (keepPosition) player.currentPosition else 0
+        // Место старта задаём вместе со списком: отдельная перемотка сразу после setMediaItems теряется.
+        val position = if (keepPosition) player.currentPosition else startAtMillis
         player.setMediaItems(items, prepared.position, position)
         player.repeatMode = when (prepared.repeatMode) {
             PlaybackQueue.Repeat.off -> Player.REPEAT_MODE_OFF
@@ -439,6 +453,7 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
         player.prepare()
         if (play || player.isPlaying) player.play()
         updatePlayback()
+        saveQueue()
     }
 
     private fun mediaItem(song: Song, api: NavidromeClient?): MediaItem {
@@ -532,6 +547,46 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
         }
     }
 
+    /** Кому принадлежит очередь: сервер или режим без сервера. Чужую не восстанавливаем. */
+    private val queueOwner: String?
+        get() = client?.credentials?.account ?: if (onDeviceOnly) "on-device" else null
+
+    private fun saveQueue() {
+        val prepared = queue ?: return
+        val owner = queueOwner ?: return
+        snapshots.save(
+            QueueSnapshots.Snapshot(
+                account = owner,
+                natural = prepared.natural.map { it.song },
+                currentId = prepared.current?.song?.id,
+                shuffle = prepared.shuffle,
+                repeat = prepared.repeatMode,
+                positionMillis = playback.position,
+                startedAt = startedAt,
+                scrobbled = scrobbled,
+            )
+        )
+    }
+
+    /** Очередь возвращается на паузе, с того же места: включать звук самовольно при запуске нельзя. */
+    private fun restoreQueue() {
+        if (restored || queue != null) return
+        val player = controller ?: return
+        val owner = queueOwner ?: return
+        val snapshot = snapshots.load() ?: run { restored = true; return }
+        restored = true
+        if (snapshot.account != owner) return
+        val index = snapshot.natural.indexOfFirst { it.id == snapshot.currentId }.coerceAtLeast(0)
+        val prepared = PlaybackQueue(snapshot.natural, index, snapshot.shuffle)
+        prepared.repeatMode = snapshot.repeat
+        if (prepared.current?.song?.let(::isPlayable) != true) return
+        queue = prepared
+        pushQueue(prepared, play = false, startAtMillis = snapshot.positionMillis.coerceAtLeast(0))
+        startedAt = snapshot.startedAt
+        scrobbled = snapshot.scrobbled
+        updatePlayback()
+    }
+
     private fun onTrackChanged() {
         val player = controller ?: return
         queue?.let { prepared ->
@@ -540,6 +595,7 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
         startedAt = System.currentTimeMillis()
         scrobbled = false
         lyrics = null
+        saveQueue()
     }
 
     private fun updatePlayback() {
@@ -591,8 +647,8 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
         val api = client ?: return
         val pending = scrobbles.all()
         if (pending.isEmpty()) return
-        val left = pending.filter { (id, time) -> runCatching { api.scrobble(id, time) }.isFailure }
-        scrobbles.replace(left)
+        val sent = pending.filter { play -> runCatching { api.scrobble(play.id, play.time) }.isSuccess }
+        scrobbles.keepOnly(sent)
     }
 
     private fun report(error: Exception) {

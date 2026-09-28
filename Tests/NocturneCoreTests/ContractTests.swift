@@ -4,6 +4,35 @@ import XCTest
 /// Runs the cross-platform contract from `shared/cases` against this implementation.
 /// Android and the desktop app run the very same files, so a difference in behaviour
 /// shows up as the same named failure on whichever platform drifted.
+/// Подставной транспорт: роняет связь или отвечает отказом столько раз, сколько просит кейс.
+private final class StubTransport: URLProtocol, @unchecked Sendable {
+    struct Plan { var kind: String; var failures: Int }
+    nonisolated(unsafe) static var plan = Plan(kind: "network", failures: 0)
+    nonisolated(unsafe) static var attempts = 0
+
+    override class func canInit(with request: URLRequest) -> Bool { true }
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+    override func stopLoading() {}
+
+    override func startLoading() {
+        Self.attempts += 1
+        let failing = Self.attempts <= Self.plan.failures
+        guard failing else { return answer(status: 200, body: #"{"subsonic-response":{"status":"ok"}}"#) }
+        switch Self.plan.kind {
+        case "network": client?.urlProtocol(self, didFailWithError: URLError(.networkConnectionLost))
+        case "auth": answer(status: 200, body: #"{"subsonic-response":{"status":"failed","error":{"code":40}}}"#)
+        default: answer(status: 500, body: "")
+        }
+    }
+
+    private func answer(status: Int, body: String) {
+        let response = HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil, headerFields: nil)!
+        client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+        client?.urlProtocol(self, didLoad: Data(body.utf8))
+        client?.urlProtocolDidFinishLoading(self)
+    }
+}
+
 final class ContractTests: XCTestCase {
     private static let casesFolder = URL(fileURLWithPath: #filePath)
         .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
@@ -13,6 +42,11 @@ final class ContractTests: XCTestCase {
         let url = Self.casesFolder.appendingPathComponent(file)
         let object = try JSONSerialization.jsonObject(with: Data(contentsOf: url))
         return try XCTUnwrap(object as? [String: Any], "\(file) is not a JSON object")
+    }
+
+    override func setUp() {
+        super.setUp()
+        StubTransport.attempts = 0
     }
 
     private func cases(_ file: String, _ key: String = "cases") throws -> [[String: Any]] {
@@ -143,6 +177,68 @@ final class ContractTests: XCTestCase {
             let expected = Float(item["expected"] as? Double ?? 1)
             XCTAssertEqual(mode.volume(for: song), expected, accuracy: tolerance, name)
         }
+    }
+
+    // MARK: - retries.json
+
+    func testRetryCases() async throws {
+        for item in try cases("retries.json") {
+            let name = item["name"] as? String ?? "?"
+            let failures = item["failures"] as? Int ?? 0
+            StubTransport.plan = StubTransport.Plan(kind: item["failure"] as? String ?? "network", failures: failures)
+            StubTransport.attempts = 0
+
+            let configuration = URLSessionConfiguration.ephemeral
+            configuration.protocolClasses = [StubTransport.self]
+            // Паузы в тесте нулевые: проверяем число попыток, а не терпение.
+            let client = NavidromeClient(credentials: try Credentials(server: "https://host", username: "test", password: "test-only"),
+                                         session: URLSession(configuration: configuration), retryDelays: [0, 0])
+            var succeeded = false
+            do {
+                _ = try await client.request("ping")
+                succeeded = true
+            } catch {
+                XCTAssertTrue(error is MusicError || error is URLError, "\(name): ошибка понятна человеку")
+            }
+            XCTAssertEqual(succeeded, item["succeeds"] as? Bool, name)
+            XCTAssertEqual(StubTransport.attempts, item["attempts"] as? Int, "\(name): число попыток")
+        }
+    }
+
+    // MARK: - quality.json и scrobbles.json
+
+    func testQualityByNetworkCases() throws {
+        for item in try cases("quality.json") {
+            let name = item["name"] as? String ?? "?"
+            let wifi = try XCTUnwrap(StreamQuality(rawValue: item["wifi"] as? String ?? ""), name)
+            let cellular = try XCTUnwrap(StreamQuality(rawValue: item["cellular"] as? String ?? ""), name)
+            let expected = try XCTUnwrap(StreamQuality(rawValue: item["expected"] as? String ?? ""), name)
+            let chosen = StreamQuality.forNetwork(expensive: item["expensive"] as? Bool ?? false, wifi: wifi, cellular: cellular)
+            XCTAssertEqual(chosen, expected, name)
+        }
+        let defaults = try XCTUnwrap(load("quality.json")["defaults"] as? [String: String])
+        XCTAssertEqual(StreamQuality.defaultWifi.rawValue, defaults["wifi"])
+        XCTAssertEqual(StreamQuality.defaultCellular.rawValue, defaults["cellular"])
+    }
+
+    func testScrobbleQueueCases() throws {
+        for item in try cases("scrobbles.json") {
+            let name = item["name"] as? String ?? "?"
+            let queue = (item["keep"] as? [[String: Any]] ?? []).reduce(into: [ScrobblePlay]()) { result, play in
+                result = Scrobbles.keep(result, plays(play))
+            }
+            XCTAssertEqual(Scrobbles.ordered(queue), (item["expected"] as? [[String: Any]] ?? []).map(plays), name)
+        }
+        for item in try cases("scrobbles.json", "afterSending") {
+            let name = item["name"] as? String ?? "?"
+            let kept = (item["kept"] as? [[String: Any]] ?? []).map(plays)
+            let sent = (item["sent"] as? [[String: Any]] ?? []).map(plays)
+            XCTAssertEqual(Scrobbles.remaining(kept, sent: sent), (item["remaining"] as? [[String: Any]] ?? []).map(plays), name)
+        }
+    }
+
+    private func plays(_ raw: [String: Any]) -> ScrobblePlay {
+        ScrobblePlay(id: raw["id"] as? String ?? "", time: raw["time"] as? Double ?? 0)
     }
 
     // MARK: - queue.json

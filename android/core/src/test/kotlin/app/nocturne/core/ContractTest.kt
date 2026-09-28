@@ -134,6 +134,39 @@ class ContractTest {
         }
     }
 
+    @Test fun retries() {
+        val file = load("retries.json")
+        val delays = file["delaysSeconds"]!!.jsonArray.map { 0.0 }  // в тесте ждать по-настоящему незачем
+        for (case in cases("retries.json")) {
+            val name = case.str("name") ?: "?"
+            val server = okhttp3.mockwebserver.MockWebServer()
+            repeat(minOf(case.int("failures") ?: 0, 10)) {
+                server.enqueue(failure(case.str("failure") ?: "network"))
+            }
+            server.enqueue(okhttp3.mockwebserver.MockResponse().setBody("""{"subsonic-response":{"status":"ok"}}"""))
+            server.start()
+            try {
+                val client = NavidromeClient(
+                    Credentials(server.url("/").toString(), "test", "test-only"),
+                    retryDelaysSeconds = delays,
+                )
+                val outcome = runCatching { kotlinx.coroutines.runBlocking { client.request("ping") } }
+                assertEquals(case.bool("succeeds"), outcome.isSuccess, "$name: исход")
+                assertEquals(case.int("attempts"), server.requestCount, "$name: число попыток")
+                if (outcome.isFailure) assertTrue(outcome.exceptionOrNull() is MusicException, "$name: ошибка понятна человеку")
+            } finally {
+                server.shutdown()
+            }
+        }
+    }
+
+    /** Что именно «ломается»: обрыв связи, отказ сервера внутри HTTP 200 или ошибка HTTP. */
+    private fun failure(kind: String) = when (kind) {
+        "network" -> okhttp3.mockwebserver.MockResponse().apply { socketPolicy = okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AT_START }
+        "auth" -> okhttp3.mockwebserver.MockResponse().setBody("""{"subsonic-response":{"status":"failed","error":{"code":40}}}""")
+        else -> okhttp3.mockwebserver.MockResponse().setResponseCode(500)
+    }
+
     @Test fun source() {
         for (case in cases("source.json")) {
             val name = case.str("name") ?: "?"
@@ -145,6 +178,38 @@ class ContractTest {
             assertEquals(SourceKind.valueOf(case.str("expected")!!), chooseSource(case.str("id")!!, availability), name)
         }
     }
+
+    @Test fun qualityByNetwork() {
+        for (case in cases("quality.json")) {
+            val name = case.str("name") ?: "?"
+            val chosen = qualityForNetwork(
+                case.bool("expensive") ?: false,
+                StreamQuality.valueOf(case.str("wifi")!!),
+                StreamQuality.valueOf(case.str("cellular")!!),
+            )
+            assertEquals(StreamQuality.valueOf(case.str("expected")!!), chosen, name)
+        }
+        val defaults = load("quality.json")["defaults"]!!.jsonObject
+        assertEquals(defaults.str("wifi"), DEFAULT_WIFI_QUALITY.name)
+        assertEquals(defaults.str("cellular"), DEFAULT_CELLULAR_QUALITY.name)
+    }
+
+    @Test fun scrobbleQueue() {
+        for (case in cases("scrobbles.json")) {
+            val name = case.str("name") ?: "?"
+            val queue = case["keep"]!!.jsonArray.map { play(it.jsonObject) }
+                .fold(emptyList<ScrobblePlay>()) { kept, play -> Scrobbles.keep(kept, play) }
+            assertEquals(case["expected"]!!.jsonArray.map { play(it.jsonObject) }, Scrobbles.ordered(queue), name)
+        }
+        for (case in cases("scrobbles.json", "afterSending")) {
+            val name = case.str("name") ?: "?"
+            val kept = case["kept"]!!.jsonArray.map { play(it.jsonObject) }
+            val sent = case["sent"]!!.jsonArray.map { play(it.jsonObject) }
+            assertEquals(case["remaining"]!!.jsonArray.map { play(it.jsonObject) }, Scrobbles.remaining(kept, sent), name)
+        }
+    }
+
+    private fun play(raw: JsonObject) = ScrobblePlay(raw.str("id")!!, raw["time"]!!.jsonPrimitive.long)
 
     @Test fun queue() {
         for (case in cases("queue.json")) {

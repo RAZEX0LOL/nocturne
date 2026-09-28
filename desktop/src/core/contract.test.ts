@@ -6,6 +6,7 @@ import { MusicError, type Song } from './models'
 import { PlaybackQueue, type RepeatMode } from './queue'
 import { replayGainVolume, type ReplayGainMode } from './replaygain'
 import { chooseSource } from './source'
+import { keepScrobble, orderedScrobbles, qualityForNetwork, remainingScrobbles, type ScrobblePlay } from './scrobbles'
 
 /**
  * Общий контракт из shared/cases. Те же файлы исполняют iOS и Android,
@@ -117,6 +118,29 @@ describe('replaygain', () => {
   }
 })
 
+describe('quality', () => {
+  for (const item of load('quality.json').cases) {
+    test(item.name, () => {
+      expect(qualityForNetwork(item.expensive, item.wifi, item.cellular)).toBe(item.expected)
+    })
+  }
+})
+
+describe('scrobbles', () => {
+  const file = load('scrobbles.json')
+  for (const item of file.cases) {
+    test(item.name, () => {
+      const queue = (item.keep as ScrobblePlay[]).reduce(keepScrobble, [] as ScrobblePlay[])
+      expect(orderedScrobbles(queue)).toEqual(item.expected)
+    })
+  }
+  for (const item of file.afterSending) {
+    test(item.name, () => {
+      expect(remainingScrobbles(item.kept, item.sent)).toEqual(item.remaining)
+    })
+  }
+})
+
 describe('queue', () => {
   for (const item of load('queue.json').cases) {
     test(item.name, () => {
@@ -171,6 +195,36 @@ describe('queue', () => {
             default: throw new Error(`неизвестная проверка ${key}`)
           }
         }
+      }
+    })
+  }
+})
+
+describe('retries', () => {
+  for (const item of load('retries.json').cases) {
+    test(item.name, async () => {
+      let attempts = 0
+      const original = globalThis.fetch
+      globalThis.fetch = (async () => {
+        attempts += 1
+        if (attempts > item.failures) return new Response('{"subsonic-response":{"status":"ok"}}', { status: 200 })
+        switch (item.failure) {
+          case 'network': throw new TypeError('network error')
+          case 'auth': return new Response('{"subsonic-response":{"status":"failed","error":{"code":40}}}', { status: 200 })
+          default: return new Response('', { status: 500 })
+        }
+      }) as unknown as typeof fetch
+      try {
+        // Паузы в тесте нулевые: проверяем число попыток, а не терпение.
+        const client = new NavidromeClient(new Credentials('https://host', 'test', 'test-only'), [0, 0])
+        const outcome = await client.ping().then(() => true).catch((error) => {
+          expect(error).toBeInstanceOf(MusicError)
+          return false
+        })
+        expect(outcome).toBe(item.succeeds)
+        expect(attempts).toBe(item.attempts)
+      } finally {
+        globalThis.fetch = original
       }
     })
   }

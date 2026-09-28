@@ -69,7 +69,8 @@ export class Credentials {
 }
 
 export class NavidromeClient {
-  constructor(readonly credentials: Credentials) {}
+  /** Паузы перед повторами; в тестах их обнуляют, чтобы не ждать по-настоящему. */
+  constructor(readonly credentials: Credentials, private readonly retryDelaysSeconds = [0.5, 2]) {}
 
   /** `repeated` — параметры, встречающиеся несколько раз, например songId в createPlaylist. */
   async url(
@@ -117,16 +118,22 @@ export class NavidromeClient {
     return response
   }
 
+  /**
+   * Чтения идемпотентны, поэтому оборванную связь переспрашиваем с растущей паузой.
+   * Ответ сервера (неверный пароль, 500) не повторяем: второй раз он будет таким же.
+   */
   private async request(endpoint: string, parameters: Record<string, string> = {}, repeated: Array<[string, string]> = []) {
-    // Чтения идемпотентны, поэтому сетевой сбой можно повторить; ошибки протокола не повторяем.
     for (let attempt = 0; ; attempt++) {
       try {
         const response = await fetch(await this.url(endpoint, parameters, repeated))
         if (!response.ok) throw new MusicError(`Сервер вернул HTTP ${response.status}.`)
         return NavidromeClient.decode(await response.text())
       } catch (error) {
-        if (error instanceof MusicError || attempt >= 2) throw error
-        await new Promise((resolve) => setTimeout(resolve, 1000 * 2 ** attempt))
+        if (error instanceof MusicError) throw error
+        if (attempt >= this.retryDelaysSeconds.length) {
+          throw new MusicError('Не удалось связаться с сервером. Проверь сеть и адрес Navidrome.', 'network')
+        }
+        await new Promise((resolve) => setTimeout(resolve, this.retryDelaysSeconds[attempt]! * 1000))
       }
     }
   }

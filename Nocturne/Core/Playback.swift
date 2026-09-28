@@ -154,3 +154,36 @@ struct QueueSnapshot: Codable, Equatable, Sendable {
     var queue: PlaybackQueue
     var elapsed: Double
 }
+
+/// Одно прослушивание — одна отметка. Правила проверяются shared/cases/scrobbles.json.
+struct ScrobblePlay: Codable, Hashable, Sendable {
+    var id: String
+    /// Время начала прослушивания в секундах эпохи: по нему сервер строит историю.
+    var time: Double
+}
+
+enum Scrobbles {
+    /// Повторную отметку того же прослушивания не добавляем: сервер засчитал бы его дважды.
+    static func keep(_ queue: [ScrobblePlay], _ play: ScrobblePlay) -> [ScrobblePlay] {
+        queue.contains(play) ? queue : queue + [play]
+    }
+
+    static func ordered(_ queue: [ScrobblePlay]) -> [ScrobblePlay] {
+        queue.sorted { $0.time < $1.time }
+    }
+
+    static func remaining(_ queue: [ScrobblePlay], sent: [ScrobblePlay]) -> [ScrobblePlay] {
+        queue.filter { !sent.contains($0) }
+    }
+}
+
+extension StreamQuality {
+    /// Значения по умолчанию — часть договорённости между платформами, не вкус отдельного экрана.
+    static let defaultWifi = StreamQuality.mp3High
+    static let defaultCellular = StreamQuality.mp3Medium
+
+    /// Дорогая сеть — мобильная: там по умолчанию экономнее.
+    static func forNetwork(expensive: Bool, wifi: StreamQuality, cellular: StreamQuality) -> StreamQuality {
+        expensive ? cellular : wifi
+    }
+}

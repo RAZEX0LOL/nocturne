@@ -451,33 +451,43 @@ final class PlayerStore {
         StatsStore.shared.record(entry.song, seconds: duration)
         // On-device files aren't on the server; server tracks played offline are sent later.
         guard !LocalLibrary.isLocal(entry.song.id) else { return }
-        let play = PendingScrobble(songID: entry.song.id, date: Date())
-        guard let client, !offlineOnly else { pendingScrobbles.append(play); return }
+        let play = ScrobblePlay(id: entry.song.id, time: Date().timeIntervalSince1970)
+        guard let client, !offlineOnly else { pendingScrobbles = Scrobbles.keep(pendingScrobbles, play); return }
         Task {
-            do { try await client.scrobble(songID: play.songID, submission: true) }
-            catch { pendingScrobbles.append(play) }
+            do { try await client.scrobble(songID: play.id, submission: true) }
+            catch { pendingScrobbles = Scrobbles.keep(pendingScrobbles, play) }
         }
     }
 
-    struct PendingScrobble: Codable, Sendable { var songID: String; var date: Date }
     private static let pendingURL = URL.applicationSupportDirectory.appendingPathComponent("pending-scrobbles.json")
-    @ObservationIgnored private var pendingScrobbles: [PendingScrobble] = PlayerStore.loadPending() {
+    @ObservationIgnored private var pendingScrobbles: [ScrobblePlay] = PlayerStore.loadPending() {
         didSet { if let data = try? JSONEncoder().encode(pendingScrobbles) { try? data.write(to: Self.pendingURL, options: .atomic) } }
     }
-    private static func loadPending() -> [PendingScrobble] {
-        (try? Data(contentsOf: pendingURL)).flatMap { try? JSONDecoder().decode([PendingScrobble].self, from: $0) } ?? []
+
+    /// Старый формат отметок (`songID` и дата) читается тоже: очередь, собранная прошлой версией,
+    /// не должна пропадать вместе с обновлением.
+    private struct LegacyScrobble: Decodable { var songID: String; var date: Date }
+
+    private static func loadPending() -> [ScrobblePlay] {
+        guard let data = try? Data(contentsOf: pendingURL) else { return [] }
+        if let plays = try? JSONDecoder().decode([ScrobblePlay].self, from: data) { return plays }
+        let legacy = (try? JSONDecoder().decode([LegacyScrobble].self, from: data)) ?? []
+        return legacy.map { ScrobblePlay(id: $0.songID, time: $0.date.timeIntervalSince1970) }
     }
 
-    /// Sends plays collected offline with their original time; stops at the first failure.
+    /// Sends plays collected offline with their original time, oldest first; the rest keep waiting.
     func flushPendingScrobbles() {
         guard let client, !pendingScrobbles.isEmpty else { return }
-        let batch = pendingScrobbles
+        let batch = Scrobbles.ordered(pendingScrobbles)
         Task {
-            var sent = 0
+            var sent: [ScrobblePlay] = []
             for play in batch {
-                do { try await client.scrobble(songID: play.songID, submission: true, time: play.date); sent += 1 } catch { break }
+                do {
+                    try await client.scrobble(songID: play.id, submission: true, time: Date(timeIntervalSince1970: play.time))
+                    sent.append(play)
+                } catch { break }
             }
-            if sent > 0 { pendingScrobbles.removeFirst(min(sent, pendingScrobbles.count)) }
+            if !sent.isEmpty { pendingScrobbles = Scrobbles.remaining(pendingScrobbles, sent: sent) }
         }
     }
 

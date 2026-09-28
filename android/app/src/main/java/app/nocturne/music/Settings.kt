@@ -4,8 +4,11 @@ import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import app.nocturne.core.DEFAULT_CELLULAR_QUALITY
+import app.nocturne.core.DEFAULT_WIFI_QUALITY
 import app.nocturne.core.ReplayGainMode
 import app.nocturne.core.StreamQuality
+import app.nocturne.core.qualityForNetwork
 
 /** Оформление: тёмная база одна, меняется акцент — как на iPhone. */
 enum class AccentTheme(val title: String, val color: Long) {
@@ -22,9 +25,9 @@ enum class AccentTheme(val title: String, val color: Long) {
 class Settings(context: Context) {
     private val store = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
 
-    var wifiQuality by mutableStateOf(enum(store.getString("quality.wifi", null), StreamQuality.mp3High))
+    var wifiQuality by mutableStateOf(enum(store.getString("quality.wifi", null), DEFAULT_WIFI_QUALITY))
         private set
-    var cellularQuality by mutableStateOf(enum(store.getString("quality.cellular", null), StreamQuality.mp3Medium))
+    var cellularQuality by mutableStateOf(enum(store.getString("quality.cellular", null), DEFAULT_CELLULAR_QUALITY))
         private set
     var replayGain by mutableStateOf(enum(store.getString("replayGain", null), ReplayGainMode.off))
         private set
@@ -52,8 +55,8 @@ class Settings(context: Context) {
         store.edit().putString("eq.gains", value.joinToString(",")).apply()
     }
 
-    /** Качество зависит от сети: по мобильной по умолчанию экономнее. */
-    fun quality(onWifi: Boolean) = if (onWifi) wifiQuality else cellularQuality
+    /** Качество зависит от сети: правило общее для всех платформ (shared/cases/quality.json). */
+    fun quality(onWifi: Boolean) = qualityForNetwork(expensive = !onWifi, wifi = wifiQuality, cellular = cellularQuality)
 
     private fun readGains(): List<Float> {
         val saved = store.getString("eq.gains", null)?.split(",")?.mapNotNull { it.toFloatOrNull() }

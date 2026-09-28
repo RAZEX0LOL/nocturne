@@ -285,6 +285,13 @@ pub async fn download_track(app: AppHandle, url: String, id: String, song: Value
 #[tauri::command]
 pub fn downloads(app: AppHandle) -> Result<Vec<Download>, String> {
     let folder = downloads_folder(&app)?;
+    // Приложение могли закрыть посреди загрузки: такой огрызок никому не нужен и место занимает.
+    for leftover in fs::read_dir(&folder).into_iter().flatten().flatten() {
+        let path = leftover.path();
+        if path.extension().is_some_and(|extension| extension == "part") {
+            let _ = fs::remove_file(path);
+        }
+    }
     let mut result = Vec::new();
     let entries = fs::read_dir(&folder).map_err(|e| error("загрузки", e))?;
     let files: Vec<PathBuf> = entries.flatten().map(|entry| entry.path()).collect();

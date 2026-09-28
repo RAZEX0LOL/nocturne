@@ -28,6 +28,8 @@ class DownloadStore(context: Context) {
     fun isDownloaded(id: String) = paths.containsKey(id)
 
     suspend fun load(): List<Song> = withContext(Dispatchers.IO) {
+        // Приложение могли закрыть посреди загрузки: такой огрызок никому не нужен и место занимает.
+        folder.listFiles().orEmpty().filter { it.extension == "part" }.forEach { it.delete() }
         val files = folder.listFiles().orEmpty()
         val audio = files.filter { it.extension !in setOf("json", "part") }.associateBy { it.nameWithoutExtension }
         val found = mutableMapOf<String, String>()
@@ -54,7 +56,7 @@ class DownloadStore(context: Context) {
                 partial.outputStream().use { output -> body.byteStream().copyTo(output) }
                 val target = File(folder, "$stem.${extensionFor(response.header("Content-Type"))}")
                 if (!partial.renameTo(target)) return@withContext false
-                File(folder, "$stem.json").writeText(describe(song).toString())
+                File(folder, "$stem.json").writeText(NavidromeClient.describe(song).toString())
                 paths = paths + (song.id to target.absolutePath)
             }
             true
@@ -75,17 +77,6 @@ class DownloadStore(context: Context) {
     }
 
     private companion object {
-        fun describe(song: Song) = buildJsonObject {
-            put("id", song.id)
-            put("title", song.title)
-            put("artist", song.artist)
-            put("album", song.album)
-            song.coverArt?.let { put("coverArt", it) }
-            song.duration?.let { put("duration", it) }
-            song.track?.let { put("track", it) }
-            if (song.starred) put("starred", true)
-        }
-
         /** Идентификатор с сервера может содержать что угодно, имя файла — нет. */
         fun safeName(id: String) = id.map { if (it.isLetterOrDigit() || it == '-' || it == '_') it else '_' }.joinToString("")
 

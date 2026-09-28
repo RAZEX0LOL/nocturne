@@ -1,0 +1,42 @@
+{
+  "description": "Повторные попытки запроса. Чтения у Subsonic идемпотентны, поэтому оборванную связь имеет смысл переспросить; ответ самого сервера (неверный пароль, 500) повторять бессмысленно — он не изменится.",
+  "delaysSeconds": [0.5, 2],
+  "maxAttempts": 3,
+  "cases": [
+    {
+      "name": "один обрыв связи — вторая попытка приносит ответ",
+      "failure": "network",
+      "failures": 1,
+      "attempts": 2,
+      "succeeds": true
+    },
+    {
+      "name": "два обрыва подряд — отвечает третья попытка",
+      "failure": "network",
+      "failures": 2,
+      "attempts": 3,
+      "succeeds": true
+    },
+    {
+      "name": "связи нет совсем — три попытки и понятная ошибка",
+      "failure": "network",
+      "failures": 99,
+      "attempts": 3,
+      "succeeds": false
+    },
+    {
+      "name": "неверный логин не переспрашиваем",
+      "failure": "auth",
+      "failures": 99,
+      "attempts": 1,
+      "succeeds": false
+    },
+    {
+      "name": "ошибку сервера не переспрашиваем",
+      "failure": "http500",
+      "failures": 99,
+      "attempts": 1,
+      "succeeds": false
+    }
+  ]
+}

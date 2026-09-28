@@ -43,9 +43,12 @@ struct Credentials: Codable, Sendable {
 struct NavidromeClient: Sendable {
     let credentials: Credentials
     let session: URLSession
+    /// Паузы перед повторами; в тестах их обнуляют, чтобы не ждать по-настоящему.
+    let retryDelays: [Double]
 
-    init(credentials: Credentials, session: URLSession? = nil) {
+    init(credentials: Credentials, session: URLSession? = nil, retryDelays: [Double] = [0.5, 2]) {
         self.credentials = credentials
+        self.retryDelays = retryDelays
         let configuration = URLSessionConfiguration.ephemeral
         configuration.timeoutIntervalForRequest = 25
         self.session = session ?? URLSession(configuration: configuration)
@@ -72,13 +75,14 @@ struct NavidromeClient: Sendable {
     }
 
     /// Subsonic reads are idempotent, so transient network failures are retried with backoff.
+    /// A server's own answer (wrong password, HTTP 500) is never retried: it would say the same again.
     func request(_ endpoint: String, parameters: [String: String] = [:], repeated: [URLQueryItem] = []) async throws -> ServerResponse {
         var attempt = 0
         while true {
             do { return try await perform(endpoint, parameters: parameters, repeated: repeated) }
-            catch let error as URLError where attempt < 2 && Self.isTransient(error) {
+            catch let error as URLError where attempt < retryDelays.count && Self.isTransient(error) {
+                try await Task.sleep(for: .seconds(retryDelays[attempt]))
                 attempt += 1
-                try await Task.sleep(for: .milliseconds(500 * attempt * attempt))
             }
         }
     }
