@@ -28,7 +28,18 @@ data class LyricLine(val start: Int?, val value: String)
 /** Текст песни целиком: у синхронного подсвечивается строка и по ней можно перематывать. */
 data class Lyrics(val synced: Boolean, val lines: List<LyricLine>)
 
-class MusicException(message: String) : Exception(message)
+/**
+ * Ошибка, которую не стыдно показать человеку. Вид ошибки — отдельным полем, а не по тексту
+ * сообщения: по нему приложение решает, это неверный пароль или просто нет связи.
+ */
+class MusicException(
+    message: String,
+    val kind: Kind = Kind.server,
+    /** Подстановки для сообщения: число из ответа сервера подставляется там, где текст переводят. */
+    val values: Map<String, String> = emptyMap(),
+) : Exception(message) {
+    enum class Kind { auth, server, network, address }
+}
 
 object DemoLibrary {
     val albums = listOf(

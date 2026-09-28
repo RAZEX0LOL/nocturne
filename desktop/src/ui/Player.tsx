@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { store, useStore } from '../state/store'
 import { Cover } from './Cover'
+import { t } from '../i18n'
 
 export type Panel = 'queue' | 'lyrics' | null
 
@@ -25,12 +26,12 @@ export function Player({ panel, onPanel }: { panel: Panel; onPanel: (panel: Pane
 
       <div className="min-w-0 w-56">
         <div className="truncate text-sm font-medium">{song.title}</div>
-        <div className="truncate text-xs text-secondary">{song.artist ?? 'Неизвестный исполнитель'}</div>
+        <div className="truncate text-xs text-secondary">{song.artist ?? t('Неизвестный исполнитель')}</div>
       </div>
       <button
         onClick={() => void store.toggleStar(song)}
         className={`px-1 text-lg ${starred ? 'text-accent' : 'text-secondary hover:text-primary'}`}
-        aria-label={starred ? 'Убрать из избранного' : 'В избранное'}
+        aria-label={starred ? t('Убрать из избранного') : t('В избранное')}
       >
         {starred ? '♥' : '♡'}
       </button>
@@ -39,29 +40,29 @@ export function Player({ panel, onPanel }: { panel: Panel; onPanel: (panel: Pane
         <button
           onClick={() => store.setShuffle(!queue.shuffle)}
           className={`px-2 text-lg ${queue.shuffle ? 'text-accent' : 'text-secondary'}`}
-          title="Перемешивать"
-          aria-label="Перемешивать"
+          title={t('Перемешивать')}
+          aria-label={t('Перемешивать')}
         >
           ⇄
         </button>
-        <button onClick={() => void store.previous()} className="px-2 text-xl" aria-label="Предыдущий трек">
+        <button onClick={() => void store.previous()} className="px-2 text-xl" aria-label={t('Предыдущий трек')}>
           ⏮
         </button>
         <button
           onClick={() => store.toggle()}
           className="grid h-11 w-11 place-items-center rounded-full bg-accent text-xl text-base"
-          aria-label={playing ? 'Пауза' : 'Воспроизвести'}
+          aria-label={playing ? t('Пауза') : t('Воспроизвести')}
         >
           {buffering ? '…' : playing ? '❚❚' : '▶'}
         </button>
-        <button onClick={() => void store.advance()} className="px-2 text-xl" aria-label="Следующий трек">
+        <button onClick={() => void store.advance()} className="px-2 text-xl" aria-label={t('Следующий трек')}>
           ⏭
         </button>
         <button
           onClick={() => store.cycleRepeat()}
           className={`px-2 text-lg ${queue.repeatMode === 'off' ? 'text-secondary' : 'text-accent'}`}
-          title="Повтор"
-          aria-label="Режим повтора"
+          title={t('Повтор')}
+          aria-label={t('Режим повтора')}
         >
           {queue.repeatMode === 'one' ? '🔂' : '🔁'}
         </button>
@@ -77,7 +78,7 @@ export function Player({ panel, onPanel }: { panel: Panel; onPanel: (panel: Pane
           value={Math.min(position, total)}
           onChange={(event) => store.seek(Number(event.target.value))}
           className="h-1 flex-1 accent-accent"
-          aria-label="Перемотка"
+          aria-label={t('Перемотка')}
         />
         <span className="w-10 text-xs tabular-nums text-secondary">{time(total)}</span>
       </div>
@@ -86,16 +87,16 @@ export function Player({ panel, onPanel }: { panel: Panel; onPanel: (panel: Pane
       <button
         onClick={() => onPanel(panel === 'lyrics' ? null : 'lyrics')}
         className={`px-2 text-lg ${panel === 'lyrics' ? 'text-accent' : 'text-secondary hover:text-primary'}`}
-        aria-label="Текст песни"
-        title="Текст песни"
+        aria-label={t('Текст песни')}
+        title={t('Текст песни')}
       >
         ❝
       </button>
       <button
         onClick={() => onPanel(panel === 'queue' ? null : 'queue')}
         className={`px-2 text-lg ${panel === 'queue' ? 'text-accent' : 'text-secondary hover:text-primary'}`}
-        aria-label="Очередь"
-        title="Очередь"
+        aria-label={t('Очередь')}
+        title={t('Очередь')}
       >
         ☰
       </button>
@@ -107,7 +108,7 @@ export function Player({ panel, onPanel }: { panel: Panel; onPanel: (panel: Pane
         value={settings.volume}
         onChange={(event) => store.update({ volume: Number(event.target.value) })}
         className="h-1 w-24 accent-accent"
-        aria-label="Громкость"
+        aria-label={t('Громкость')}
       />
     </footer>
   )
@@ -141,8 +142,8 @@ function SleepTimerMenu() {
       <button
         onClick={() => setOpen(!open)}
         className={`px-2 text-sm ${active ? 'text-accent' : 'text-secondary hover:text-primary'}`}
-        aria-label="Таймер сна"
-        title="Таймер сна"
+        aria-label={t('Таймер сна')}
+        title={t('Таймер сна')}
       >
         {left ?? (sleepAtTrackEnd ? '☾•' : '☾')}
       </button>
@@ -150,11 +151,11 @@ function SleepTimerMenu() {
         <div className="absolute bottom-full right-0 z-20 mb-2 w-44 overflow-hidden rounded-lg border border-surface-strong bg-surface shadow-xl">
           {active && (
             <button onClick={() => choose(null)} className="block w-full px-3 py-2 text-left text-sm text-red-300 hover:bg-surface-strong">
-              Выключить таймер
+              {t('Выключить таймер')}
             </button>
           )}
           <button onClick={() => choose(0)} className="block w-full px-3 py-2 text-left text-sm hover:bg-surface-strong">
-            В конце трека
+            {t('В конце трека')}
           </button>
           {[15, 30, 45, 60, 90].map((minutes) => (
             <button
@@ -162,7 +163,7 @@ function SleepTimerMenu() {
               onClick={() => choose(minutes)}
               className="block w-full px-3 py-2 text-left text-sm hover:bg-surface-strong"
             >
-              {minutes} мин
+              {t('{n} мин', { n: minutes })}
             </button>
           ))}
         </div>

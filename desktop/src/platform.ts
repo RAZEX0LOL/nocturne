@@ -1,4 +1,5 @@
 import type { Song } from './core/models'
+import { t } from './i18n'
 
 /**
  * Всё, что умеет только окно Tauri: файлы на диске, системные диалоги, загрузки.
@@ -58,7 +59,7 @@ export async function pick(kind: 'files' | 'folder'): Promise<string[]> {
       ? { directory: true, multiple: false }
       : {
           multiple: true,
-          filters: [{ name: 'Музыка', extensions: ['mp3', 'm4a', 'aac', 'flac', 'wav', 'aif', 'aiff', 'ogg', 'opus'] }],
+          filters: [{ name: t('Музыка'), extensions: ['mp3', 'm4a', 'aac', 'flac', 'wav', 'aif', 'aiff', 'ogg', 'opus'] }],
         },
   )
   if (!result) return []

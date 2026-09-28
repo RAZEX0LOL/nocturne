@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import { AudioEngine, EQ_PRESETS, type EqSettings } from '../audio/engine'
+import { setLanguage, t, type Language } from '../i18n'
 import { Credentials, NavidromeClient, type StreamQuality } from '../core/client'
 import { MusicError, type Album, type Artist, type LyricLine, type Playlist, type Song } from '../core/models'
 import { PlaybackQueue, type RepeatMode } from '../core/queue'
@@ -15,6 +16,7 @@ export interface Settings {
   fadeSeconds: number
   eq: EqSettings
   volume: number
+  language: Language
 }
 
 /** Что открыто в основной области окна. */
@@ -104,6 +106,7 @@ const defaultSettings: Settings = {
   fadeSeconds: 0,
   eq: { enabled: false, gains: [...EQ_PRESETS.flat!] },
   volume: 1,
+  language: 'auto',
 }
 
 interface QueueSnapshot {
@@ -254,7 +257,7 @@ class Store {
       this.patch({ client, status: 'ready', offline: false, serverless: false, error: undefined, view: { kind: 'home' }, history: [] })
       await this.refresh()
     } catch (error) {
-      this.patch({ error: error instanceof MusicError ? error.message : 'Не удалось подключиться.' })
+      this.patch({ error: error instanceof MusicError ? error.message : t('Не удалось подключиться.') })
     }
   }
 
@@ -350,7 +353,7 @@ class Store {
           break
       }
     } catch (error) {
-      this.patch({ error: error instanceof MusicError ? error.message : 'Не удалось загрузить раздел.' })
+      this.patch({ error: error instanceof MusicError ? error.message : t('Не удалось загрузить раздел.') })
     }
   }
 
@@ -404,7 +407,7 @@ class Store {
       const known = new Set(remote.songs.map((song) => song.id))
       this.patch({ search: { query: text, ...remote, songs: [...onDisk.filter((song) => !known.has(song.id)), ...remote.songs] } })
     } catch (error) {
-      this.patch({ error: error instanceof MusicError ? error.message : 'Поиск не удался.' })
+      this.patch({ error: error instanceof MusicError ? error.message : t('Поиск не удался.') })
     }
   }
 
@@ -424,7 +427,7 @@ class Store {
       await client.setStarred(song.id, starred)
     } catch {
       await this.refresh()
-      this.patch({ error: 'Не удалось изменить избранное.' })
+      this.patch({ error: t('Не удалось изменить избранное.') })
     }
   }
 
@@ -457,7 +460,7 @@ class Store {
         ),
       })
     } catch (error) {
-      this.patch({ error: `Не удалось прочитать папку музыки: ${String(error)}` })
+      this.patch({ error: t('Не удалось прочитать папку музыки: {error}', { error: String(error) }) })
     }
   }
 
@@ -468,9 +471,9 @@ class Store {
     try {
       const added = await platform.importItems(paths)
       await this.loadOnDisk()
-      this.showNotice(added ? `Добавлено на компьютер: ${added}` : 'Новых треков не найдено')
+      this.showNotice(added ? t('Добавлено на компьютер: {n}', { n: added }) : t('Новых треков не найдено'))
     } catch (error) {
-      this.patch({ error: `Не удалось добавить музыку: ${String(error)}` })
+      this.patch({ error: t('Не удалось добавить музыку: {error}', { error: String(error) }) })
     } finally {
       this.patch({ importing: false })
     }
@@ -487,7 +490,7 @@ class Store {
       await platform.removeLocal(path)
       await this.loadOnDisk()
     } catch (error) {
-      this.patch({ error: `Не удалось удалить файл: ${String(error)}` })
+      this.patch({ error: t('Не удалось удалить файл: {error}', { error: String(error) }) })
     }
   }
 
@@ -496,7 +499,7 @@ class Store {
     const client = this.state.client
     if (!client || !this.online) return
     const wanted = songs.filter((song) => !isLocalId(song.id) && !this.state.downloads[song.id] && !this.state.downloading[song.id])
-    if (!wanted.length) return this.showNotice('Уже скачано')
+    if (!wanted.length) return this.showNotice(t('Уже скачано'))
     this.patch({ downloading: { ...this.state.downloading, ...Object.fromEntries(wanted.map((song) => [song.id, true as const])) } })
     let done = 0
     for (const song of wanted) {
@@ -513,13 +516,13 @@ class Store {
             saved.cover && song.coverArt ? { ...this.state.coverFiles, [song.coverArt]: saved.cover } : this.state.coverFiles,
         })
       } catch (error) {
-        this.patch({ error: `Не удалось скачать «${song.title}»: ${String(error)}` })
+        this.patch({ error: t('Не удалось скачать «{title}»: {error}', { title: song.title, error: String(error) }) })
       } finally {
         const { [song.id]: _finished, ...rest } = this.state.downloading
         this.patch({ downloading: rest })
       }
     }
-    if (done) this.showNotice(done === 1 ? 'Трек скачан' : `Скачано треков: ${done}`)
+    if (done) this.showNotice(done === 1 ? t('Трек скачан') : t('Скачано треков: {n}', { n: done }))
   }
 
   async removeDownload(song: Song) {
@@ -530,7 +533,7 @@ class Store {
       // Файл обложки ушёл вместе с треком; у альбома он мог остаться от других загрузок.
       await this.loadOnDisk()
     } catch (error) {
-      this.patch({ error: `Не удалось удалить загрузку: ${String(error)}` })
+      this.patch({ error: t('Не удалось удалить загрузку: {error}', { error: String(error) }) })
     }
   }
 
@@ -556,7 +559,7 @@ class Store {
     // Без сети из списка играет только то, что лежит на диске.
     const chosen = songs[at]
     const playable = songs.filter((song) => this.isPlayable(song))
-    if (!chosen || !this.isPlayable(chosen)) return this.showNotice('Трек не скачан — недоступен без сети')
+    if (!chosen || !this.isPlayable(chosen)) return this.showNotice(t('Трек не скачан — недоступен без сети'))
     const queue = new PlaybackQueue(playable, playable.indexOf(chosen), shuffle)
     this.patch({ queue })
     this.touchQueue()
@@ -570,7 +573,7 @@ class Store {
     if (!queue) return void this.play(playable, 0)
     queue.insertNext(playable)
     this.touchQueue()
-    this.showNotice(playable.length === 1 ? 'Сыграет следующим' : `Следующими: ${playable.length}`)
+    this.showNotice(playable.length === 1 ? t('Сыграет следующим') : t('Следующими: {n}', { n: playable.length }))
   }
 
   append(songs: Song[]) {
@@ -580,7 +583,7 @@ class Store {
     if (!queue) return void this.play(playable, 0)
     queue.append(playable)
     this.touchQueue()
-    this.showNotice(playable.length === 1 ? 'Добавлено в очередь' : `В очередь: ${playable.length}`)
+    this.showNotice(playable.length === 1 ? t('Добавлено в очередь') : t('В очередь: {n}', { n: playable.length }))
   }
 
   removeFromQueue(entryId: string) {
@@ -608,7 +611,7 @@ class Store {
     const url = await this.sourceUrl(song)
     if (!url) {
       this.engine.pause()
-      return this.showNotice('Трек не скачан — недоступен без сети')
+      return this.showNotice(t('Трек не скачан — недоступен без сети'))
     }
     this.startedAt = Date.now()
     this.scrobbled = false
@@ -871,7 +874,8 @@ class Store {
   }
 
   private applySettings() {
-    const { eq, fadeSeconds, volume } = this.state.settings
+    const { eq, fadeSeconds, volume, language } = this.state.settings
+    setLanguage(language)
     this.engine.setEq(eq)
     this.engine.setFadeSeconds(fadeSeconds)
     this.engine.setVolume(volume)

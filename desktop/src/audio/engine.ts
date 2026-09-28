@@ -1,6 +1,7 @@
 import type { Song } from '../core/models'
 import { replayGainVolume, type ReplayGainMode } from '../core/replaygain'
 import { debugLog } from '../debug'
+import { t } from '../i18n'
 
 /** Те же полосы, что в приложении на iPhone, чтобы настройки звучали одинаково. */
 export const EQ_BANDS = [60, 150, 400, 1000, 2400, 6000, 15000] as const
@@ -109,7 +110,7 @@ export class AudioEngine {
     }
     element.addEventListener('error', () => {
       if (!mine()) return
-      this.onError?.('Не удалось воспроизвести трек. Проверь связь с сервером.')
+      this.onError?.(t('Не удалось воспроизвести трек. Проверь связь с сервером.'))
     })
   }
 
@@ -186,7 +187,7 @@ export class AudioEngine {
     try {
       await this.element.play()
     } catch {
-      this.onError?.('Не удалось начать воспроизведение.')
+      this.onError?.(t('Не удалось начать воспроизведение.'))
     }
   }
 

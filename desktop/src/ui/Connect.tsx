@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { store, useStore } from '../state/store'
+import { t } from '../i18n'
 
 export function Connect() {
   const { error } = useStore()
@@ -22,27 +23,27 @@ export function Connect() {
       <form onSubmit={submit} className="w-full max-w-md space-y-5">
         <div className="space-y-2">
           <h1 className="text-3xl font-semibold leading-tight">
-            Твоя музыка.
+            {t('Твоя музыка.')}
             <br />
-            Твоё пространство.
+            {t('Твоё пространство.')}
           </h1>
-          <p className="text-sm text-secondary">Подключи Navidrome и слушай свою библиотеку на компьютере.</p>
+          <p className="text-sm text-secondary">{t('Подключи Navidrome и слушай свою библиотеку на компьютере.')}</p>
         </div>
 
         <label className="block space-y-1.5">
-          <span className="text-xs text-secondary">Адрес сервера</span>
+          <span className="text-xs text-secondary">{t('Адрес сервера')}</span>
           <input className={field} value={server} onChange={(e) => setServer(e.target.value)} placeholder="https://music.example.com" autoFocus />
         </label>
-        <p className="text-xs text-secondary">HTTP без шифрования разрешён только для домашней сети: 192.168.x.x, 10.x.x.x, *.local.</p>
+        <p className="text-xs text-secondary">{t('HTTP без шифрования разрешён только для домашней сети: 192.168.x.x, 10.x.x.x, *.local.')}</p>
 
         <label className="block space-y-1.5">
-          <span className="text-xs text-secondary">Логин</span>
-          <input className={field} value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Имя пользователя" />
+          <span className="text-xs text-secondary">{t('Логин')}</span>
+          <input className={field} value={username} onChange={(e) => setUsername(e.target.value)} placeholder={t('Имя пользователя')} />
         </label>
 
         <label className="block space-y-1.5">
-          <span className="text-xs text-secondary">Пароль</span>
-          <input className={field} type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Пароль Navidrome" />
+          <span className="text-xs text-secondary">{t('Пароль')}</span>
+          <input className={field} type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t('Пароль Navidrome')} />
         </label>
 
         {error && <p className="text-sm text-red-400">{error}</p>}
@@ -52,11 +53,11 @@ export function Connect() {
           disabled={busy || !server || !username || !password}
           className="w-full rounded-xl bg-accent px-4 py-3 font-medium text-base disabled:opacity-40"
         >
-          {busy ? 'Подключаюсь…' : 'Подключиться →'}
+          {busy ? t('Подключаюсь…') : t('Подключиться →')}
         </button>
-        <p className="text-center text-xs text-secondary">Пароль хранится в системном хранилище этого компьютера.</p>
+        <p className="text-center text-xs text-secondary">{t('Пароль хранится в системном хранилище этого компьютера.')}</p>
         <button type="button" onClick={() => void store.useOnDevice()} className="w-full text-center text-sm text-accent hover:underline">
-          Слушать музыку с компьютера — без сервера
+          {t('Слушать музыку с компьютера — без сервера')}
         </button>
       </form>
     </div>

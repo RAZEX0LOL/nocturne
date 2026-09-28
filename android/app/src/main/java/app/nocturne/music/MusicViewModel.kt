@@ -94,7 +94,7 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
 
     init {
         try { client = vault.load()?.let(::NavidromeClient) }
-        catch (_: Exception) { error = "Не удалось прочитать сохранённый вход. Подключи сервер заново." }
+        catch (_: Exception) { error = tr("Не удалось прочитать сохранённый вход. Подключи сервер заново.") }
         onDeviceOnly = client == null && vault.prefersOnDevice()
         viewModelScope.launch { reloadOnDisk() }
         if (client != null) viewModelScope.launch { reconnect() }
@@ -105,13 +105,13 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
                         override fun onEvents(player: Player, events: Player.Events) = updatePlayback()
                         override fun onMediaItemTransition(item: MediaItem?, reason: Int) = onTrackChanged()
                         override fun onPlayerError(error: PlaybackException) {
-                            this@MusicViewModel.error = "Не удалось воспроизвести трек. Проверь сеть и транскодирование Navidrome."
+                            this@MusicViewModel.error = tr("Не удалось воспроизвести трек. Проверь сеть и транскодирование Navidrome.")
                         }
                     })
                 }
                 updatePlayback()
                 restoreQueue()
-            } catch (_: Exception) { error = "Аудиосервис недоступен. Перезапусти приложение." }
+            } catch (_: Exception) { error = tr("Аудиосервис недоступен. Перезапусти приложение.") }
         }, ContextCompat.getMainExecutor(application))
         viewModelScope.launch {
             var lastSavedSecond = -1L
@@ -197,7 +197,7 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
 
     fun disconnect() {
         try { snapshots.clear(); vault.clear(); vault.rememberOnDevice(false); resetSession(); client = null; demo = false; offline = false }
-        catch (_: Exception) { error = "Не удалось удалить сохранённый вход." }
+        catch (_: Exception) { error = tr("Не удалось удалить сохранённый вход.") }
     }
 
     /**
@@ -258,7 +258,7 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
                 }
             } catch (error: Exception) {
                 if (version == sessionVersion) {
-                    if (error is MusicException && error.message?.contains("логин") == true) report(error) else offline = true
+                    if (error is MusicException && error.kind == MusicException.Kind.auth) report(error) else offline = true
                 }
             }
             finally { if (version == sessionVersion) loading = false }
@@ -338,7 +338,7 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
         viewModelScope.launch {
             try {
                 api.addToPlaylist(playlist.id, songs.map { it.id })
-                notice = "Добавлено в «${playlist.name}»"
+                notice = tr("Добавлено в «{playlist}»", "playlist" to playlist.name)
                 playlists = api.playlists()
             } catch (error: Exception) { report(error) }
         }
@@ -349,7 +349,7 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
         viewModelScope.launch {
             try {
                 api.createPlaylist(name, songs.map { it.id })
-                notice = "Плейлист «$name» создан"
+                notice = tr("Плейлист «{name}» создан", "name" to name)
                 playlists = api.playlists()
             } catch (error: Exception) { report(error) }
         }
@@ -372,11 +372,11 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
             val added = runCatching { localLibrary.import(uris) }.getOrDefault(0)
             reloadOnDisk()
             importing = false
-            notice = if (added > 0) "Добавлено на телефон: $added" else "Новых треков не найдено"
+            notice = if (added > 0) tr("Добавлено на телефон: {n}", "n" to added) else tr("Новых треков не найдено")
         }
     }
 
-    fun rescan() { viewModelScope.launch { reloadOnDisk(); notice = "Треков на телефоне: ${local.size}" } }
+    fun rescan() { viewModelScope.launch { reloadOnDisk(); notice = tr("Треков на телефоне: {n}", "n" to local.size) } }
 
     fun removeLocal(song: Song) {
         viewModelScope.launch {
@@ -388,8 +388,8 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
     fun download(songs: List<Song>) {
         val api = client ?: return
         val wanted = songs.filter { !isLocalId(it.id) && !downloads.isDownloaded(it.id) && it.id !in downloading }
-        if (wanted.isEmpty()) { notice = "Уже скачано"; return }
-        if (settings.downloadOverWifiOnly && !onWifi) { error = "Загрузка только по Wi-Fi — включи Wi-Fi или измени настройку."; return }
+        if (wanted.isEmpty()) { notice = tr("Уже скачано"); return }
+        if (settings.downloadOverWifiOnly && !onWifi) { error = tr("Загрузка только по Wi-Fi — включи Wi-Fi или измени настройку."); return }
         downloading = downloading + wanted.map { it.id }
         viewModelScope.launch {
             var done = 0
@@ -397,12 +397,12 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
                 // Обложку забираем вместе с треком: без сети серверный адрес уже не откроется.
                 val cover = song.coverArt?.let { api.cover(it) }
                 val ok = runCatching { downloads.download(api.stream(song.id, settings.quality(onWifi)), song, cover) }.getOrDefault(false)
-                if (ok) done++ else error = "Не удалось скачать «${song.title}»"
+                if (ok) done++ else error = tr("Не удалось скачать «{title}»", "title" to song.title)
                 downloading = downloading - song.id
                 downloaded = runCatching { downloads.load() }.getOrDefault(downloaded)
                 coverFiles = downloads.coverFiles()
             }
-            if (done > 0) notice = if (done == 1) "Трек скачан" else "Скачано треков: $done"
+            if (done > 0) notice = if (done == 1) tr("Трек скачан") else tr("Скачано треков: {n}", "n" to done)
         }
     }
 
@@ -440,9 +440,9 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
     // MARK: - Воспроизведение
 
     fun play(songs: List<Song>, index: Int = 0, shuffle: Boolean = false) {
-        if (demo) { error = "Это демомедиатека. Подключи Navidrome, чтобы слушать свою музыку."; return }
+        if (demo) { error = tr("Это демомедиатека. Подключи Navidrome, чтобы слушать свою музыку."); return }
         val chosen = songs.getOrNull(index) ?: return
-        if (!isPlayable(chosen)) { notice = "Трек не скачан — недоступен без сети"; return }
+        if (!isPlayable(chosen)) { notice = tr("Трек не скачан — недоступен без сети"); return }
         val playable = songs.filter { isPlayable(it) }
         val prepared = PlaybackQueue(playable, playable.indexOf(chosen), shuffle)
         queue = prepared
@@ -455,7 +455,7 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
         if (playable.isEmpty()) return
         prepared.insertNext(playable)
         pushQueue(prepared, play = false, keepPosition = true)
-        notice = if (playable.size == 1) "Сыграет следующим" else "Следующими: ${playable.size}"
+        notice = if (playable.size == 1) tr("Сыграет следующим") else tr("Следующими: {n}", "n" to playable.size)
     }
 
     fun appendToQueue(songs: List<Song>) {
@@ -464,7 +464,7 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
         if (playable.isEmpty()) return
         prepared.append(playable)
         pushQueue(prepared, play = false, keepPosition = true)
-        notice = if (playable.size == 1) "Добавлено в очередь" else "В очередь: ${playable.size}"
+        notice = if (playable.size == 1) tr("Добавлено в очередь") else tr("В очередь: {n}", "n" to playable.size)
     }
 
     fun removeFromQueue(index: Int) {
@@ -479,7 +479,7 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
      */
     private fun pushQueue(prepared: PlaybackQueue, play: Boolean, keepPosition: Boolean = false, startAtMillis: Long = 0) {
         val api = client
-        val player = controller ?: run { error = "Аудиосервис ещё подключается. Попробуй через секунду."; return }
+        val player = controller ?: run { error = tr("Аудиосервис ещё подключается. Попробуй через секунду."); return }
         val items = prepared.items.map { entry -> mediaItem(entry.song, api) }
         // Место старта задаём вместе со списком: отдельная перемотка сразу после setMediaItems теряется.
         val position = if (keepPosition) player.currentPosition else startAtMillis
@@ -584,7 +584,7 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
             delay(minutes * 60_000L)
             controller?.pause()
             sleepAt = null
-            notice = "Таймер сна: музыка остановлена"
+            notice = tr("Таймер сна: музыка остановлена")
         }
     }
 
@@ -640,7 +640,7 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
         if (sleepAtTrackEnd) {
             sleepAtTrackEnd = false
             player.pause()
-            notice = "Таймер сна: музыка остановлена"
+            notice = tr("Таймер сна: музыка остановлена")
         }
         saveQueue()
     }
@@ -700,7 +700,9 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
 
     private fun report(error: Exception) {
         if (error !is CancellationException) {
-            this.error = if (error is MusicException) error.message else "Не удалось выполнить действие. Проверь подключение."
+            // Сообщение ядра приходит по-русски и с подстановками: и то и другое разрешается здесь, на показе.
+            this.error = if (error is MusicException) tr(error.message.orEmpty(), *error.values.toList().toTypedArray())
+            else tr("Не удалось выполнить действие. Проверь подключение.")
         }
     }
 

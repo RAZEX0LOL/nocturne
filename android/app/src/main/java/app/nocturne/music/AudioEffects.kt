@@ -18,7 +18,7 @@ class AudioEffects(context: Context) {
     fun attach(audioSessionId: Int) {
         release()
         equalizer = runCatching { Equalizer(0, audioSessionId) }.getOrElse {
-            Log.w("Nocturne", "Эквалайзер недоступен на этом устройстве", it)
+            Log.w("Nocturne", tr("Эквалайзер недоступен на этом устройстве"), it)
             null
         }
         apply()
@@ -36,7 +36,7 @@ class AudioEffects(context: Context) {
                 val millibels = (settings.equalizerGains.getOrElse(nearest) { 0f } * 100).toInt()
                 equalizer.setBandLevel(band.toShort(), millibels.coerceIn(range[0].toInt(), range[1].toInt()).toShort())
             }
-        }.onFailure { Log.w("Nocturne", "Не удалось применить эквалайзер", it) }
+        }.onFailure { Log.w("Nocturne", tr("Не удалось применить эквалайзер"), it) }
     }
 
     fun release() {

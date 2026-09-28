@@ -1,5 +1,6 @@
 import { md5 } from './md5'
 import { MusicError, type Album, type Artist, type Playlist, type Song, type StructuredLyrics } from './models'
+import { t } from '../i18n'
 
 /** Правила адресов и подписи описаны в shared/spec/api.md и проверяются shared/cases. */
 
@@ -44,15 +45,15 @@ export class Credentials {
     try {
       url = new URL(server.trim())
     } catch {
-      throw new MusicError('Укажи адрес сервера целиком, вместе с https://', 'address')
+      throw new MusicError(t('Укажи адрес сервера целиком, вместе с https://'), 'address')
     }
     const scheme = url.protocol.replace(':', '').toLowerCase()
     const secure = scheme === 'https' || (scheme === 'http' && isLocalNetworkHost(url.hostname))
     if (!secure || !url.hostname || url.username || url.password || url.search || url.hash) {
-      throw new MusicError('Укажи адрес сервера по HTTPS без логина и параметров.', 'address')
+      throw new MusicError(t('Укажи адрес сервера по HTTPS без логина и параметров.'), 'address')
     }
     const login = username.trim()
-    if (!login || !password) throw new MusicError('Введи логин и пароль.', 'address')
+    if (!login || !password) throw new MusicError(t('Введи логин и пароль.'), 'address')
     this.server = url
     this.username = login
     this.password = password
@@ -105,15 +106,15 @@ export class NavidromeClient {
     try {
       parsed = JSON.parse(text)
     } catch {
-      throw new MusicError('Сервер вернул неожиданный ответ.')
+      throw new MusicError(t('Сервер вернул неожиданный ответ.'))
     }
     const response = parsed?.['subsonic-response']
-    if (!response || typeof response !== 'object') throw new MusicError('Сервер вернул неожиданный ответ.')
+    if (!response || typeof response !== 'object') throw new MusicError(t('Сервер вернул неожиданный ответ.'))
     if (response.status !== 'ok') {
       const code = response.error?.code
       throw code === 40
-        ? new MusicError('Неверный логин или пароль.', 'auth')
-        : new MusicError(`Ошибка Navidrome (${code ?? '?'}).`)
+        ? new MusicError(t('Неверный логин или пароль.'), 'auth')
+        : new MusicError(t('Ошибка Navidrome ({code}).', { code: code ?? '?' }))
     }
     return response
   }
@@ -126,12 +127,12 @@ export class NavidromeClient {
     for (let attempt = 0; ; attempt++) {
       try {
         const response = await fetch(await this.url(endpoint, parameters, repeated))
-        if (!response.ok) throw new MusicError(`Сервер вернул HTTP ${response.status}.`)
+        if (!response.ok) throw new MusicError(t('Сервер вернул HTTP {status}.', { status: response.status }))
         return NavidromeClient.decode(await response.text())
       } catch (error) {
         if (error instanceof MusicError) throw error
         if (attempt >= this.retryDelaysSeconds.length) {
-          throw new MusicError('Не удалось связаться с сервером. Проверь сеть и адрес Navidrome.', 'network')
+          throw new MusicError(t('Не удалось связаться с сервером. Проверь сеть и адрес Navidrome.'), 'network')
         }
         await new Promise((resolve) => setTimeout(resolve, this.retryDelaysSeconds[attempt]! * 1000))
       }

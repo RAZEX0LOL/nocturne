@@ -16,8 +16,8 @@ class Credentials(server: String, username: String, val password: String) {
     val server: HttpUrl = server.trim().toHttpUrlOrNull()?.takeIf {
         (it.isHttps || isLocalNetworkHost(it.host)) &&
             it.username.isEmpty() && it.password.isEmpty() && it.query == null && it.fragment == null
-    } ?: throw MusicException("Укажи адрес сервера по HTTPS без логина и параметров.")
-    init { if (this.username.isEmpty() || password.isEmpty()) throw MusicException("Введи логин и пароль.") }
+    } ?: throw MusicException("Укажи адрес сервера по HTTPS без логина и параметров.", MusicException.Kind.address)
+    init { if (this.username.isEmpty() || password.isEmpty()) throw MusicException("Введи логин и пароль.", MusicException.Kind.address) }
 
     val isInsecure: Boolean get() = !server.isHttps
     /** Устойчивое имя пары «сервер и пользователь», без секретов. */
@@ -89,7 +89,7 @@ class NavidromeClient(
             try {
                 return perform(endpoint, parameters, repeated)
             } catch (failure: NetworkFailure) {
-                if (attempt >= retryDelaysSeconds.size) throw MusicException("Не удалось связаться с сервером. Проверь сеть и адрес Navidrome.")
+                if (attempt >= retryDelaysSeconds.size) throw MusicException("Не удалось связаться с сервером. Проверь сеть и адрес Navidrome.", MusicException.Kind.network)
                 delay((retryDelaysSeconds[attempt] * 1000).toLong())
                 attempt += 1
             }
@@ -113,7 +113,7 @@ class NavidromeClient(
             override fun onResponse(call: Call, response: Response) {
                 response.use {
                     try {
-                        if (!it.isSuccessful) throw MusicException("Сервер вернул HTTP ${it.code}.")
+                        if (!it.isSuccessful) throw MusicException("Сервер вернул HTTP {status}.", values = mapOf("status" to "${it.code}"))
                         val parsed = decode(it.body?.string() ?: "")
                         continuation.resume(parsed)
                     } catch (error: Exception) {
@@ -180,7 +180,8 @@ class NavidromeClient(
                     ?: throw MusicException("Сервер вернул неожиданный ответ.")
                 if (response.text("status") != "ok") {
                     val code = response.obj("error").number("code")
-                    throw MusicException(if (code == 40) "Неверный логин или пароль." else "Ошибка Navidrome ($code).")
+                    throw if (code == 40) MusicException("Неверный логин или пароль.", MusicException.Kind.auth)
+                        else MusicException("Ошибка Navidrome ({code}).", values = mapOf("code" to "$code"))
                 }
                 return response
             } catch (error: Exception) {

@@ -1,6 +1,7 @@
 import type { Song } from '../core/models'
 import { isLocalId } from '../core/source'
 import { store, useStore } from '../state/store'
+import { t } from '../i18n'
 
 export function formatTime(seconds?: number) {
   if (seconds === undefined || !Number.isFinite(seconds) || seconds < 0) return ''
@@ -17,7 +18,7 @@ export function SongList({
   numbered = false,
   showAlbum = false,
   onRemove,
-  removeLabel = 'Удалить',
+  removeLabel = t('Удалить'),
 }: {
   songs: Song[]
   numbered?: boolean
@@ -29,7 +30,7 @@ export function SongList({
   const currentId = queue?.current?.song.id
   const online = !!client && !offline
 
-  if (!songs.length) return <p className="px-1 text-sm text-secondary">Здесь пока пусто.</p>
+  if (!songs.length) return <p className="px-1 text-sm text-secondary">{t('Здесь пока пусто.')}</p>
 
   return (
     <ol className="divide-y divide-surface-strong overflow-hidden rounded-xl bg-surface">
@@ -45,7 +46,7 @@ export function SongList({
             <button
               onClick={() => void store.play(songs, index)}
               className="flex min-w-0 flex-1 items-center gap-4 px-4 py-2.5 text-left"
-              title={playable ? undefined : 'Трек не скачан — недоступен без сети'}
+              title={playable ? undefined : t('Трек не скачан — недоступен без сети')}
             >
               <span className={`w-6 text-right text-sm tabular-nums ${current ? 'text-accent' : 'text-secondary'}`}>
                 {current ? (playing ? '♪' : '♫') : numbered ? song.track ?? index + 1 : index + 1}
@@ -53,20 +54,20 @@ export function SongList({
               <span className="min-w-0 flex-1">
                 <span className={`block truncate ${current ? 'text-accent' : ''}`}>{song.title}</span>
                 <span className="block truncate text-xs text-secondary">
-                  {song.artist ?? 'Неизвестный исполнитель'}
+                  {song.artist ?? t('Неизвестный исполнитель')}
                   {showAlbum && song.album ? ` · ${song.album}` : ''}
                 </span>
               </span>
-              {downloaded && <span className="text-xs text-secondary" title="Скачано">⤓</span>}
+              {downloaded && <span className="text-xs text-secondary" title={t('Скачано')}>⤓</span>}
               <span className="w-10 text-right text-xs tabular-nums text-secondary">{formatTime(song.duration)}</span>
             </button>
             <div className="flex items-center gap-1 pr-3">
               {playable && (
                 <>
-                  <button onClick={() => store.playNext([song])} className={rowAction} title="Сыграть следующим">
+                  <button onClick={() => store.playNext([song])} className={rowAction} title={t('Сыграть следующим')}>
                     ↳
                   </button>
-                  <button onClick={() => store.append([song])} className={rowAction} title="В конец очереди">
+                  <button onClick={() => store.append([song])} className={rowAction} title={t('В конец очереди')}>
                     ＋
                   </button>
                 </>
@@ -75,7 +76,7 @@ export function SongList({
                 <button
                   onClick={() => void store.download([song])}
                   className={downloading[song.id] ? 'rounded px-2 py-1 text-xs text-accent' : rowAction}
-                  title="Скачать для прослушивания без сети"
+                  title={t('Скачать для прослушивания без сети')}
                   disabled={!!downloading[song.id]}
                 >
                   {downloading[song.id] ? '…' : '↓'}
@@ -90,8 +91,8 @@ export function SongList({
                 <button
                   onClick={() => void store.toggleStar(song)}
                   className={`rounded px-2 py-1 ${starred ? 'text-accent' : 'text-secondary opacity-0 group-hover:opacity-100'}`}
-                  title={starred ? 'Убрать из избранного' : 'В избранное'}
-                  aria-label={starred ? 'Убрать из избранного' : 'В избранное'}
+                  title={starred ? t('Убрать из избранного') : t('В избранное')}
+                  aria-label={starred ? t('Убрать из избранного') : t('В избранное')}
                 >
                   {starred ? '♥' : '♡'}
                 </button>

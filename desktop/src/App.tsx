@@ -18,9 +18,11 @@ import {
   PlaylistView,
   SearchView,
 } from './ui/Views'
+import { t } from './i18n'
 
 interface Section {
   view: View
+  /** Русское название как ключ: перевод берётся при показе, иначе смена языка не доходит до меню. */
   label: string
   icon: string
 }
@@ -109,7 +111,7 @@ export function App() {
   }, [])
 
   if (status === 'connecting') {
-    return <div className="grid h-full place-items-center text-secondary">Загружаю…</div>
+    return <div className="grid h-full place-items-center text-secondary">{t('Загружаю…')}</div>
   }
   if (status === 'signed-out') return <Connect />
 
@@ -129,7 +131,7 @@ export function App() {
               }`}
             >
               <span className="w-4 text-center">{section.icon}</span>
-              {section.label}
+              {t(section.label)}
             </button>
           ))}
           <div className="flex-1" />
@@ -138,11 +140,11 @@ export function App() {
               onClick={() => void (offline ? store.reconnect() : store.refresh())}
               className="rounded-lg px-3 py-2 text-left text-sm text-secondary hover:text-primary"
             >
-              ↻ {offline ? 'Проверить связь' : 'Обновить'}
+              ↻ {offline ? t('Проверить связь') : t('Обновить')}
             </button>
           )}
           <button onClick={() => setSettingsOpen(true)} className="rounded-lg px-3 py-2 text-left text-sm text-secondary hover:text-primary">
-            ⚙ Настройки
+            {t('⚙ Настройки')}
           </button>
         </nav>
 
@@ -150,7 +152,7 @@ export function App() {
           <div className="space-y-4 p-8">
             {history.length > 0 && (
               <button onClick={() => store.back()} className="text-sm text-secondary hover:text-primary">
-                ← Назад
+                {t('← Назад')}
               </button>
             )}
             <Content view={view} />
@@ -164,7 +166,7 @@ export function App() {
       {error && (
         <div className="mx-6 mb-2 flex items-center justify-between rounded-lg bg-red-500/15 px-4 py-2 text-sm text-red-300">
           <span>{error}</span>
-          <button onClick={() => store.dismissError()} aria-label="Закрыть">×</button>
+          <button onClick={() => store.dismissError()} aria-label={t('Закрыть')}>×</button>
         </div>
       )}
       {notice && <div className="pointer-events-none fixed left-1/2 top-4 -translate-x-1/2 rounded-lg bg-surface-strong px-4 py-2 text-sm shadow-lg">{notice}</div>}
@@ -182,41 +184,54 @@ function Settings({ onClose }: { onClose: () => void }) {
     <div className="fixed inset-0 grid place-items-center bg-black/60 p-6" onClick={onClose}>
       <div className="w-full max-w-lg space-y-6 rounded-2xl bg-surface p-6" onClick={(event) => event.stopPropagation()}>
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Настройки</h2>
+          <h2 className="text-lg font-semibold">{t('Настройки')}</h2>
           <button onClick={onClose} className="text-secondary hover:text-primary">
-            Готово
+            {t('Готово')}
           </button>
         </div>
 
         <label className="flex items-center justify-between gap-4 text-sm">
-          Качество потока
+          {t('Язык')}
+          <select
+            value={settings.language}
+            onChange={(event) => store.update({ language: event.target.value as typeof settings.language })}
+            className="rounded-lg bg-surface-strong px-3 py-2"
+          >
+            <option value="auto">{t('Как в системе')}</option>
+            <option value="ru">{t('Русский')}</option>
+            <option value="en">{t('Английский')}</option>
+          </select>
+        </label>
+
+        <label className="flex items-center justify-between gap-4 text-sm">
+          {t('Качество потока')}
           <select
             value={settings.quality}
             onChange={(event) => store.update({ quality: event.target.value as typeof settings.quality })}
             className="rounded-lg bg-surface-strong px-3 py-2"
           >
-            <option value="original">Оригинал (без сжатия)</option>
-            <option value="mp3High">Высокое · MP3 320</option>
-            <option value="mp3Medium">Среднее · MP3 192</option>
-            <option value="mp3Low">Экономное · MP3 128</option>
+            <option value="original">{t('Оригинал (без сжатия)')}</option>
+            <option value="mp3High">{t('Высокое · MP3 320')}</option>
+            <option value="mp3Medium">{t('Среднее · MP3 192')}</option>
+            <option value="mp3Low">{t('Экономное · MP3 128')}</option>
           </select>
         </label>
 
         <label className="flex items-center justify-between gap-4 text-sm">
-          Выравнивание громкости
+          {t('Выравнивание громкости')}
           <select
             value={settings.replayGain}
             onChange={(event) => store.update({ replayGain: event.target.value as typeof settings.replayGain })}
             className="rounded-lg bg-surface-strong px-3 py-2"
           >
-            <option value="off">Выключено</option>
-            <option value="track">По треку</option>
-            <option value="album">По альбому</option>
+            <option value="off">{t('Выключено')}</option>
+            <option value="track">{t('По треку')}</option>
+            <option value="album">{t('По альбому')}</option>
           </select>
         </label>
 
         <label className="flex items-center justify-between gap-4 text-sm">
-          Плавные переходы, сек
+          {t('Плавные переходы, сек')}
           <input
             type="number"
             min={0}
@@ -235,7 +250,7 @@ function Settings({ onClose }: { onClose: () => void }) {
               checked={settings.eq.enabled}
               onChange={(event) => store.update({ eq: { ...settings.eq, enabled: event.target.checked } })}
             />
-            Эквалайзер
+            {t('Эквалайзер')}
           </label>
 
           <div className="flex gap-2">
@@ -245,7 +260,7 @@ function Settings({ onClose }: { onClose: () => void }) {
                 onClick={() => store.update({ eq: { enabled: true, gains: [...EQ_PRESETS[preset]!] } })}
                 className="rounded-lg bg-surface-strong px-3 py-1.5 text-xs"
               >
-                {{ flat: 'Ровно', bass: 'Бас', treble: 'Верх', vocal: 'Вокал', loudness: 'Громко' }[preset] ?? preset}
+                {{ flat: t('Ровно'), bass: t('Бас'), treble: t('Верх'), vocal: t('Вокал'), loudness: t('Громко') }[preset] ?? preset}
               </button>
             ))}
           </div>
@@ -267,25 +282,25 @@ function Settings({ onClose }: { onClose: () => void }) {
                   }}
                   className="h-24 accent-accent"
                   style={{ writingMode: 'vertical-lr', direction: 'rtl' }}
-                  aria-label={`${band} Гц`}
+                  aria-label={t('{n} Гц', { n: band })}
                 />
-                <span className="text-[10px] text-secondary">{band >= 1000 ? `${band / 1000}к` : band}</span>
+                <span className="text-[10px] text-secondary">{band >= 1000 ? t('{n}к', { n: band / 1000 }) : band}</span>
               </div>
             ))}
           </div>
         </section>
 
         <section className="space-y-2 border-t border-surface-strong pt-4 text-sm">
-          <h3 className="font-medium">Сервер</h3>
+          <h3 className="font-medium">{t('Сервер')}</h3>
           {serverless || !client ? (
             <button onClick={() => { onClose(); store.showConnect() }} className="text-accent">
-              Подключить Navidrome
+              {t('Подключить Navidrome')}
             </button>
           ) : (
             <>
               <p className="text-secondary">{client.credentials.account}</p>
               <button onClick={() => { onClose(); void store.disconnect() }} className="text-red-400">
-                Отключить сервер
+                {t('Отключить сервер')}
               </button>
             </>
           )}

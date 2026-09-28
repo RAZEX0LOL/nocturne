@@ -10,7 +10,10 @@ import app.nocturne.core.ReplayGainMode
 import app.nocturne.core.StreamQuality
 import app.nocturne.core.qualityForNetwork
 
-/** Оформление: тёмная база одна, меняется акцент — как на iPhone. */
+/**
+ * Оформление: тёмная база одна, меняется акцент — как на iPhone.
+ * Название хранится по-русски: это ключ перевода, английский берётся при показе.
+ */
 enum class AccentTheme(val title: String, val color: Long) {
     violet("Фиолетовый", 0xFFA78BFA),
     mint("Мятный", 0xFF5EEAD4),
@@ -73,6 +76,7 @@ class Settings(context: Context) {
         /** Те же полосы, что на iPhone и десктопе, чтобы пресеты звучали одинаково. */
         val EQ_BANDS = listOf(60, 150, 400, 1000, 2400, 6000, 15000)
 
+        /** Названия — ключи перевода, как и у акцентов: переводятся на показе. */
         val EQ_PRESETS = linkedMapOf(
             "Ровно" to listOf(0f, 0f, 0f, 0f, 0f, 0f, 0f),
             "Бас" to listOf(6f, 4f, 1.5f, 0f, 0f, 0f, 0f),

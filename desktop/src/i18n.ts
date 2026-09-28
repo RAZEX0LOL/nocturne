@@ -1,0 +1,201 @@
+/**
+ * Язык интерфейса. Ключ — русская строка, как в каталоге на iPhone: исходный текст остаётся
+ * в коде читаемым, а перевод лежит рядом одним списком.
+ *
+ * Подстановки помечаются фигурными скобками: `t('Треков: {n}', { n })`.
+ */
+
+export type Language = 'auto' | 'ru' | 'en'
+
+const english: Record<string, string> = {
+  // Вход
+  'Твоя музыка.': 'Your music.',
+  'Твоё пространство.': 'Your space.',
+  'Подключи Navidrome и слушай свою библиотеку на компьютере.': 'Connect Navidrome and listen to your library on this computer.',
+  'Адрес сервера': 'Server address',
+  'HTTP без шифрования разрешён только для домашней сети: 192.168.x.x, 10.x.x.x, *.local.':
+    'Plain HTTP is allowed only on a home network: 192.168.x.x, 10.x.x.x, *.local.',
+  'Логин': 'Username',
+  'Имя пользователя': 'Username',
+  'Пароль': 'Password',
+  'Пароль Navidrome': 'Navidrome password',
+  'Подключаюсь…': 'Connecting…',
+  'Подключиться →': 'Connect →',
+  'Пароль хранится в системном хранилище этого компьютера.': 'The password is kept in this computer’s system keychain.',
+  'Слушать музыку с компьютера — без сервера': 'Play music from this computer — no server',
+
+  // Разделы
+  'Главная': 'Home',
+  'Поиск': 'Search',
+  'На компьютере': 'On this computer',
+  'Загрузки': 'Downloads',
+  'Альбомы': 'Albums',
+  'Артисты': 'Artists',
+  'Плейлисты': 'Playlists',
+  'Избранное': 'Favourites',
+  'Моя музыка': 'My music',
+  'Доступно без сети': 'Available offline',
+  'Любимые треки': 'Favourite songs',
+  'Недавно добавленные': 'Recently added',
+  'Все →': 'All →',
+  'Все альбомы →': 'All albums →',
+  'Треки': 'Songs',
+  'Загружаю…': 'Loading…',
+  '← Назад': '← Back',
+  'Назад': 'Back',
+
+  // Списки и действия
+  'Здесь пока пусто.': 'Nothing here yet.',
+  'Неизвестный исполнитель': 'Unknown artist',
+  'Трек не скачан — недоступен без сети': 'Not downloaded — unavailable offline',
+  'Скачано': 'Downloaded',
+  'Сыграть следующим': 'Play next',
+  'В конец очереди': 'Add to queue',
+  'Скачать для прослушивания без сети': 'Download for offline listening',
+  'Убрать из избранного': 'Remove from favourites',
+  'В избранное': 'Add to favourites',
+  'Удалить': 'Delete',
+  'Удалить загрузку': 'Delete download',
+  'Удалить файл с компьютера': 'Delete the file from this computer',
+  'Открыть папку': 'Open folder',
+  '↻ Пересканировать': '↻ Rescan',
+  '＋ Файлы': '＋ Files',
+  '＋ Папка целиком': '＋ Whole folder',
+  '▶ Слушать': '▶ Play',
+  '⇄ Перемешать': '⇄ Shuffle',
+  '↓ Скачать': '↓ Download',
+  '✓ Скачано': '✓ Downloaded',
+  'Скачиваю…': 'Downloading…',
+  'Добавляю музыку…': 'Adding music…',
+  'Треков: {n}': 'Songs: {n}',
+  'Альбомов: {n}': 'Albums: {n}',
+  '{n} треков': '{n} songs',
+  'По запросу «{query}» ничего не нашлось.': 'Nothing found for “{query}”.',
+  'Треки, альбомы, артисты': 'Songs, albums, artists',
+  'Найти артиста': 'Find an artist',
+  'Плейлистов на сервере пока нет.': 'No playlists on the server yet.',
+  'На компьютере пока нет музыки': 'No music on this computer yet',
+  'Добавь файлы или папку кнопками выше или положи их в папку': 'Add files or a folder with the buttons above, or drop them into',
+  'Музыка → Nocturne': 'Music → Nocturne',
+  '— приложение найдёт их само.': '— the app will find them on its own.',
+  'Поддерживаются MP3, M4A, AAC, ALAC, FLAC, WAV, AIFF, OGG.': 'MP3, M4A, AAC, ALAC, FLAC, WAV, AIFF and OGG are supported.',
+  'Треки с сервера, сохранённые для прослушивания без сети.': 'Songs from the server, kept for offline listening.',
+  'Сейчас скачивается: {n}.': 'Downloading now: {n}.',
+  'Нет связи с сервером': 'No connection to the server',
+  'Играет то, что есть на компьютере и в загрузках.': 'Playing what is on this computer and in downloads.',
+  'Повторить': 'Try again',
+
+  // Плеер
+  'Воспроизвести': 'Play',
+  'Пауза': 'Pause',
+  'Предыдущий трек': 'Previous song',
+  'Следующий трек': 'Next song',
+  'Перемешивать': 'Shuffle',
+  'Повтор': 'Repeat',
+  'Режим повтора': 'Repeat mode',
+  'Перемотка': 'Seek',
+  'Громкость': 'Volume',
+  'Очередь': 'Queue',
+  'Сейчас играет': 'Now playing',
+  'Дальше': 'Up next',
+  'Дальше ничего нет': 'Nothing up next',
+  'Убрать из очереди': 'Remove from queue',
+  'Скрыть': 'Hide',
+  'Таймер сна': 'Sleep timer',
+  'Выключить таймер': 'Turn the timer off',
+  'В конце трека': 'At the end of the song',
+  '{n} мин': '{n} min',
+  'Текст песни': 'Lyrics',
+  'Загружаем текст…': 'Loading the lyrics…',
+  'Не удалось загрузить текст.': 'Could not load the lyrics.',
+  'Попробовать снова': 'Try again',
+  'Navidrome не нашёл текст для этого трека.': 'Navidrome has no lyrics for this song.',
+  'Ничего не играет.': 'Nothing is playing.',
+
+  // Настройки
+  '⚙ Настройки': '⚙ Settings',
+  'Настройки': 'Settings',
+  'Готово': 'Done',
+  'Обновить': 'Refresh',
+  'Проверить связь': 'Check the connection',
+  'Закрыть': 'Close',
+  'Качество потока': 'Stream quality',
+  'Оригинал (без сжатия)': 'Original (no transcoding)',
+  'Высокое · MP3 320': 'High · MP3 320',
+  'Среднее · MP3 192': 'Medium · MP3 192',
+  'Экономное · MP3 128': 'Light · MP3 128',
+  'Выравнивание громкости': 'Volume levelling',
+  'Выключено': 'Off',
+  'По треку': 'Per song',
+  'По альбому': 'Per album',
+  'Плавные переходы, сек': 'Fades, seconds',
+  'Эквалайзер': 'Equaliser',
+  'Ровно': 'Flat',
+  'Бас': 'Bass',
+  'Верх': 'Treble',
+  'Вокал': 'Vocal',
+  'Громко': 'Loudness',
+  '{n} Гц': '{n} Hz',
+  '{n}к': '{n}k',
+  'Язык': 'Language',
+  'Как в системе': 'Same as the system',
+  'Русский': 'Russian',
+  'Английский': 'English',
+  'Сервер': 'Server',
+  'Подключить Navidrome': 'Connect Navidrome',
+  'Отключить сервер': 'Disconnect the server',
+  'Музыка': 'Music',
+
+  // Сообщения
+  'Сыграет следующим': 'Plays next',
+  'Следующими: {n}': 'Next in line: {n}',
+  'Добавлено в очередь': 'Added to the queue',
+  'В очередь: {n}': 'Added to the queue: {n}',
+  'Трек скачан': 'Song downloaded',
+  'Скачано треков: {n}': 'Songs downloaded: {n}',
+  'Уже скачано': 'Already downloaded',
+  'Добавлено на компьютер: {n}': 'Added to this computer: {n}',
+  'Новых треков не найдено': 'No new songs found',
+  'Не удалось подключиться.': 'Could not connect.',
+  'Не удалось загрузить раздел.': 'Could not load this section.',
+  'Не удалось изменить избранное.': 'Could not change favourites.',
+  'Поиск не удался.': 'The search failed.',
+  'Не удалось прочитать папку музыки: {error}': 'Could not read the music folder: {error}',
+  'Не удалось добавить музыку: {error}': 'Could not add the music: {error}',
+  'Не удалось удалить файл: {error}': 'Could not delete the file: {error}',
+  'Не удалось скачать «{title}»: {error}': 'Could not download “{title}”: {error}',
+  'Не удалось удалить загрузку: {error}': 'Could not delete the download: {error}',
+  'Не удалось воспроизвести трек. Проверь связь с сервером.': 'Could not play the song. Check the connection to the server.',
+  'Не удалось начать воспроизведение.': 'Could not start playback.',
+
+  // Сервер и адреса (ядро)
+  'Введи логин и пароль.': 'Enter a username and a password.',
+  'Укажи адрес сервера целиком, вместе с https://': 'Enter the whole server address, including https://',
+  'Укажи адрес сервера по HTTPS без логина и параметров.': 'Enter an HTTPS server address without a login or parameters.',
+  'Неверный логин или пароль.': 'Wrong username or password.',
+  'Сервер вернул неожиданный ответ.': 'The server returned an unexpected response.',
+  'Не удалось связаться с сервером. Проверь сеть и адрес Navidrome.': 'Could not reach the server. Check the network and the Navidrome address.',
+  'Ошибка Navidrome ({code}).': 'Navidrome error ({code}).',
+  'Сервер вернул HTTP {status}.': 'The server returned HTTP {status}.',
+}
+
+let language: Language = 'auto'
+
+export function setLanguage(value: Language) {
+  language = value
+}
+
+/** «Как в системе» — русский только для русской системы: перевод здесь один, английский. */
+function useEnglish() {
+  if (language === 'en') return true
+  if (language === 'ru') return false
+  // Язык системы есть не везде: в тестах ядра окна нет вовсе, и там остаётся исходный русский.
+  const system = typeof navigator === 'undefined' ? undefined : navigator.language
+  return system !== undefined && !system.toLowerCase().startsWith('ru')
+}
+
+export function t(text: string, values?: Record<string, string | number>): string {
+  const translated = useEnglish() ? english[text] ?? text : text
+  if (!values) return translated
+  return Object.entries(values).reduce((result, [key, value]) => result.split(`{${key}}`).join(String(value)), translated)
+}

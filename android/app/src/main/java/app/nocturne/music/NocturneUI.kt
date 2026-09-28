@@ -88,12 +88,12 @@ internal val LocalCoverFiles = staticCompositionLocalOf<Map<String, String>> { e
         Surface(color = Background, modifier = Modifier.fillMaxSize()) { ConnectionScreen(vm) {} }
     } else {
         BackHandler(vm.detail != null) { vm.closeDetail() }
-        val titles = if (vm.onDeviceOnly) listOf("На телефоне", "Медиатека", "Поиск") else listOf("Главная", "Медиатека", "Поиск")
+        val titles = if (vm.onDeviceOnly) listOf(tr("На телефоне"), tr("Медиатека"), tr("Поиск")) else listOf(tr("Главная"), tr("Медиатека"), tr("Поиск"))
         Scaffold(containerColor = Background, topBar = {
             LargeTopAppBar(
                 title = { Text(vm.detail?.title ?: titles[tab], fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                navigationIcon = { if (vm.detail != null) IconButton(onClick = vm::closeDetail) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Назад") } },
-                actions = { IconButton(onClick = { settingsOpen = true }) { Icon(Icons.Rounded.Settings, "Настройки") } },
+                navigationIcon = { if (vm.detail != null) IconButton(onClick = vm::closeDetail) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, tr("Назад")) } },
+                actions = { IconButton(onClick = { settingsOpen = true }) { Icon(Icons.Rounded.Settings, tr("Настройки")) } },
                 colors = TopAppBarDefaults.largeTopAppBarColors(containerColor = Background),
             )
         }, bottomBar = {
@@ -107,10 +107,10 @@ internal val LocalCoverFiles = staticCompositionLocalOf<Map<String, String>> { e
                         Cover(song.coverArt, vm.client, Modifier.size(46.dp))
                         Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
                             Text(song.title, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleSmall)
-                            Text(song.artist, color = Muted, maxLines = 1, style = MaterialTheme.typography.bodySmall)
+                            Text(tr(song.artist), color = Muted, maxLines = 1, style = MaterialTheme.typography.bodySmall)
                         }
-                        PlayerButton(if (vm.playback.playing || vm.playback.buffering) Icons.Rounded.Pause else Icons.Rounded.PlayArrow, "Воспроизведение / пауза", vm::toggle)
-                        PlayerButton(Icons.Rounded.SkipNext, "Следующий трек", vm::next)
+                        PlayerButton(if (vm.playback.playing || vm.playback.buffering) Icons.Rounded.Pause else Icons.Rounded.PlayArrow, tr("Воспроизведение / пауза"), vm::toggle)
+                        PlayerButton(Icons.Rounded.SkipNext, tr("Следующий трек"), vm::next)
                     }
                 }
                 NavigationBar(containerColor = Background) {
@@ -148,7 +148,7 @@ internal val LocalCoverFiles = staticCompositionLocalOf<Map<String, String>> { e
     vm.error?.let { message ->
         AlertDialog(
             onDismissRequest = { vm.error = null }, title = { Text("Nocturne") }, text = { Text(message) },
-            confirmButton = { TextButton(onClick = { vm.error = null }) { Text("Понятно") } },
+            confirmButton = { TextButton(onClick = { vm.error = null }) { Text(tr("Понятно")) } },
         )
     }
     vm.notice?.let { message ->
@@ -170,23 +170,23 @@ internal val LocalCoverFiles = staticCompositionLocalOf<Map<String, String>> { e
         verticalArrangement = Arrangement.spacedBy(18.dp),
     ) {
         Icon(Icons.Rounded.GraphicEq, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 16.dp).size(64.dp))
-        Text("Твоя музыка.\nТвоё пространство.", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
-        Text("Подключи Navidrome и забери любимую музыку с собой.", color = Muted)
-        OutlinedTextField(server, { server = it }, label = { Text("Адрес сервера") }, placeholder = { Text("https://music.example.com") }, modifier = Modifier.fillMaxWidth(), singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri))
-        OutlinedTextField(username, { username = it }, label = { Text("Логин") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
-        OutlinedTextField(password, { password = it }, label = { Text("Пароль Navidrome") }, modifier = Modifier.fillMaxWidth(), singleLine = true, visualTransformation = PasswordVisualTransformation(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password))
+        Text(tr("Твоя музыка.\nТвоё пространство."), style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
+        Text(tr("Подключи Navidrome и забери любимую музыку с собой."), color = Muted)
+        OutlinedTextField(server, { server = it }, label = { Text(tr("Адрес сервера")) }, placeholder = { Text("https://music.example.com") }, modifier = Modifier.fillMaxWidth(), singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri))
+        OutlinedTextField(username, { username = it }, label = { Text(tr("Логин")) }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+        OutlinedTextField(password, { password = it }, label = { Text(tr("Пароль Navidrome")) }, modifier = Modifier.fillMaxWidth(), singleLine = true, visualTransformation = PasswordVisualTransformation(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password))
         Button(
             onClick = { vm.connect(server, username, password) { password = ""; done() } },
             enabled = !vm.connecting && server.isNotBlank() && username.isNotBlank() && password.isNotEmpty(),
             modifier = Modifier.fillMaxWidth().height(54.dp), shape = RoundedCornerShape(16.dp),
         ) {
-            if (vm.connecting) CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp) else Text("Подключиться", fontWeight = FontWeight.SemiBold)
+            if (vm.connecting) CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp) else Text(tr("Подключиться"), fontWeight = FontWeight.SemiBold)
         }
-        Text("Данные входа зашифрованы ключом из Android Keystore и исключены из резервной копии.", color = Muted, style = MaterialTheme.typography.bodySmall)
+        Text(tr("Данные входа зашифрованы ключом из Android Keystore и исключены из резервной копии."), color = Muted, style = MaterialTheme.typography.bodySmall)
         TextButton(onClick = { vm.useOnDevice(); done() }, enabled = !vm.connecting, modifier = Modifier.fillMaxWidth()) {
-            Text("Слушать музыку с телефона — без сервера")
+            Text(tr("Слушать музыку с телефона — без сервера"))
         }
-        if (vm.client == null) TextButton(onClick = { vm.useDemo(); done() }, enabled = !vm.connecting, modifier = Modifier.fillMaxWidth()) { Text("Посмотреть демоверсию") }
+        if (vm.client == null) TextButton(onClick = { vm.useDemo(); done() }, enabled = !vm.connecting, modifier = Modifier.fillMaxWidth()) { Text(tr("Посмотреть демоверсию")) }
         Text("NOCTURNE", letterSpacing = 5.sp, color = Muted, style = MaterialTheme.typography.labelSmall, modifier = Modifier.align(Alignment.CenterHorizontally).padding(16.dp))
     }
 }
@@ -199,10 +199,10 @@ internal val LocalCoverFiles = staticCompositionLocalOf<Map<String, String>> { e
     ) {
         Icon(Icons.Rounded.CloudOff, null, tint = Color(0xFFFFB86B))
         Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
-            Text("Нет связи с сервером", style = MaterialTheme.typography.titleSmall)
-            Text("Играет то, что на телефоне и в загрузках.", color = Muted, style = MaterialTheme.typography.bodySmall)
+            Text(tr("Нет связи с сервером"), style = MaterialTheme.typography.titleSmall)
+            Text(tr("Играет то, что на телефоне и в загрузках."), color = Muted, style = MaterialTheme.typography.bodySmall)
         }
-        TextButton(onClick = vm::retry) { Text("Повторить") }
+        TextButton(onClick = vm::retry) { Text(tr("Повторить")) }
     }
 }
 
@@ -213,11 +213,11 @@ internal val LocalCoverFiles = staticCompositionLocalOf<Map<String, String>> { e
             item { OfflineBanner(vm) }
             item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(if (vm.offline) "Доступно без сети" else "Моя музыка", Modifier.weight(1f), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                    if (onDisk.isNotEmpty()) IconButton(onClick = { vm.play(onDisk, 0, shuffle = true) }) { Icon(Icons.Rounded.Shuffle, "Перемешать всё") }
+                    Text(if (vm.offline) tr("Доступно без сети") else tr("Моя музыка"), Modifier.weight(1f), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                    if (onDisk.isNotEmpty()) IconButton(onClick = { vm.play(onDisk, 0, shuffle = true) }) { Icon(Icons.Rounded.Shuffle, tr("Перемешать всё")) }
                 }
             }
-            if (onDisk.isEmpty()) item { EmptyState("На телефоне пока нет музыки", "Открой «Медиатека → На телефоне» и добавь файлы или папку.") }
+            if (onDisk.isEmpty()) item { EmptyState(tr("На телефоне пока нет музыки"), tr("Открой «Медиатека → На телефоне» и добавь файлы или папку.")) }
             itemsIndexed(onDisk) { index, song -> SongRow(song, vm) { vm.play(onDisk, index) } }
         }
         return
@@ -225,15 +225,15 @@ internal val LocalCoverFiles = staticCompositionLocalOf<Map<String, String>> { e
     LazyVerticalGrid(GridCells.Fixed(2), contentPadding = PaddingValues(24.dp), horizontalArrangement = Arrangement.spacedBy(16.dp), verticalArrangement = Arrangement.spacedBy(22.dp)) {
         if (vm.demo) item(span = { GridItemSpan(2) }) {
             Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(Surface).clickable(onClick = settings).padding(18.dp)) {
-                Text("Твоя музыка будет здесь", fontWeight = FontWeight.SemiBold)
-                Text("Демоверсия · Подключить Navidrome", color = Muted, style = MaterialTheme.typography.bodySmall)
+                Text(tr("Твоя музыка будет здесь"), fontWeight = FontWeight.SemiBold)
+                Text(tr("Демоверсия · Подключить Navidrome"), color = Muted, style = MaterialTheme.typography.bodySmall)
             }
         }
         if (vm.starred.isNotEmpty()) {
             item(span = { GridItemSpan(2) }) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Любимые треки", Modifier.weight(1f), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                    IconButton(onClick = { vm.play(vm.starred, 0) }) { Icon(Icons.Rounded.PlayArrow, "Слушать избранное") }
+                    Text(tr("Любимые треки"), Modifier.weight(1f), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                    IconButton(onClick = { vm.play(vm.starred, 0) }) { Icon(Icons.Rounded.PlayArrow, tr("Слушать избранное")) }
                 }
             }
             items(vm.starred.take(4), span = { GridItemSpan(2) }, key = { "starred-${it.id}" }) { song ->
@@ -242,14 +242,14 @@ internal val LocalCoverFiles = staticCompositionLocalOf<Map<String, String>> { e
         }
         item(span = { GridItemSpan(2) }) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Недавно добавлено", Modifier.weight(1f), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                IconButton(onClick = { vm.refresh() }, enabled = !vm.loading && !vm.demo) { Icon(Icons.Rounded.Refresh, "Обновить") }
+                Text(tr("Недавно добавлено"), Modifier.weight(1f), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                IconButton(onClick = { vm.refresh() }, enabled = !vm.loading && !vm.demo) { Icon(Icons.Rounded.Refresh, tr("Обновить")) }
             }
         }
         items(vm.albums, key = { it.id }) { AlbumCard(it, vm) }
         if (vm.loading) item(span = { GridItemSpan(2) }) { Loading() }
-        if (!vm.loading && vm.albums.isEmpty()) item(span = { GridItemSpan(2) }) { EmptyState("Здесь пока тихо", "Добавь музыку в Navidrome и обнови медиатеку.") }
-        if (vm.hasMore) item(span = { GridItemSpan(2) }) { TextButton(onClick = { vm.refresh(more = true) }, enabled = !vm.loading) { Text("Загрузить ещё") } }
+        if (!vm.loading && vm.albums.isEmpty()) item(span = { GridItemSpan(2) }) { EmptyState(tr("Здесь пока тихо"), tr("Добавь музыку в Navidrome и обнови медиатеку.")) }
+        if (vm.hasMore) item(span = { GridItemSpan(2) }) { TextButton(onClick = { vm.refresh(more = true) }, enabled = !vm.loading) { Text(tr("Загрузить ещё")) } }
     }
 }
 
@@ -257,7 +257,7 @@ internal val LocalCoverFiles = staticCompositionLocalOf<Map<String, String>> { e
     Column(Modifier.clickable { vm.openAlbum(album) }, verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Cover(album.coverArt, vm.client, Modifier.fillMaxWidth().aspectRatio(1f))
         Text(album.name, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleSmall)
-        Text(album.artist, maxLines = 1, overflow = TextOverflow.Ellipsis, color = Muted, style = MaterialTheme.typography.bodySmall)
+        Text(tr(album.artist), maxLines = 1, overflow = TextOverflow.Ellipsis, color = Muted, style = MaterialTheme.typography.bodySmall)
     }
 }
 
@@ -266,9 +266,9 @@ internal val LocalCoverFiles = staticCompositionLocalOf<Map<String, String>> { e
     // Своё и скачанное — первыми: за ними лезут чаще всего, особенно когда сети нет.
     val categories = remember(vm.onDeviceOnly, vm.offline) {
         when {
-            vm.onDeviceOnly -> listOf("На телефоне")
-            vm.offline -> listOf("На телефоне", "Загрузки", "Плейлисты")
-            else -> listOf("На телефоне", "Загрузки", "Альбомы", "Артисты", "Плейлисты", "Избранное")
+            vm.onDeviceOnly -> listOf(tr("На телефоне"))
+            vm.offline -> listOf(tr("На телефоне"), tr("Загрузки"), tr("Плейлисты"))
+            else -> listOf(tr("На телефоне"), tr("Загрузки"), tr("Альбомы"), tr("Артисты"), tr("Плейлисты"), tr("Избранное"))
         }
     }
     var category by rememberSaveable { mutableIntStateOf(0) }
@@ -279,8 +279,8 @@ internal val LocalCoverFiles = staticCompositionLocalOf<Map<String, String>> { e
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
                 categories.forEachIndexed { index, title ->
                     val badge = when (title) {
-                        "На телефоне" -> vm.local.size
-                        "Загрузки" -> vm.downloaded.size
+                        tr("На телефоне") -> vm.local.size
+                        tr("Загрузки") -> vm.downloaded.size
                         else -> 0
                     }
                     FilterChip(
@@ -293,23 +293,23 @@ internal val LocalCoverFiles = staticCompositionLocalOf<Map<String, String>> { e
         }
         item { OfflineBanner(vm) }
         when (current) {
-            "На телефоне" -> localSection(vm)
-            "Загрузки" -> downloadsSection(vm)
-            "Альбомы" -> {
+            tr("На телефоне") -> localSection(vm)
+            tr("Загрузки") -> downloadsSection(vm)
+            tr("Альбомы") -> {
                 items(vm.albums, key = { it.id }) { AlbumRow(it, vm) }
-                if (vm.hasMore) item { TextButton(onClick = { vm.refresh(true) }, enabled = !vm.loading) { Text("Загрузить ещё") } }
+                if (vm.hasMore) item { TextButton(onClick = { vm.refresh(true) }, enabled = !vm.loading) { Text(tr("Загрузить ещё")) } }
             }
-            "Артисты" -> items(vm.artists, key = { it.id }) { artist ->
-                MusicRow(artist.name, "Альбомов: ${artist.albumCount}", artist.coverArt, vm.client) { vm.openArtist(artist) }
+            tr("Артисты") -> items(vm.artists, key = { it.id }) { artist ->
+                MusicRow(artist.name, tr("Альбомов: {n}", "n" to artist.albumCount), artist.coverArt, vm.client) { vm.openArtist(artist) }
             }
-            "Плейлисты" -> {
-                if (vm.playlists.isEmpty()) item { EmptyState("Плейлистов пока нет", "Плейлисты из Navidrome появятся здесь.") }
+            tr("Плейлисты") -> {
+                if (vm.playlists.isEmpty()) item { EmptyState(tr("Плейлистов пока нет"), tr("Плейлисты из Navidrome появятся здесь.")) }
                 items(vm.playlists, key = { it.id }) { playlist ->
-                    MusicRow(playlist.name, "Треков: ${playlist.songCount}", playlist.coverArt, vm.client) { vm.openPlaylist(playlist) }
+                    MusicRow(playlist.name, tr("Треков: {n}", "n" to playlist.songCount), playlist.coverArt, vm.client) { vm.openPlaylist(playlist) }
                 }
             }
             else -> {
-                if (vm.starred.isEmpty()) item { EmptyState("Избранного пока нет", "Отмечай треки сердцем — они соберутся здесь.") }
+                if (vm.starred.isEmpty()) item { EmptyState(tr("Избранного пока нет"), tr("Отмечай треки сердцем — они соберутся здесь.")) }
                 itemsIndexed(vm.starred) { index, song -> SongRow(song, vm) { vm.play(vm.starred, index) } }
             }
         }
@@ -319,9 +319,9 @@ internal val LocalCoverFiles = staticCompositionLocalOf<Map<String, String>> { e
 private fun androidx.compose.foundation.lazy.LazyListScope.localSection(vm: MusicViewModel) {
     item { LocalControls(vm) }
     if (vm.local.isEmpty()) {
-        item { EmptyState("На телефоне пока нет музыки", "Добавь файлы или папку кнопками выше. Поддерживаются MP3, M4A, AAC, FLAC, WAV, OGG.") }
+        item { EmptyState(tr("На телефоне пока нет музыки"), tr("Добавь файлы или папку кнопками выше. Поддерживаются MP3, M4A, AAC, FLAC, WAV, OGG.")) }
     } else {
-        item { Text("Треков: ${vm.local.size}", color = Muted, style = MaterialTheme.typography.bodySmall) }
+        item { Text(tr("Треков: {n}", "n" to vm.local.size), color = Muted, style = MaterialTheme.typography.bodySmall) }
         itemsIndexed(vm.local) { index, song -> SongRow(song, vm) { vm.play(vm.local, index) } }
     }
 }
@@ -329,18 +329,18 @@ private fun androidx.compose.foundation.lazy.LazyListScope.localSection(vm: Musi
 private fun androidx.compose.foundation.lazy.LazyListScope.downloadsSection(vm: MusicViewModel) {
     item {
         Text(
-            "Треки с сервера, сохранённые для прослушивания без сети." +
-                if (vm.downloading.isNotEmpty()) " Сейчас скачивается: ${vm.downloading.size}." else "",
+            tr("Треки с сервера, сохранённые для прослушивания без сети.") +
+                if (vm.downloading.isNotEmpty()) tr(" Сейчас скачивается: {n}.", "n" to vm.downloading.size) else "",
             color = Muted, style = MaterialTheme.typography.bodySmall,
         )
     }
     if (vm.downloaded.isEmpty()) {
-        item { EmptyState("Загрузок пока нет", "Открой альбом и нажми «Скачать», чтобы слушать без сети.") }
+        item { EmptyState(tr("Загрузок пока нет"), tr("Открой альбом и нажми «Скачать», чтобы слушать без сети.")) }
     } else {
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = { vm.play(vm.downloaded, 0) }) { Icon(Icons.Rounded.PlayArrow, null); Spacer(Modifier.width(6.dp)); Text("Слушать") }
-                OutlinedButton(onClick = { vm.play(vm.downloaded, 0, shuffle = true) }) { Text("Перемешать") }
+                Button(onClick = { vm.play(vm.downloaded, 0) }) { Icon(Icons.Rounded.PlayArrow, null); Spacer(Modifier.width(6.dp)); Text(tr("Слушать")) }
+                OutlinedButton(onClick = { vm.play(vm.downloaded, 0, shuffle = true) }) { Text(tr("Перемешать")) }
             }
         }
         itemsIndexed(vm.downloaded) { index, song -> SongRow(song, vm) { vm.play(vm.downloaded, index) } }
@@ -353,18 +353,18 @@ private fun androidx.compose.foundation.lazy.LazyListScope.downloadsSection(vm: 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(onClick = { files.launch(arrayOf("audio/*")) }, enabled = !vm.importing) {
-                Icon(Icons.Rounded.LibraryAdd, null); Spacer(Modifier.width(6.dp)); Text("Файлы")
+                Icon(Icons.Rounded.LibraryAdd, null); Spacer(Modifier.width(6.dp)); Text(tr("Файлы"))
             }
-            OutlinedButton(onClick = { folder.launch(null) }, enabled = !vm.importing) { Text("Папка") }
-            OutlinedButton(onClick = vm::rescan, enabled = !vm.importing) { Text("Обновить") }
+            OutlinedButton(onClick = { folder.launch(null) }, enabled = !vm.importing) { Text(tr("Папка")) }
+            OutlinedButton(onClick = vm::rescan, enabled = !vm.importing) { Text(tr("Обновить")) }
         }
-        if (vm.importing) Text("Добавляю музыку…", color = Muted, style = MaterialTheme.typography.bodySmall)
-        Text("Папка на телефоне: ${vm.musicFolder}", color = Muted, style = MaterialTheme.typography.bodySmall)
+        if (vm.importing) Text(tr("Добавляю музыку…"), color = Muted, style = MaterialTheme.typography.bodySmall)
+        Text(tr("Папка на телефоне: {folder}", "folder" to vm.musicFolder), color = Muted, style = MaterialTheme.typography.bodySmall)
     }
 }
 
 @Composable private fun AlbumRow(album: Album, vm: MusicViewModel) =
-    MusicRow(album.name, "${album.artist} · ${album.year ?: ""}", album.coverArt, vm.client) { vm.openAlbum(album) }
+    MusicRow(album.name, "${tr(album.artist)} · ${album.year ?: ""}", album.coverArt, vm.client) { vm.openAlbum(album) }
 
 @Composable private fun MusicRow(title: String, subtitle: String, cover: String?, client: NavidromeClient?, action: () -> Unit) {
     Row(Modifier.fillMaxWidth().clickable(onClick = action).padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -385,17 +385,17 @@ private fun androidx.compose.foundation.lazy.LazyListScope.downloadsSection(vm: 
                 Text(detail.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                 if (detail.songs.isNotEmpty()) {
                     Button(onClick = { vm.play(detail.songs) }, modifier = Modifier.fillMaxWidth().height(52.dp)) {
-                        Icon(Icons.Rounded.PlayArrow, null); Spacer(Modifier.width(8.dp)); Text("Слушать")
+                        Icon(Icons.Rounded.PlayArrow, null); Spacer(Modifier.width(8.dp)); Text(tr("Слушать"))
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedButton(onClick = { vm.play(detail.songs, 0, shuffle = true) }) { Text("Перемешать") }
+                        OutlinedButton(onClick = { vm.play(detail.songs, 0, shuffle = true) }) { Text(tr("Перемешать")) }
                         val missing = detail.songs.filterNot(vm::isDownloaded)
                         if (vm.client != null && !vm.offline) OutlinedButton(
                             onClick = { vm.download(detail.songs) },
                             enabled = missing.isNotEmpty() && vm.downloading.isEmpty(),
                         ) {
                             Icon(Icons.Rounded.Download, null); Spacer(Modifier.width(6.dp))
-                            Text(if (missing.isEmpty()) "Скачано" else "Скачать")
+                            Text(if (missing.isEmpty()) tr("Скачано") else tr("Скачать"))
                         }
                     }
                 }
@@ -404,7 +404,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.downloadsSection(vm: 
         if (detail.loading) item { Loading() }
         items(detail.albums, key = { it.id }) { AlbumRow(it, vm) }
         itemsIndexed(detail.songs) { index, song -> SongRow(song, vm) { vm.play(detail.songs, index) } }
-        if (!detail.loading && detail.albums.isEmpty() && detail.songs.isEmpty()) item { EmptyState("Пока пусто", "Здесь появится твоя музыка.") }
+        if (!detail.loading && detail.albums.isEmpty() && detail.songs.isEmpty()) item { EmptyState(tr("Пока пусто"), tr("Здесь появится твоя музыка.")) }
     }
 }
 
@@ -413,31 +413,31 @@ private fun androidx.compose.foundation.lazy.LazyListScope.downloadsSection(vm: 
     val playable = vm.isPlayable(song)
     val accent = MaterialTheme.colorScheme.primary
     Row(
-        Modifier.fillMaxWidth().clickable { if (playable) action() else vm.notice = "Трек не скачан — недоступен без сети" }
+        Modifier.fillMaxWidth().clickable { if (playable) action() else vm.notice = tr("Трек не скачан — недоступен без сети") }
             .alpha(if (playable) 1f else 0.4f).padding(vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Cover(song.coverArt, vm.client, Modifier.size(48.dp))
         Column(Modifier.weight(1f).padding(horizontal = 12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(song.title, color = if (vm.playback.current?.id == song.id) accent else Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleSmall)
-            Text(song.artist, color = Muted, maxLines = 1, style = MaterialTheme.typography.bodySmall)
+            Text(tr(song.artist), color = Muted, maxLines = 1, style = MaterialTheme.typography.bodySmall)
         }
-        if (vm.isDownloaded(song)) Icon(Icons.Rounded.DownloadDone, "Скачано", tint = Muted, modifier = Modifier.size(18.dp))
+        if (vm.isDownloaded(song)) Icon(Icons.Rounded.DownloadDone, tr("Скачано"), tint = Muted, modifier = Modifier.size(18.dp))
         Text(timeLabel(((song.duration ?: 0.0) * 1000).toLong()), color = Muted, style = MaterialTheme.typography.bodySmall)
         Box {
-            IconButton(onClick = { menu = true }) { Icon(Icons.Rounded.MoreVert, "Действия с треком", tint = Muted) }
+            IconButton(onClick = { menu = true }) { Icon(Icons.Rounded.MoreVert, tr("Действия с треком"), tint = Muted) }
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                DropdownMenuItem(text = { Text("Сыграть следующим") }, onClick = { menu = false; vm.playNext(listOf(song)) })
-                DropdownMenuItem(text = { Text("В конец очереди") }, onClick = { menu = false; vm.appendToQueue(listOf(song)) })
+                DropdownMenuItem(text = { Text(tr("Сыграть следующим")) }, onClick = { menu = false; vm.playNext(listOf(song)) })
+                DropdownMenuItem(text = { Text(tr("В конец очереди")) }, onClick = { menu = false; vm.appendToQueue(listOf(song)) })
                 if (!isLocalId(song.id) && vm.client != null && !vm.offline) {
                     DropdownMenuItem(
-                        text = { Text(if (vm.isStarred(song)) "Убрать из избранного" else "В избранное") },
+                        text = { Text(if (vm.isStarred(song)) tr("Убрать из избранного") else tr("В избранное")) },
                         onClick = { menu = false; vm.toggleStar(song) },
                     )
-                    if (!vm.isDownloaded(song)) DropdownMenuItem(text = { Text("Скачать") }, onClick = { menu = false; vm.download(listOf(song)) })
+                    if (!vm.isDownloaded(song)) DropdownMenuItem(text = { Text(tr("Скачать")) }, onClick = { menu = false; vm.download(listOf(song)) })
                 }
-                if (vm.isDownloaded(song)) DropdownMenuItem(text = { Text("Удалить загрузку") }, onClick = { menu = false; vm.removeDownload(song) })
-                if (isLocalId(song.id)) DropdownMenuItem(text = { Text("Удалить с телефона") }, onClick = { menu = false; vm.removeLocal(song) })
+                if (vm.isDownloaded(song)) DropdownMenuItem(text = { Text(tr("Удалить загрузку")) }, onClick = { menu = false; vm.removeDownload(song) })
+                if (isLocalId(song.id)) DropdownMenuItem(text = { Text(tr("Удалить с телефона")) }, onClick = { menu = false; vm.removeLocal(song) })
             }
         }
     }
@@ -449,21 +449,21 @@ private fun androidx.compose.foundation.lazy.LazyListScope.downloadsSection(vm: 
     LazyColumn(contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         item {
             OutlinedTextField(
-                query, { query = it }, placeholder = { Text("Поиск в медиатеке") },
+                query, { query = it }, placeholder = { Text(tr("Поиск в медиатеке")) },
                 leadingIcon = { Icon(Icons.Rounded.Search, null) }, modifier = Modifier.fillMaxWidth(),
                 singleLine = true, shape = RoundedCornerShape(18.dp),
             )
         }
-        if (query.isBlank()) item { EmptyState("Найди своё звучание", "Альбомы, исполнители и любимые треки.") }
+        if (query.isBlank()) item { EmptyState(tr("Найди своё звучание"), tr("Альбомы, исполнители и любимые треки.")) }
         else if (vm.searchLoading) item { Loading() }
         else {
-            if (vm.search.artists.isNotEmpty()) item { SectionTitle("Исполнители") }
-            items(vm.search.artists) { artist -> MusicRow(artist.name, "Исполнитель", artist.coverArt, vm.client) { vm.openArtist(artist) } }
-            if (vm.search.albums.isNotEmpty()) item { SectionTitle("Альбомы") }
+            if (vm.search.artists.isNotEmpty()) item { SectionTitle(tr("Исполнители")) }
+            items(vm.search.artists) { artist -> MusicRow(artist.name, tr("Исполнитель"), artist.coverArt, vm.client) { vm.openArtist(artist) } }
+            if (vm.search.albums.isNotEmpty()) item { SectionTitle(tr("Альбомы")) }
             items(vm.search.albums) { AlbumRow(it, vm) }
-            if (vm.search.songs.isNotEmpty()) item { SectionTitle("Треки") }
+            if (vm.search.songs.isNotEmpty()) item { SectionTitle(tr("Треки")) }
             itemsIndexed(vm.search.songs) { index, song -> SongRow(song, vm) { vm.play(vm.search.songs, index) } }
-            if (vm.search == SearchResult()) item { EmptyState("Ничего не найдено", "Попробуй другое название или исполнителя.") }
+            if (vm.search == SearchResult()) item { EmptyState(tr("Ничего не найдено"), tr("Попробуй другое название или исполнителя.")) }
         }
     }
 }
@@ -485,18 +485,18 @@ private fun androidx.compose.foundation.lazy.LazyListScope.downloadsSection(vm: 
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            PlayerButton(Icons.Rounded.KeyboardArrowDown, "Свернуть", close)
-            Text("СЕЙЧАС ИГРАЕТ", Modifier.weight(1f), style = MaterialTheme.typography.labelSmall, letterSpacing = 2.sp)
+            PlayerButton(Icons.Rounded.KeyboardArrowDown, tr("Свернуть"), close)
+            Text(tr("СЕЙЧАС ИГРАЕТ"), Modifier.weight(1f), style = MaterialTheme.typography.labelSmall, letterSpacing = 2.sp)
             if (!isLocalId(song.id) && vm.client != null) PlayerButton(
                 if (vm.isStarred(song)) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
-                "В избранное", { vm.toggleStar(song) }, if (vm.isStarred(song)) accent else Color.White,
+                tr("В избранное"), { vm.toggleStar(song) }, if (vm.isStarred(song)) accent else Color.White,
             )
-            PlayerButton(Icons.AutoMirrored.Rounded.QueueMusic, "Очередь", { showQueue = true })
+            PlayerButton(Icons.AutoMirrored.Rounded.QueueMusic, tr("Очередь"), { showQueue = true })
         }
         Cover(song.coverArt, vm.client, Modifier.fillMaxWidth().aspectRatio(1f))
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(song.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-            Text(song.artist, color = Muted, style = MaterialTheme.typography.titleMedium)
+            Text(tr(song.artist), color = Muted, style = MaterialTheme.typography.titleMedium)
         }
         Column {
             Slider(
@@ -512,44 +512,44 @@ private fun androidx.compose.foundation.lazy.LazyListScope.downloadsSection(vm: 
             }
         }
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-            PlayerButton(Icons.Rounded.Shuffle, "Перемешивать", vm::toggleShuffle, if (state.shuffle) accent else Color.White)
-            PlayerButton(Icons.Rounded.SkipPrevious, "Предыдущий трек", vm::previous)
+            PlayerButton(Icons.Rounded.Shuffle, tr("Перемешивать"), vm::toggleShuffle, if (state.shuffle) accent else Color.White)
+            PlayerButton(Icons.Rounded.SkipPrevious, tr("Предыдущий трек"), vm::previous)
             FilledIconButton(
                 onClick = vm::toggle, modifier = Modifier.size(80.dp),
                 colors = IconButtonDefaults.filledIconButtonColors(containerColor = Color.White.copy(alpha = .12f), contentColor = Color.White),
             ) {
                 if (state.buffering) CircularProgressIndicator(Modifier.size(30.dp))
-                else Icon(if (state.playing) Icons.Rounded.Pause else Icons.Rounded.PlayArrow, "Воспроизведение / пауза", Modifier.size(38.dp))
+                else Icon(if (state.playing) Icons.Rounded.Pause else Icons.Rounded.PlayArrow, tr("Воспроизведение / пауза"), Modifier.size(38.dp))
             }
-            PlayerButton(Icons.Rounded.SkipNext, "Следующий трек", vm::next)
+            PlayerButton(Icons.Rounded.SkipNext, tr("Следующий трек"), vm::next)
             PlayerButton(
                 if (state.repeat == PlaybackQueue.Repeat.one) Icons.Rounded.RepeatOne else Icons.Rounded.Repeat,
-                "Режим повтора", vm::cycleRepeat, if (state.repeat == PlaybackQueue.Repeat.off) Color.White else accent,
+                tr("Режим повтора"), vm::cycleRepeat, if (state.repeat == PlaybackQueue.Repeat.off) Color.White else accent,
             )
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-            TextButton(onClick = { showLyrics = true; vm.loadLyrics(song) }) { Text("Текст") }
+            TextButton(onClick = { showLyrics = true; vm.loadLyrics(song) }) { Text(tr("Текст")) }
             Box {
-                TextButton(onClick = { sleepMenu = true }) { Text(if (timerOn) "Таймер включён" else "Таймер сна") }
+                TextButton(onClick = { sleepMenu = true }) { Text(if (timerOn) tr("Таймер включён") else tr("Таймер сна")) }
                 DropdownMenu(expanded = sleepMenu, onDismissRequest = { sleepMenu = false }) {
-                    if (timerOn) DropdownMenuItem(text = { Text("Выключить таймер") }, onClick = { sleepMenu = false; vm.setSleepTimer(null) })
-                    DropdownMenuItem(text = { Text("В конце трека") }, onClick = { sleepMenu = false; vm.setSleepTimer(0) })
+                    if (timerOn) DropdownMenuItem(text = { Text(tr("Выключить таймер")) }, onClick = { sleepMenu = false; vm.setSleepTimer(null) })
+                    DropdownMenuItem(text = { Text(tr("В конце трека")) }, onClick = { sleepMenu = false; vm.setSleepTimer(0) })
                     listOf(15, 30, 45, 60, 90).forEach { minutes ->
-                        DropdownMenuItem(text = { Text("$minutes мин") }, onClick = { sleepMenu = false; vm.setSleepTimer(minutes) })
+                        DropdownMenuItem(text = { Text(tr("{n} мин", "n" to minutes)) }, onClick = { sleepMenu = false; vm.setSleepTimer(minutes) })
                     }
                 }
             }
-            TextButton(onClick = { showQueue = true }) { Text("Очередь · ${state.queue.size}") }
+            TextButton(onClick = { showQueue = true }) { Text(tr("Очередь · {n}", "n" to state.queue.size)) }
         }
     }
 
     if (showQueue) ModalBottomSheet(onDismissRequest = { showQueue = false }, containerColor = Background) {
         LazyColumn(contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            item { SectionTitle("Очередь") }
+            item { SectionTitle(tr("Очередь")) }
             itemsIndexed(state.queue) { index, entry ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.weight(1f)) { SongRow(entry, vm) { vm.selectQueue(index) } }
-                    IconButton(onClick = { vm.removeFromQueue(index) }) { Icon(Icons.Rounded.Close, "Убрать из очереди", tint = Muted) }
+                    IconButton(onClick = { vm.removeFromQueue(index) }) { Icon(Icons.Rounded.Close, tr("Убрать из очереди"), tint = Muted) }
                 }
             }
         }
@@ -567,22 +567,22 @@ private fun androidx.compose.foundation.lazy.LazyListScope.downloadsSection(vm: 
         verticalArrangement = Arrangement.spacedBy(18.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Настройки", Modifier.weight(1f), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-            TextButton(onClick = close) { Text("Готово") }
+            Text(tr("Настройки"), Modifier.weight(1f), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            TextButton(onClick = close) { Text(tr("Готово")) }
         }
 
-        SectionTitle("Качество потока")
+        SectionTitle(tr("Качество потока"))
         QualityPicker("Wi-Fi", settings.wifiQuality) { settings.chooseWifiQuality(it) }
-        QualityPicker("Мобильная сеть", settings.cellularQuality) { settings.chooseCellularQuality(it) }
-        Text("Новое качество применяется со следующего трека.", color = Muted, style = MaterialTheme.typography.bodySmall)
+        QualityPicker(tr("Мобильная сеть"), settings.cellularQuality) { settings.chooseCellularQuality(it) }
+        Text(tr("Новое качество применяется со следующего трека."), color = Muted, style = MaterialTheme.typography.bodySmall)
 
-        SectionTitle("Громкость")
+        SectionTitle(tr("Громкость"))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             ReplayGainMode.entries.forEach { mode ->
                 FilterChip(
                     selected = settings.replayGain == mode,
                     onClick = { settings.chooseReplayGain(mode) },
-                    label = { Text(when (mode) { ReplayGainMode.off -> "Выключено"; ReplayGainMode.track -> "По треку"; ReplayGainMode.album -> "По альбому" }) },
+                    label = { Text(when (mode) { ReplayGainMode.off -> tr("Выключено"); ReplayGainMode.track -> tr("По треку"); ReplayGainMode.album -> tr("По альбому") }) },
                 )
             }
         }
@@ -592,25 +592,25 @@ private fun androidx.compose.foundation.lazy.LazyListScope.downloadsSection(vm: 
                 FilterChip(
                     selected = settings.fadeSeconds == seconds,
                     onClick = { settings.chooseFadeSeconds(seconds) },
-                    label = { Text(if (seconds == 0f) "Без затухания" else "${seconds.toInt()} с") },
+                    label = { Text(if (seconds == 0f) tr("Без затухания") else tr("{n} с", "n" to seconds.toInt())) },
                 )
             }
         }
-        Text("Затухание между треками.", color = Muted, style = MaterialTheme.typography.bodySmall)
+        Text(tr("Затухание между треками."), color = Muted, style = MaterialTheme.typography.bodySmall)
 
-        SectionTitle("Эквалайзер")
+        SectionTitle(tr("Эквалайзер"))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Включить", Modifier.weight(1f))
+            Text(tr("Включить"), Modifier.weight(1f))
             Switch(checked = settings.equalizerEnabled, onCheckedChange = { settings.enableEqualizer(it) })
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
             Settings.EQ_PRESETS.forEach { (title, gains) ->
-                AssistChip(onClick = { settings.enableEqualizer(true); settings.saveEqualizerGains(gains) }, label = { Text(title) })
+                AssistChip(onClick = { settings.enableEqualizer(true); settings.saveEqualizerGains(gains) }, label = { Text(tr(title)) })
             }
         }
         Settings.EQ_BANDS.forEachIndexed { index, band ->
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(if (band >= 1000) "${band / 1000}к" else "$band", Modifier.width(44.dp), color = Muted, style = MaterialTheme.typography.bodySmall)
+                Text(if (band >= 1000) tr("{n}к", "n" to band / 1000) else "$band", Modifier.width(44.dp), color = Muted, style = MaterialTheme.typography.bodySmall)
                 Slider(
                     value = settings.equalizerGains.getOrElse(index) { 0f },
                     onValueChange = { value ->
@@ -621,30 +621,30 @@ private fun androidx.compose.foundation.lazy.LazyListScope.downloadsSection(vm: 
             }
         }
 
-        SectionTitle("Загрузки")
+        SectionTitle(tr("Загрузки"))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Только по Wi-Fi", Modifier.weight(1f))
+            Text(tr("Только по Wi-Fi"), Modifier.weight(1f))
             Switch(checked = settings.downloadOverWifiOnly, onCheckedChange = { settings.limitDownloadsToWifi(it) })
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Скачивать избранное", Modifier.weight(1f))
+            Text(tr("Скачивать избранное"), Modifier.weight(1f))
             Switch(checked = settings.downloadFavorites, onCheckedChange = { settings.autoDownloadFavorites(it) })
         }
 
-        SectionTitle("Оформление")
+        SectionTitle(tr("Оформление"))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             AccentTheme.entries.forEach { theme ->
-                FilterChip(selected = settings.accent == theme, onClick = { settings.chooseAccent(theme) }, label = { Text(theme.title) })
+                FilterChip(selected = settings.accent == theme, onClick = { settings.chooseAccent(theme) }, label = { Text(tr(theme.title)) })
             }
         }
 
-        SectionTitle("Сервер")
+        SectionTitle(tr("Сервер"))
         when {
             vm.client != null -> {
                 Text(vm.client?.credentials?.account.orEmpty(), color = Muted, style = MaterialTheme.typography.bodySmall)
-                TextButton(onClick = { vm.disconnect(); close() }) { Text("Отключить сервер", color = MaterialTheme.colorScheme.error) }
+                TextButton(onClick = { vm.disconnect(); close() }) { Text(tr("Отключить сервер"), color = MaterialTheme.colorScheme.error) }
             }
-            else -> TextButton(onClick = { vm.showConnect(); close() }) { Text("Подключить Navidrome") }
+            else -> TextButton(onClick = { vm.showConnect(); close() }) { Text(tr("Подключить Navidrome")) }
         }
     }
 }
@@ -661,7 +661,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.downloadsSection(vm: 
                     label = {
                         Text(
                             when (quality) {
-                                StreamQuality.original -> "Оригинал"
+                                StreamQuality.original -> tr("Оригинал")
                                 StreamQuality.mp3High -> "MP3 320"
                                 StreamQuality.mp3Medium -> "MP3 192"
                                 StreamQuality.mp3Low -> "MP3 128"
@@ -754,10 +754,10 @@ private fun timeLabel(milliseconds: Long): String {
     LaunchedEffect(active) { if (active >= 0) listState.animateScrollToItem(active) }
 
     Column(Modifier.padding(horizontal = 24.dp).padding(bottom = 24.dp).heightIn(min = 200.dp, max = 460.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        SectionTitle("Текст песни")
+        SectionTitle(tr("Текст песни"))
         when {
             lyrics == null -> Loading()
-            lines.isEmpty() -> Text("Navidrome не нашёл текст для этого трека.", color = Muted)
+            lines.isEmpty() -> Text(tr("Navidrome не нашёл текст для этого трека."), color = Muted)
             else -> LazyColumn(state = listState, verticalArrangement = Arrangement.spacedBy(if (synced) 14.dp else 6.dp)) {
                 itemsIndexed(lines) { index, line ->
                     val start = line.start
