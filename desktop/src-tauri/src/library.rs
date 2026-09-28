@@ -45,6 +45,8 @@ pub struct Download {
     id: String,
     path: String,
     song: Value,
+    /// Обложка, скачанная вместе с треком: без неё офлайн-библиотека выглядит пустыми квадратами.
+    cover: Option<String>,
 }
 
 fn error(context: &str, error: impl std::fmt::Display) -> String {
@@ -252,7 +254,13 @@ fn extension_for(content_type: &str) -> &'static str {
 /// Скачивает трек с сервера во временный файл и переносит на место, только когда он дошёл целиком:
 /// оборванная загрузка не должна выглядеть как готовая.
 #[tauri::command]
-pub async fn download_track(app: AppHandle, url: String, id: String, song: Value) -> Result<Download, String> {
+pub async fn download_track(
+    app: AppHandle,
+    url: String,
+    id: String,
+    song: Value,
+    cover_url: Option<String>,
+) -> Result<Download, String> {
     let folder = downloads_folder(&app)?;
     let stem = file_stem_for(&id);
     let response = reqwest::get(&url).await.map_err(|e| error("загрузка", e))?;
@@ -279,7 +287,23 @@ pub async fn download_track(app: AppHandle, url: String, id: String, song: Value
     tokio::fs::rename(&partial, &target).await.map_err(|e| error("файл", e))?;
     let meta = serde_json::to_vec(&song).map_err(|e| error("метаданные", e))?;
     tokio::fs::write(folder.join(format!("{stem}.json")), meta).await.map_err(|e| error("метаданные", e))?;
-    Ok(Download { id, path: target.to_string_lossy().to_string(), song })
+    // Обложку кладём рядом: без сети серверный адрес не откроется, а файл — откроется.
+    let cover = match cover_url {
+        Some(address) => save_cover(&folder.join(format!("{stem}.cover")), &address).await,
+        None => None,
+    };
+    Ok(Download { id, path: target.to_string_lossy().to_string(), song, cover })
+}
+
+/// Обложка — украшение: не дошла, и ничего страшного, трек всё равно скачан.
+async fn save_cover(target: &Path, url: &str) -> Option<String> {
+    let response = reqwest::get(url).await.ok()?;
+    if !response.status().is_success() {
+        return None;
+    }
+    let bytes = response.bytes().await.ok()?;
+    tokio::fs::write(target, &bytes).await.ok()?;
+    Some(target.to_string_lossy().to_string())
 }
 
 #[tauri::command]
@@ -295,7 +319,8 @@ pub fn downloads(app: AppHandle) -> Result<Vec<Download>, String> {
     let mut result = Vec::new();
     let entries = fs::read_dir(&folder).map_err(|e| error("загрузки", e))?;
     let files: Vec<PathBuf> = entries.flatten().map(|entry| entry.path()).collect();
-    let audio: HashSet<&PathBuf> = files.iter().filter(|p| p.extension().is_some_and(|e| e != "json" && e != "part")).collect();
+    let audio: HashSet<&PathBuf> =
+        files.iter().filter(|p| p.extension().is_some_and(|e| e != "json" && e != "part" && e != "cover")).collect();
     for meta in files.iter().filter(|p| p.extension().is_some_and(|e| e == "json")) {
         let Ok(text) = fs::read_to_string(meta) else { continue };
         let Ok(song) = serde_json::from_str::<Value>(&text) else { continue };
@@ -303,7 +328,9 @@ pub fn downloads(app: AppHandle) -> Result<Vec<Download>, String> {
         let stem = meta.file_stem().map(|s| s.to_string_lossy().to_string()).unwrap_or_default();
         // Без аудиофайла метаданные бесполезны — такую загрузку считаем несостоявшейся.
         let Some(path) = audio.iter().find(|p| p.file_stem().is_some_and(|s| s.to_string_lossy() == stem)) else { continue };
-        result.push(Download { id, path: path.to_string_lossy().to_string(), song });
+        let cover = folder.join(format!("{stem}.cover"));
+        let cover = cover.exists().then(|| cover.to_string_lossy().to_string());
+        result.push(Download { id, path: path.to_string_lossy().to_string(), song, cover });
     }
     Ok(result)
 }

@@ -48,7 +48,11 @@ Subsonic отвечает `HTTP 200` даже на ошибку, поэтому 
 Действия: `star`, `unstar`, `setRating`, `scrobble`, `createPlaylist`, `updatePlaylist`,
 `deletePlaylist`, `createShare`.
 
-Медиа: `stream` (с параметрами качества), `download`, `getCoverArt`, `getLyricsBySongId`.
+Медиа: `stream` (с параметрами качества), `download`, `getCoverArt`, `getLyricsBySongId`, `getLyrics`.
+
+Текст песни берётся из `getLyricsBySongId`: из нескольких вариантов выбирается синхронный, иначе
+первый. Если структурированного текста нет вовсе, спрашиваем старый `getLyrics` по исполнителю и
+названию — на серверах с простыми текстами это единственный способ их увидеть.
 
 ## Скробблинг
 

@@ -1,5 +1,8 @@
+import { useEffect, useRef, useState } from 'react'
 import { store, useStore } from '../state/store'
 import { Cover } from './Cover'
+
+export type Panel = 'queue' | 'lyrics' | null
 
 function time(seconds: number) {
   if (!Number.isFinite(seconds) || seconds < 0) return '0:00'
@@ -8,7 +11,7 @@ function time(seconds: number) {
 }
 
 /** Нижняя панель: обложка, название, перемотка и управление. */
-export function Player({ queueOpen, onToggleQueue }: { queueOpen: boolean; onToggleQueue: () => void }) {
+export function Player({ panel, onPanel }: { panel: Panel; onPanel: (panel: Panel) => void }) {
   const { queue, playing, buffering, position, duration, settings, starredIds } = useStore()
   const song = queue?.current?.song
   if (!song) return null
@@ -79,9 +82,18 @@ export function Player({ queueOpen, onToggleQueue }: { queueOpen: boolean; onTog
         <span className="w-10 text-xs tabular-nums text-secondary">{time(total)}</span>
       </div>
 
+      <SleepTimerMenu />
       <button
-        onClick={onToggleQueue}
-        className={`px-2 text-lg ${queueOpen ? 'text-accent' : 'text-secondary hover:text-primary'}`}
+        onClick={() => onPanel(panel === 'lyrics' ? null : 'lyrics')}
+        className={`px-2 text-lg ${panel === 'lyrics' ? 'text-accent' : 'text-secondary hover:text-primary'}`}
+        aria-label="Текст песни"
+        title="Текст песни"
+      >
+        ❝
+      </button>
+      <button
+        onClick={() => onPanel(panel === 'queue' ? null : 'queue')}
+        className={`px-2 text-lg ${panel === 'queue' ? 'text-accent' : 'text-secondary hover:text-primary'}`}
         aria-label="Очередь"
         title="Очередь"
       >
@@ -99,4 +111,75 @@ export function Player({ queueOpen, onToggleQueue }: { queueOpen: boolean; onTog
       />
     </footer>
   )
+}
+
+/** Таймер сна: те же варианты, что на телефоне, плюс обратный отсчёт на кнопке. */
+function SleepTimerMenu() {
+  const { sleepAt, sleepAtTrackEnd } = useStore()
+  const [open, setOpen] = useState(false)
+  const box = useRef<HTMLDivElement>(null)
+  const left = useCountdown(sleepAt)
+  const active = sleepAt !== undefined || sleepAtTrackEnd
+
+  // Меню закрывается по клику мимо: отдельной кнопки «закрыть» здесь быть не должно.
+  useEffect(() => {
+    if (!open) return
+    const away = (event: MouseEvent) => {
+      if (!box.current?.contains(event.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', away)
+    return () => document.removeEventListener('mousedown', away)
+  }, [open])
+
+  const choose = (minutes: number | null) => {
+    store.setSleepTimer(minutes)
+    setOpen(false)
+  }
+
+  return (
+    <div ref={box} className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className={`px-2 text-sm ${active ? 'text-accent' : 'text-secondary hover:text-primary'}`}
+        aria-label="Таймер сна"
+        title="Таймер сна"
+      >
+        {left ?? (sleepAtTrackEnd ? '☾•' : '☾')}
+      </button>
+      {open && (
+        <div className="absolute bottom-full right-0 z-20 mb-2 w-44 overflow-hidden rounded-lg border border-surface-strong bg-surface shadow-xl">
+          {active && (
+            <button onClick={() => choose(null)} className="block w-full px-3 py-2 text-left text-sm text-red-300 hover:bg-surface-strong">
+              Выключить таймер
+            </button>
+          )}
+          <button onClick={() => choose(0)} className="block w-full px-3 py-2 text-left text-sm hover:bg-surface-strong">
+            В конце трека
+          </button>
+          {[15, 30, 45, 60, 90].map((minutes) => (
+            <button
+              key={minutes}
+              onClick={() => choose(minutes)}
+              className="block w-full px-3 py-2 text-left text-sm hover:bg-surface-strong"
+            >
+              {minutes} мин
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/** Сколько осталось до автоматической паузы; пересчитывается раз в секунду, только пока таймер идёт. */
+function useCountdown(deadline: number | undefined) {
+  const [, tick] = useState(0)
+  useEffect(() => {
+    if (deadline === undefined) return
+    const timer = setInterval(() => tick((value) => value + 1), 1000)
+    return () => clearInterval(timer)
+  }, [deadline])
+  if (deadline === undefined) return undefined
+  const left = Math.max(0, Math.round((deadline - Date.now()) / 1000))
+  return `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`
 }

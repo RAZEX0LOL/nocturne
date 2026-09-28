@@ -25,6 +25,9 @@ data class SearchResult(val albums: List<Album> = emptyList(), val songs: List<S
 /** Строка текста песни; start в миллисекундах, если текст синхронный. */
 data class LyricLine(val start: Int?, val value: String)
 
+/** Текст песни целиком: у синхронного подсвечивается строка и по ней можно перематывать. */
+data class Lyrics(val synced: Boolean, val lines: List<LyricLine>)
+
 class MusicException(message: String) : Exception(message)
 
 object DemoLibrary {

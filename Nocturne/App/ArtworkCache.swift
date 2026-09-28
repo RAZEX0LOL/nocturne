@@ -42,6 +42,9 @@ actor ArtworkCache {
                 try? FileManager.default.setAttributes([.modificationDate: Date()], ofItemAtPath: file.path)
                 return image
             }
+            // Обложка, сохранённая рядом с загрузкой: этот файл iOS не вычищает, и он работает без сети.
+            let kept = DownloadStore.coverFile(account: client.credentials.account, coverID: id)
+            if let data = try? Data(contentsOf: kept), let image = Self.decode(data, maxPixels: bucket) { return image }
             guard let url = try? client.url("getCoverArt", parameters: ["id": id, "size": String(bucket)]),
                   let (data, response) = try? await client.session.data(from: url),
                   (response as? HTTPURLResponse)?.statusCode == 200,
@@ -56,6 +59,16 @@ actor ArtworkCache {
             Self.memory.setObject(image, forKey: key as NSString, cost: Int(image.size.width * image.size.height * image.scale * image.scale * 4))
         }
         return image
+    }
+
+    /// Saves the cover next to the account's downloads, so it survives a purge of the caches directory.
+    func keepCover(id: String, account: String, client: NavidromeClient) async {
+        let file = DownloadStore.coverFile(account: account, coverID: id)
+        guard !FileManager.default.fileExists(atPath: file.path) else { return }
+        guard let url = try? client.url("getCoverArt", parameters: ["id": id, "size": "640"]),
+              let (data, response) = try? await client.session.data(from: url),
+              (response as? HTTPURLResponse)?.statusCode == 200 else { return }
+        try? data.write(to: file, options: .atomic)
     }
 
     /// Artwork extracted from an on-device track's tags.

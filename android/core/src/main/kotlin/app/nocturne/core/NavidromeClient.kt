@@ -145,10 +145,18 @@ class NavidromeClient(
         request("scrobble", mapOf("id" to id, "submission" to "true", "time" to "$startedAt"))
     }
 
-    suspend fun lyrics(id: String): List<LyricLine> =
-        request("getLyricsBySongId", mapOf("id" to id)).obj("lyricsList").objects("structuredLyrics")
-            .firstOrNull()?.objects("line")?.map { LyricLine(it["start"]?.jsonPrimitive?.intOrNull, it.text("value")) }
-            ?: emptyList()
+    /** Предпочитаем синхронный текст OpenSubsonic; если его нет — старый простой запрос, как на iPhone. */
+    suspend fun lyrics(song: Song): Lyrics {
+        val list = runCatching {
+            request("getLyricsBySongId", mapOf("id" to song.id)).obj("lyricsList").objects("structuredLyrics")
+        }.getOrDefault(emptyList())
+        val best = list.firstOrNull { it["synced"]?.jsonPrimitive?.booleanOrNull == true } ?: list.firstOrNull()
+        val lines = best?.objects("line")?.map { LyricLine(it["start"]?.jsonPrimitive?.intOrNull, it.text("value")) }.orEmpty()
+        if (lines.isNotEmpty()) return Lyrics(best?.get("synced")?.jsonPrimitive?.booleanOrNull == true, lines)
+        val plain = request("getLyrics", mapOf("artist" to song.artist, "title" to song.title)).obj("lyrics").text("value")
+        if (plain.isBlank()) return Lyrics(false, emptyList())
+        return Lyrics(false, plain.split("\n").map { LyricLine(null, it) })
+    }
 
     suspend fun createPlaylist(name: String, songIds: List<String>) {
         request("createPlaylist", mapOf("name" to name), songIds.map { "songId" to it })

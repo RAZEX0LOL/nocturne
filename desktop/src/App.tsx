@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { EQ_BANDS, EQ_PRESETS } from './audio/engine'
 import { store, useStore, type View } from './state/store'
 import { Connect } from './ui/Connect'
-import { Player } from './ui/Player'
+import { Player, type Panel } from './ui/Player'
+import { LyricsPanel } from './ui/LyricsPanel'
 import { QueuePanel } from './ui/QueuePanel'
 import {
   DownloadsView,
@@ -76,7 +77,7 @@ function Content({ view }: { view: View }) {
 export function App() {
   const { status, error, notice, view, history, serverless, offline } = useStore()
   const [settingsOpen, setSettingsOpen] = useState(false)
-  const [queueOpen, setQueueOpen] = useState(false)
+  const [panel, setPanel] = useState<Panel>(null)
   const main = useRef<HTMLElement>(null)
 
   useEffect(() => {
@@ -156,7 +157,8 @@ export function App() {
           </div>
         </main>
 
-        {queueOpen && <QueuePanel onClose={() => setQueueOpen(false)} />}
+        {panel === 'queue' && <QueuePanel onClose={() => setPanel(null)} />}
+        {panel === 'lyrics' && <LyricsPanel onClose={() => setPanel(null)} />}
       </div>
 
       {error && (
@@ -167,7 +169,7 @@ export function App() {
       )}
       {notice && <div className="pointer-events-none fixed left-1/2 top-4 -translate-x-1/2 rounded-lg bg-surface-strong px-4 py-2 text-sm shadow-lg">{notice}</div>}
 
-      <Player queueOpen={queueOpen} onToggleQueue={() => setQueueOpen(!queueOpen)} />
+      <Player panel={panel} onPanel={setPanel} />
       {settingsOpen && <Settings onClose={() => setSettingsOpen(false)} />}
     </div>
   )

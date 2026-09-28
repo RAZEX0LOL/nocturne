@@ -37,6 +37,8 @@ class Settings(context: Context) {
         private set
     var equalizerGains by mutableStateOf(readGains())
         private set
+    var fadeSeconds by mutableStateOf(store.getFloat("playback.fade", 0f))
+        private set
     var downloadOverWifiOnly by mutableStateOf(store.getBoolean("downloads.wifiOnly", false))
         private set
     var downloadFavorites by mutableStateOf(store.getBoolean("downloads.favorites", false))
@@ -46,6 +48,7 @@ class Settings(context: Context) {
     fun chooseCellularQuality(value: StreamQuality) { cellularQuality = value; store.edit().putString("quality.cellular", value.name).apply() }
     fun chooseReplayGain(value: ReplayGainMode) { replayGain = value; store.edit().putString("replayGain", value.name).apply() }
     fun chooseAccent(value: AccentTheme) { accent = value; store.edit().putString("accent", value.name).apply() }
+    fun chooseFadeSeconds(value: Float) { fadeSeconds = value; store.edit().putFloat("playback.fade", value).apply() }
     fun enableEqualizer(value: Boolean) { equalizerEnabled = value; store.edit().putBoolean("eq.enabled", value).apply() }
     fun limitDownloadsToWifi(value: Boolean) { downloadOverWifiOnly = value; store.edit().putBoolean("downloads.wifiOnly", value).apply() }
     fun autoDownloadFavorites(value: Boolean) { downloadFavorites = value; store.edit().putBoolean("downloads.favorites", value).apply() }

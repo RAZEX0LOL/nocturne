@@ -65,8 +65,12 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
     var error by mutableStateOf<String?>(null)
     var notice by mutableStateOf<String?>(null)
     var playback by mutableStateOf(Playback()); private set
-    var lyrics by mutableStateOf<List<LyricLine>?>(null); private set
+    var lyrics by mutableStateOf<Lyrics?>(null); private set
     var sleepAt by mutableStateOf<Long?>(null); private set
+    /** Остановиться, когда текущий трек закончится: отдельный вариант таймера сна, как на iPhone. */
+    var sleepAtTrackEnd by mutableStateOf(false); private set
+    /** Обложки, скачанные рядом с треками: показываются и без сети. */
+    var coverFiles by mutableStateOf<Map<String, String>>(emptyMap()); private set
 
     val settings = Settings(application)
     val musicFolder: String get() = localLibrary.folderPath
@@ -123,6 +127,36 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
                 delay(500)
             }
         }
+        // Фейды идут отдельным, более частым тиком: на полсекунды затухание слышно ступеньками.
+        viewModelScope.launch {
+            while (isActive) {
+                applyFade()
+                delay(100)
+            }
+        }
+    }
+
+    /**
+     * Затухание в конце трека и нарастание в начале — тем же правилом, что на iPhone и десктопе:
+     * только если трек заметно длиннее самого перехода.
+     */
+    private fun applyFade() {
+        val player = controller ?: return
+        val fade = settings.fadeSeconds
+        val duration = player.duration.takeIf { it != C.TIME_UNSET && it > 0 } ?: 0L
+        if (fade <= 0f || duration <= 0 || duration < fade * 3000) {
+            if (player.volume != 1f) player.volume = 1f
+            return
+        }
+        val position = player.currentPosition.coerceAtLeast(0)
+        val remaining = duration - position
+        val window = (fade * 1000).toLong()
+        val factor = when {
+            position < window -> position.toFloat() / window
+            remaining < window -> remaining.coerceAtLeast(0).toFloat() / window
+            else -> 1f
+        }
+        if (player.volume != factor) player.volume = factor
     }
 
     // MARK: - Подключение
@@ -295,8 +329,8 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
     fun loadLyrics(song: Song) {
         lyrics = null
         val api = client ?: return
-        if (isLocalId(song.id) || !online) return
-        viewModelScope.launch { lyrics = runCatching { api.lyrics(song.id) }.getOrDefault(emptyList()) }
+        if (isLocalId(song.id) || !online) { lyrics = Lyrics(false, emptyList()); return }
+        viewModelScope.launch { lyrics = runCatching { api.lyrics(song) }.getOrDefault(Lyrics(false, emptyList())) }
     }
 
     fun addToPlaylist(playlist: Playlist, songs: List<Song>) {
@@ -326,6 +360,7 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
     suspend fun reloadOnDisk() {
         local = runCatching { localLibrary.scan() }.getOrDefault(emptyList())
         downloaded = runCatching { downloads.load() }.getOrDefault(emptyList())
+        coverFiles = downloads.coverFiles()
         // Что играбельно, теперь известно — можно вернуть сохранённую очередь.
         restoreQueue()
     }
@@ -359,10 +394,13 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
         viewModelScope.launch {
             var done = 0
             for (song in wanted) {
-                val ok = runCatching { downloads.download(api.stream(song.id, settings.quality(onWifi)), song) }.getOrDefault(false)
+                // Обложку забираем вместе с треком: без сети серверный адрес уже не откроется.
+                val cover = song.coverArt?.let { api.cover(it) }
+                val ok = runCatching { downloads.download(api.stream(song.id, settings.quality(onWifi)), song, cover) }.getOrDefault(false)
                 if (ok) done++ else error = "Не удалось скачать «${song.title}»"
                 downloading = downloading - song.id
                 downloaded = runCatching { downloads.load() }.getOrDefault(downloaded)
+                coverFiles = downloads.coverFiles()
             }
             if (done > 0) notice = if (done == 1) "Трек скачан" else "Скачано треков: $done"
         }
@@ -372,6 +410,7 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
         viewModelScope.launch {
             downloads.remove(song)
             downloaded = runCatching { downloads.load() }.getOrDefault(downloaded)
+            coverFiles = downloads.coverFiles()
         }
     }
 
@@ -533,10 +572,12 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
         updatePlayback()
     }
 
-    /** Таймер сна: 0 — остановиться в конце текущего трека. */
+    /** Таймер сна: `null` выключает, `0` — остановиться в конце текущего трека. */
     fun setSleepTimer(minutes: Int?) {
         sleepJob?.cancel()
-        if (minutes == null) { sleepAt = null; return }
+        sleepAt = null
+        sleepAtTrackEnd = minutes == 0
+        if (minutes == null || minutes <= 0) return
         val deadline = System.currentTimeMillis() + minutes * 60_000L
         sleepAt = deadline
         sleepJob = viewModelScope.launch {
@@ -595,6 +636,12 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
         startedAt = System.currentTimeMillis()
         scrobbled = false
         lyrics = null
+        // Таймер «в конце трека»: дослушали — и тишина, следующий трек уже не играем.
+        if (sleepAtTrackEnd) {
+            sleepAtTrackEnd = false
+            player.pause()
+            notice = "Таймер сна: музыка остановлена"
+        }
         saveQueue()
     }
 

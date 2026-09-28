@@ -147,7 +147,12 @@ final class DownloadStore {
         saveIndex()
     }
 
-    func removeAll() { remove(items.values.map(\.song) + transfers.values.map(\.song)) }
+    func removeAll() {
+        remove(items.values.map(\.song) + transfers.values.map(\.song))
+        // Обложки больше ни к чему не относятся: удаляем вместе с последними загрузками.
+        guard let directory, let files = try? FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil) else { return }
+        for file in files where file.lastPathComponent.hasPrefix("cover-") { try? FileManager.default.removeItem(at: file) }
+    }
 
     private func cancelTransfers(where match: @escaping @Sendable (String) -> Bool) {
         for id in transfers.keys where match(id) { transfers[id] = nil; active[id] = nil }
@@ -184,6 +189,9 @@ final class DownloadStore {
         }
         let size = (try? destination.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
         let item = Item(song: transfer.song, file: file, size: size, date: Date())
+        if let coverID = transfer.song.coverArt, let client, client.credentials.account == transfer.account {
+            Task { await ArtworkCache.shared.keepCover(id: coverID, account: transfer.account, client: client) }
+        }
         if transfer.account == client?.credentials.account {
             items[songID] = item
             saveIndex()
@@ -221,7 +229,7 @@ final class DownloadStore {
 
     // MARK: - Storage
 
-    private static func folder(for account: String) -> URL {
+    nonisolated private static func folder(for account: String) -> URL {
         let name = SHA256.hash(data: Data(account.utf8)).prefix(12).map { String(format: "%02x", $0) }.joined()
         var folder = root.appendingPathComponent(name, isDirectory: true)
         try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
@@ -229,6 +237,13 @@ final class DownloadStore {
         values.isExcludedFromBackup = true
         try? folder.setResourceValues(values)
         return folder
+    }
+
+    /// Cover kept next to the downloaded tracks: the artwork cache lives in Caches and iOS may purge it,
+    /// which would leave the offline library as empty squares.
+    nonisolated static func coverFile(account: String, coverID: String) -> URL {
+        let name = SHA256.hash(data: Data(coverID.utf8)).prefix(8).map { String(format: "%02x", $0) }.joined()
+        return folder(for: account).appendingPathComponent("cover-\(name).img")
     }
 
     private func saveIndex() {

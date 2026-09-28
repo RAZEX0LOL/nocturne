@@ -22,8 +22,12 @@ class DownloadStore(context: Context) {
     private val http = OkHttpClient.Builder().callTimeout(java.time.Duration.ofMinutes(10)).build()
 
     @Volatile private var paths: Map<String, String> = emptyMap()
+    @Volatile private var covers: Map<String, String> = emptyMap()
 
     fun pathOf(id: String) = paths[id]
+
+    /** Обложки, скачанные вместе с треками: id обложки → файл. Ищутся по id, поэтому хватает одной на альбом. */
+    fun coverFiles() = covers
 
     fun isDownloaded(id: String) = paths.containsKey(id)
 
@@ -31,22 +35,26 @@ class DownloadStore(context: Context) {
         // Приложение могли закрыть посреди загрузки: такой огрызок никому не нужен и место занимает.
         folder.listFiles().orEmpty().filter { it.extension == "part" }.forEach { it.delete() }
         val files = folder.listFiles().orEmpty()
-        val audio = files.filter { it.extension !in setOf("json", "part") }.associateBy { it.nameWithoutExtension }
+        val audio = files.filter { it.extension !in setOf("json", "part", "cover") }.associateBy { it.nameWithoutExtension }
+        val art = files.filter { it.extension == "cover" }.associateBy { it.nameWithoutExtension }
         val found = mutableMapOf<String, String>()
+        val foundCovers = mutableMapOf<String, String>()
         val songs = files.filter { it.extension == "json" }.mapNotNull { meta ->
             // Метаданные храним в том же виде, в каком их отдаёт сервер, и читаем тем же разбором.
             val song = runCatching { NavidromeClient.song(Json.parseToJsonElement(meta.readText()).jsonObject) }
                 .getOrNull()?.takeIf { it.id.isNotEmpty() } ?: return@mapNotNull null
             val file = audio[meta.nameWithoutExtension] ?: return@mapNotNull null
             found[song.id] = file.absolutePath
+            song.coverArt?.let { cover -> art[meta.nameWithoutExtension]?.let { foundCovers[cover] = it.absolutePath } }
             song
         }
         paths = found
+        covers = foundCovers
         songs.sortedWith(compareBy({ it.album }, { it.track ?: 0 }, { it.title }))
     }
 
     /** Скачивает трек; возвращает false, если сервер отказал или файл не дошёл целиком. */
-    suspend fun download(url: String, song: Song): Boolean = withContext(Dispatchers.IO) {
+    suspend fun download(url: String, song: Song, coverUrl: String? = null): Boolean = withContext(Dispatchers.IO) {
         val stem = safeName(song.id)
         val partial = File(folder, "$stem.part")
         try {
@@ -58,6 +66,12 @@ class DownloadStore(context: Context) {
                 if (!partial.renameTo(target)) return@withContext false
                 File(folder, "$stem.json").writeText(NavidromeClient.describe(song).toString())
                 paths = paths + (song.id to target.absolutePath)
+                // Обложку кладём рядом: без сети серверный адрес уже не откроется, а файл откроется.
+                val coverId = song.coverArt
+                if (coverUrl != null && coverId != null) {
+                    val cover = File(folder, "$stem.cover")
+                    if (saveCover(coverUrl, cover)) covers = covers + (coverId to cover.absolutePath)
+                }
             }
             true
         } catch (_: Exception) {
@@ -70,6 +84,18 @@ class DownloadStore(context: Context) {
         val stem = safeName(song.id)
         folder.listFiles().orEmpty().filter { it.nameWithoutExtension == stem }.forEach { it.delete() }
         paths = paths - song.id
+        // Список обложек пересобирается ближайшим load(): обложка альбома могла остаться от других треков.
+    }
+
+    /** Обложка — украшение: не дошла, и ничего страшного, трек всё равно скачан. */
+    private fun saveCover(url: String, target: File): Boolean = try {
+        http.newCall(Request.Builder().url(url).build()).execute().use { response ->
+            val body = response.body
+            if (!response.isSuccessful || body == null) false
+            else { target.outputStream().use { output -> body.byteStream().copyTo(output) }; true }
+        }
+    } catch (_: Exception) {
+        false
     }
 
     suspend fun totalBytes(): Long = withContext(Dispatchers.IO) {

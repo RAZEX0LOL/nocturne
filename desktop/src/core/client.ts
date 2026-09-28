@@ -1,5 +1,5 @@
 import { md5 } from './md5'
-import { MusicError, type Album, type Artist, type Playlist, type Song } from './models'
+import { MusicError, type Album, type Artist, type Playlist, type Song, type StructuredLyrics } from './models'
 
 /** Правила адресов и подписи описаны в shared/spec/api.md и проверяются shared/cases. */
 
@@ -199,9 +199,17 @@ export class NavidromeClient {
     await this.request('scrobble', { id, submission: 'true', time: String(startedAt) })
   }
 
-  async lyrics(id: string) {
-    const response = await this.request('getLyricsBySongId', { id })
-    return response.lyricsList?.structuredLyrics ?? []
+  /** Предпочитаем синхронный текст OpenSubsonic; если его нет — старый простой запрос, как на iPhone. */
+  async lyrics(song: Song): Promise<StructuredLyrics | undefined> {
+    const list = await this.request('getLyricsBySongId', { id: song.id })
+      .then((response) => (response.lyricsList?.structuredLyrics as StructuredLyrics[] | undefined) ?? [])
+      .catch(() => [] as StructuredLyrics[])
+    const best = list.find((one) => one.synced) ?? list[0]
+    if (best && (best.line ?? []).length) return best
+    const plain = await this.request('getLyrics', { artist: song.artist ?? '', title: song.title })
+    const text = (plain.lyrics?.value as string | undefined) ?? ''
+    if (!text.trim()) return undefined
+    return { synced: false, line: text.split('\n').map((value) => ({ value })) }
   }
 
   stream(id: string, quality: StreamQuality = 'mp3High') {

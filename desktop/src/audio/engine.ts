@@ -18,12 +18,41 @@ export const EQ_PRESETS: Record<string, number[]> = {
   loudness: [5, 3, 0, -1, 0, 3, 5],
 }
 
+/** Один проигрыватель: играющий и подготовленный меняются местами, поэтому их два. */
+class Deck {
+  readonly element = new Audio()
+  /** Чей трек уже загружен в элемент; адрес потока каждый раз новый, поэтому помним id. */
+  songID?: string
+
+  constructor() {
+    this.element.preload = 'auto'
+    this.element.crossOrigin = 'anonymous'
+  }
+
+  hold(songID: string, url: string) {
+    this.songID = songID
+    this.element.src = url
+    this.element.load()
+  }
+
+  release() {
+    this.songID = undefined
+    this.element.pause()
+    this.element.removeAttribute('src')
+    this.element.load()
+  }
+}
+
 /**
  * Звук: обычный <audio> как источник, дальше цепочка Web Audio —
  * эквалайзер из семи фильтров и общий регулятор, через который делаются плавные переходы.
+ *
+ * Элементов два: пока играет один, следующий трек уже качается во второй, и переход
+ * между треками не ждёт сети.
  */
 export class AudioEngine {
-  private readonly element = new Audio()
+  private readonly decks = [new Deck(), new Deck()]
+  private active = 0
   private context?: AudioContext
   private filters: BiquadFilterNode[] = []
   private gainNode?: GainNode
@@ -31,6 +60,7 @@ export class AudioEngine {
   /** Громкость самого трека после выравнивания: фейды множатся на неё. */
   private trackVolume = 1
   private fadeSeconds = 0
+  private volume = 1
   private eq: EqSettings = { enabled: false, gains: [...EQ_PRESETS.flat!] }
   /** Пауза поставлена нами (кнопкой, клавишей, концом очереди), а не движком окна. */
   private pausedOnPurpose = true
@@ -41,35 +71,58 @@ export class AudioEngine {
   onError?: (message: string) => void
 
   constructor() {
-    this.element.preload = 'auto'
-    this.element.crossOrigin = 'anonymous'
-    this.element.addEventListener('ended', () => this.onEnded?.())
-    this.element.addEventListener('timeupdate', () => {
-      this.onTimeUpdate?.(this.element.currentTime, this.element.duration || 0)
+    this.decks.forEach((deck, index) => this.listen(deck, index))
+    document.addEventListener('visibilitychange', () => debugLog(`page ${document.visibilityState}`))
+  }
+
+  /** События интересны только от играющего элемента: второй в это время молча качает следующий трек. */
+  private listen(deck: Deck, index: number) {
+    const mine = () => this.active === index
+    const element = deck.element
+    element.addEventListener('ended', () => mine() && this.onEnded?.())
+    element.addEventListener('timeupdate', () => {
+      if (!mine()) return
+      this.onTimeUpdate?.(element.currentTime, element.duration || 0)
       this.applyFade()
     })
-    this.element.addEventListener('playing', () => {
+    element.addEventListener('playing', () => {
+      if (!mine()) return
       this.onStateChange?.(true, false)
       setTimeout(() => this.logLevel(), 1500)
     })
-    this.element.addEventListener('pause', () => {
+    element.addEventListener('pause', () => {
+      if (!mine()) return
       // Движок окна может сам остановить звук — например, когда окно свернули. Музыка при этом
       // должна продолжаться, поэтому чужую паузу снимаем сразу же.
-      if (!this.pausedOnPurpose && !this.element.ended) {
+      if (!this.pausedOnPurpose && !element.ended) {
         debugLog('unexpected pause, resuming')
-        void this.element.play().catch(() => this.onStateChange?.(false, false))
+        void element.play().catch(() => this.onStateChange?.(false, false))
         return
       }
       this.onStateChange?.(false, false)
     })
-    this.element.addEventListener('waiting', () => this.onStateChange?.(!this.element.paused, true))
+    element.addEventListener('waiting', () => mine() && this.onStateChange?.(!element.paused, true))
     for (const name of ['play', 'playing', 'pause', 'waiting', 'stalled', 'suspend', 'ended', 'error']) {
-      this.element.addEventListener(name, () => debugLog(`audio ${name} t=${this.element.currentTime.toFixed(1)} ctx=${this.context?.state ?? '-'}`))
+      element.addEventListener(name, () =>
+        debugLog(`audio${index} ${name} t=${element.currentTime.toFixed(1)} ctx=${this.context?.state ?? '-'}`),
+      )
     }
-    document.addEventListener('visibilitychange', () => debugLog(`page ${document.visibilityState}`))
-    this.element.addEventListener('error', () => {
+    element.addEventListener('error', () => {
+      if (!mine()) return
       this.onError?.('Не удалось воспроизвести трек. Проверь связь с сервером.')
     })
+  }
+
+  private get deck() {
+    return this.decks[this.active]!
+  }
+
+  private get spare() {
+    return this.decks[1 - this.active]!
+  }
+
+  private get element() {
+    return this.deck.element
   }
 
   /**
@@ -79,7 +132,6 @@ export class AudioEngine {
   private ensureGraph() {
     if (this.context) return
     const context = new AudioContext()
-    const source = context.createMediaElementSource(this.element)
     this.filters = EQ_BANDS.map((frequency, index) => {
       const filter = context.createBiquadFilter()
       filter.type = index === 0 ? 'lowshelf' : index === EQ_BANDS.length - 1 ? 'highshelf' : 'peaking'
@@ -93,9 +145,11 @@ export class AudioEngine {
     // а не тишина от источника, который Web Audio счёл чужим.
     const analyser = context.createAnalyser()
     this.analyser = analyser
-    const chain: AudioNode[] = [source, ...this.filters, gain, analyser]
+    const chain: AudioNode[] = [...this.filters, gain, analyser]
     chain.forEach((node, index) => chain[index + 1] && node.connect(chain[index + 1]!))
     analyser.connect(context.destination)
+    // Оба элемента идут через одну и ту же цепочку: эквалайзер и фейды одинаковы, кто бы ни играл.
+    for (const deck of this.decks) context.createMediaElementSource(deck.element).connect(this.filters[0]!)
     context.onstatechange = () => debugLog(`context ${context.state}`)
     this.context = context
     this.gainNode = gain
@@ -104,11 +158,25 @@ export class AudioEngine {
 
   async load(url: string, song: Song, mode: ReplayGainMode, autoplay: boolean) {
     this.pausedOnPurpose = true
+    if (this.spare.songID === song.id) {
+      // Трек уже скачан во второй элемент — играем его, а не начинаем загрузку заново.
+      debugLog(`swap to prepared deck ${1 - this.active}`)
+      this.deck.release()
+      this.active = 1 - this.active
+    } else {
+      this.deck.hold(song.id, url)
+    }
     this.trackVolume = replayGainVolume(mode, song)
-    this.element.src = url
-    this.element.load()
+    this.setVolume(this.volume)
     if (autoplay) await this.play()
     else this.setGain(this.trackVolume)
+  }
+
+  /** Готовит следующий трек заранее; повторный вызов с тем же треком ничего не делает. */
+  prepare(url: string, songID: string) {
+    if (this.spare.songID === songID || this.deck.songID === songID) return
+    debugLog(`prepare next in deck ${1 - this.active}`)
+    this.spare.hold(songID, url)
   }
 
   async play() {
@@ -145,7 +213,9 @@ export class AudioEngine {
 
   /** Системная громкость окна; выравнивание по ReplayGain живёт отдельно, в узле усиления. */
   setVolume(volume: number) {
-    this.element.volume = Math.min(Math.max(volume, 0), 1)
+    this.volume = Math.min(Math.max(volume, 0), 1)
+    // Подготовленный элемент держим на той же громкости: иначе переход прозвучит скачком.
+    for (const deck of this.decks) deck.element.volume = this.volume
   }
 
   setFadeSeconds(seconds: number) {
@@ -165,7 +235,7 @@ export class AudioEngine {
 
   private setGain(value: number) {
     if (this.gainNode) this.gainNode.gain.value = value
-    else this.element.volume = Math.min(Math.max(value, 0), 1)
+    else this.element.volume = Math.min(Math.max(value * this.volume, 0), 1)
   }
 
   /** Уровень сигнала на выходе цепочки — только для отладочного журнала. */

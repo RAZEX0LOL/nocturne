@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -69,6 +70,12 @@ private val Muted = Color(0xFF9C9CAA)
         content = content,
     )
 }
+
+/**
+ * Обложки, скачанные рядом с треками. Через локальное значение, а не параметром: обложку рисуют
+ * восемь разных мест, и всем нужен один и тот же список.
+ */
+internal val LocalCoverFiles = staticCompositionLocalOf<Map<String, String>> { emptyMap() }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable internal fun NocturneApp(vm: MusicViewModel) {
@@ -468,6 +475,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.downloadsSection(vm: 
     var showQueue by remember { mutableStateOf(false) }
     var showLyrics by remember { mutableStateOf(false) }
     var sleepMenu by remember { mutableStateOf(false) }
+    val timerOn = vm.sleepAt != null || vm.sleepAtTrackEnd
     var scrub by remember(song.id) { mutableFloatStateOf(-1f) }
     val accent = MaterialTheme.colorScheme.primary
 
@@ -522,9 +530,10 @@ private fun androidx.compose.foundation.lazy.LazyListScope.downloadsSection(vm: 
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
             TextButton(onClick = { showLyrics = true; vm.loadLyrics(song) }) { Text("Текст") }
             Box {
-                TextButton(onClick = { sleepMenu = true }) { Text(if (vm.sleepAt != null) "Таймер включён" else "Таймер сна") }
+                TextButton(onClick = { sleepMenu = true }) { Text(if (timerOn) "Таймер включён" else "Таймер сна") }
                 DropdownMenu(expanded = sleepMenu, onDismissRequest = { sleepMenu = false }) {
-                    if (vm.sleepAt != null) DropdownMenuItem(text = { Text("Выключить таймер") }, onClick = { sleepMenu = false; vm.setSleepTimer(null) })
+                    if (timerOn) DropdownMenuItem(text = { Text("Выключить таймер") }, onClick = { sleepMenu = false; vm.setSleepTimer(null) })
+                    DropdownMenuItem(text = { Text("В конце трека") }, onClick = { sleepMenu = false; vm.setSleepTimer(0) })
                     listOf(15, 30, 45, 60, 90).forEach { minutes ->
                         DropdownMenuItem(text = { Text("$minutes мин") }, onClick = { sleepMenu = false; vm.setSleepTimer(minutes) })
                     }
@@ -546,14 +555,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.downloadsSection(vm: 
         }
     }
     if (showLyrics) ModalBottomSheet(onDismissRequest = { showLyrics = false }, containerColor = Background) {
-        Column(Modifier.padding(24.dp).heightIn(min = 200.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            SectionTitle("Текст песни")
-            when (val lines = vm.lyrics) {
-                null -> Loading()
-                else -> if (lines.isEmpty()) Text("Navidrome не нашёл текст для этого трека.", color = Muted)
-                else lines.forEach { Text(it.value, style = MaterialTheme.typography.bodyLarge) }
-            }
-        }
+        LyricsSheet(vm)
     }
 }
 
@@ -584,6 +586,17 @@ private fun androidx.compose.foundation.lazy.LazyListScope.downloadsSection(vm: 
                 )
             }
         }
+
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
+            listOf(0f, 2f, 4f, 6f, 8f).forEach { seconds ->
+                FilterChip(
+                    selected = settings.fadeSeconds == seconds,
+                    onClick = { settings.chooseFadeSeconds(seconds) },
+                    label = { Text(if (seconds == 0f) "Без затухания" else "${seconds.toInt()} с") },
+                )
+            }
+        }
+        Text("Затухание между треками.", color = Muted, style = MaterialTheme.typography.bodySmall)
 
         SectionTitle("Эквалайзер")
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -689,11 +702,13 @@ private fun androidx.compose.foundation.lazy.LazyListScope.downloadsSection(vm: 
         }
     } else {
         val context = LocalContext.current
-        // Обложка своего файла лежит на диске, серверная — по подписанному адресу.
-        val source = remember(id, client) {
+        val saved = LocalCoverFiles.current
+        // Обложка своего файла лежит на диске, скачанная — рядом с треком, серверная — по подписанному адресу.
+        val source = remember(id, client, saved) {
             when {
                 id == null -> null
                 id.startsWith(LocalLibrary.FILE_COVER_PREFIX) -> File(id.removePrefix(LocalLibrary.FILE_COVER_PREFIX))
+                saved[id] != null -> File(saved.getValue(id))
                 else -> client?.cover(id)
             }
         }
@@ -722,4 +737,41 @@ private fun androidx.compose.foundation.lazy.LazyListScope.downloadsSection(vm: 
 private fun timeLabel(milliseconds: Long): String {
     val seconds = milliseconds.coerceAtLeast(0) / 1000
     return "${seconds / 60}:${(seconds % 60).toString().padStart(2, '0')}"
+}
+
+/**
+ * Текст песни. У синхронного текста подсвечивается текущая строка, список едет за ней сам,
+ * и по строке можно перемотать — так же, как в приложении на iPhone.
+ */
+@Composable private fun LyricsSheet(vm: MusicViewModel) {
+    val lyrics = vm.lyrics
+    val lines = lyrics?.lines.orEmpty()
+    val synced = lyrics?.synced == true
+    val position = vm.playback.position
+    val active = if (synced) lines.indexOfLast { (it.start ?: Int.MAX_VALUE) <= position } else -1
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(active) { if (active >= 0) listState.animateScrollToItem(active) }
+
+    Column(Modifier.padding(horizontal = 24.dp).padding(bottom = 24.dp).heightIn(min = 200.dp, max = 460.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        SectionTitle("Текст песни")
+        when {
+            lyrics == null -> Loading()
+            lines.isEmpty() -> Text("Navidrome не нашёл текст для этого трека.", color = Muted)
+            else -> LazyColumn(state = listState, verticalArrangement = Arrangement.spacedBy(if (synced) 14.dp else 6.dp)) {
+                itemsIndexed(lines) { index, line ->
+                    val start = line.start
+                    Text(
+                        line.value.ifEmpty { " " },
+                        style = if (synced) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyLarge,
+                        fontWeight = if (synced && index == active) FontWeight.Bold else FontWeight.Normal,
+                        color = if (!synced || index == active) Color.White else Muted,
+                        modifier = Modifier.fillMaxWidth().then(
+                            if (synced && start != null) Modifier.clickable { vm.seek(start.toLong()) } else Modifier
+                        ),
+                    )
+                }
+            }
+        }
+    }
 }

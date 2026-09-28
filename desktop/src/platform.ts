@@ -27,6 +27,8 @@ export interface DownloadedTrack {
   id: string
   path: string
   song: Song
+  /** Обложка, сохранённая рядом с треком: она открывается и без сети. */
+  cover?: string
 }
 
 /** Адрес, по которому окно может прочитать файл с диска (протокол asset). */
@@ -68,8 +70,8 @@ export async function openFolder(path: string) {
   await openPath(path)
 }
 
-export async function downloadTrack(url: string, song: Song): Promise<DownloadedTrack> {
-  return invoke('download_track', { url, id: song.id, song })
+export async function downloadTrack(url: string, song: Song, coverUrl?: string): Promise<DownloadedTrack> {
+  return invoke('download_track', { url, id: song.id, song, coverUrl })
 }
 
 export async function downloads(): Promise<DownloadedTrack[]> {

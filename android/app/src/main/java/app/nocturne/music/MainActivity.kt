@@ -8,6 +8,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.SystemBarStyle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -23,7 +24,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             val vm: MusicViewModel = viewModel()
             // Акцент оформления выбирают в настройках, поэтому тема читает его из состояния.
-            NocturneTheme(vm.settings.accent) { NocturneApp(vm) }
+            NocturneTheme(vm.settings.accent) {
+                CompositionLocalProvider(LocalCoverFiles provides vm.coverFiles) { NocturneApp(vm) }
+            }
             connectFromIntentIfDebug(vm)
         }
     }

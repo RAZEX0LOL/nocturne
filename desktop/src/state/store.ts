@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react'
 import { AudioEngine, EQ_PRESETS, type EqSettings } from '../audio/engine'
 import { Credentials, NavidromeClient, type StreamQuality } from '../core/client'
-import { MusicError, type Album, type Artist, type Playlist, type Song } from '../core/models'
+import { MusicError, type Album, type Artist, type LyricLine, type Playlist, type Song } from '../core/models'
 import { PlaybackQueue, type RepeatMode } from '../core/queue'
 import type { ReplayGainMode } from '../core/replaygain'
 import { keepScrobble, orderedScrobbles, remainingScrobbles, type ScrobblePlay } from '../core/scrobbles'
@@ -66,6 +66,8 @@ export interface State {
   /** Скачанные с сервера треки: id → путь к файлу. */
   downloads: Record<string, string>
   downloadedSongs: Song[]
+  /** Обложки, лежащие рядом с загрузками: id обложки → файл на диске. */
+  coverFiles: Record<string, string>
   downloading: Record<string, true>
   importing: boolean
   queue?: PlaybackQueue
@@ -75,7 +77,19 @@ export interface State {
   buffering: boolean
   position: number
   duration: number
+  /** Когда плеер сам встанет на паузу: момент по таймеру сна или конец текущего трека. */
+  sleepAt?: number
+  sleepAtTrackEnd: boolean
+  lyrics?: Lyrics
   settings: Settings
+}
+
+/** Текст песни: грузится по требованию, поэтому вместе с ним хранится и состояние загрузки. */
+export interface Lyrics {
+  songID: string
+  state: 'loading' | 'ready' | 'failed'
+  synced: boolean
+  lines: LyricLine[]
 }
 
 const SETTINGS_KEY = 'nocturne.settings'
@@ -127,6 +141,7 @@ class Store {
     local: [],
     downloads: {},
     downloadedSongs: [],
+    coverFiles: {},
     downloading: {},
     importing: false,
     queueVersion: 0,
@@ -134,6 +149,7 @@ class Store {
     buffering: false,
     position: 0,
     duration: 0,
+    sleepAtTrackEnd: false,
     settings: readSettings(),
   }
 
@@ -145,6 +161,7 @@ class Store {
   private startedAt = 0
   private scrobbled = false
   private lastSavedSecond = -1
+  private sleepTimer?: ReturnType<typeof setTimeout>
 
   constructor() {
     this.engine.onEnded = () => void this.advance(true)
@@ -434,6 +451,10 @@ class Store {
         musicFolder: library.folder,
         downloads: Object.fromEntries(downloaded.map((item) => [item.id, item.path])),
         downloadedSongs: downloaded.map((item) => item.song).sort(byAlbumThenTrack),
+        // Обложка ищется по её серверному id, поэтому весь скачанный альбом показывается без сети.
+        coverFiles: Object.fromEntries(
+          downloaded.flatMap((item) => (item.cover && item.song.coverArt ? [[item.song.coverArt, item.cover] as const] : [])),
+        ),
       })
     } catch (error) {
       this.patch({ error: `Не удалось прочитать папку музыки: ${String(error)}` })
@@ -481,11 +502,15 @@ class Store {
     for (const song of wanted) {
       try {
         const url = await client.stream(song.id, this.state.settings.quality)
-        const saved = await platform.downloadTrack(url, song)
+        // Обложку забираем вместе с треком: без сети серверный адрес уже не откроется.
+        const cover = song.coverArt ? await client.cover(song.coverArt, 600) : undefined
+        const saved = await platform.downloadTrack(url, song, cover)
         done += 1
         this.patch({
           downloads: { ...this.state.downloads, [song.id]: saved.path },
           downloadedSongs: [...this.state.downloadedSongs.filter((one) => one.id !== song.id), song].sort(byAlbumThenTrack),
+          coverFiles:
+            saved.cover && song.coverArt ? { ...this.state.coverFiles, [song.coverArt]: saved.cover } : this.state.coverFiles,
         })
       } catch (error) {
         this.patch({ error: `Не удалось скачать «${song.title}»: ${String(error)}` })
@@ -502,6 +527,8 @@ class Store {
       await platform.removeDownload(song.id)
       const { [song.id]: _removed, ...rest } = this.state.downloads
       this.patch({ downloads: rest, downloadedSongs: this.state.downloadedSongs.filter((one) => one.id !== song.id) })
+      // Файл обложки ушёл вместе с треком; у альбома он мог остаться от других загрузок.
+      await this.loadOnDisk()
     } catch (error) {
       this.patch({ error: `Не удалось удалить загрузку: ${String(error)}` })
     }
@@ -589,6 +616,20 @@ class Store {
     if (from > 0) this.engine.seek(from)
     this.patch({ position: from, duration: song.duration ?? 0 })
     void this.updateNowPlaying(song)
+    void this.prepareNext()
+  }
+
+  /** Следующий трек скачивается заранее: переход между треками не должен ждать сети. */
+  private async prepareNext() {
+    const queue = this.state.queue
+    if (!queue) return
+    const next = queue.nextPosition(true)
+    if (next === null) return
+    const song = queue.items[next]?.song
+    // Повтор одного трека и недоступные треки готовить не нужно: играть будет нечего или то же самое.
+    if (!song || song.id === queue.current?.song.id || !this.isPlayable(song)) return
+    const url = await this.sourceUrl(song)
+    if (url) this.engine.prepare(url, song.id)
   }
 
   toggle() {
@@ -600,6 +641,12 @@ class Store {
   async advance(automatic = false) {
     const queue = this.state.queue
     if (!queue) return
+    // Таймер «в конце трека»: дослушали — и тишина, следующий не начинаем.
+    if (automatic && this.state.sleepAtTrackEnd) {
+      this.patch({ sleepAtTrackEnd: false })
+      this.engine.pause()
+      return
+    }
     // Пропускаем то, что стало недоступно (связь пропала, файл удалили), но не по кругу бесконечно.
     for (let attempt = 0; attempt < queue.items.length; attempt++) {
       const next = queue.nextPosition(automatic)
@@ -651,6 +698,48 @@ class Store {
     const order: RepeatMode[] = ['off', 'all', 'one']
     queue.repeatMode = order[(order.indexOf(queue.repeatMode) + 1) % order.length]!
     this.touchQueue()
+  }
+
+  // MARK: - Таймер сна
+
+  /** `null` выключает таймер, `0` означает «в конце этого трека». */
+  setSleepTimer(minutes: number | null) {
+    if (this.sleepTimer) clearTimeout(this.sleepTimer)
+    this.sleepTimer = undefined
+    this.patch({ sleepAt: undefined, sleepAtTrackEnd: minutes === 0 })
+    if (!minutes || minutes <= 0) return
+    const deadline = Date.now() + minutes * 60_000
+    this.patch({ sleepAt: deadline })
+    this.sleepTimer = setTimeout(() => {
+      this.sleepTimer = undefined
+      this.patch({ sleepAt: undefined })
+      this.engine.pause()
+    }, deadline - Date.now())
+  }
+
+  // MARK: - Текст песни
+
+  /** Текст берётся с сервера по требованию: без него плеер работает точно так же. */
+  async loadLyrics() {
+    const song = this.state.queue?.current?.song
+    if (!song) return
+    if (this.state.lyrics?.songID === song.id && this.state.lyrics.state !== 'failed') return
+    const client = this.state.client
+    if (isLocalId(song.id) || !client || !this.online) {
+      this.patch({ lyrics: { songID: song.id, state: 'ready', synced: false, lines: [] } })
+      return
+    }
+    this.patch({ lyrics: { songID: song.id, state: 'loading', synced: false, lines: [] } })
+    try {
+      const found = await client.lyrics(song)
+      if (this.state.queue?.current?.song.id !== song.id) return
+      this.patch({
+        lyrics: { songID: song.id, state: 'ready', synced: found?.synced ?? false, lines: found?.line ?? [] },
+      })
+    } catch {
+      if (this.state.queue?.current?.song.id !== song.id) return
+      this.patch({ lyrics: { songID: song.id, state: 'failed', synced: false, lines: [] } })
+    }
   }
 
   // MARK: - Отметки о прослушивании
@@ -798,10 +887,12 @@ class Store {
   }
 }
 
-/** Обложка: своя — файл на диске, серверная — по подписанному адресу. */
+/** Обложка: своя — файл на диске, скачанная — файл рядом с треком, серверная — по подписанному адресу. */
 export async function coverUrl(id: string | undefined, client: NavidromeClient | undefined, size: number) {
   if (!id) return undefined
   if (id.startsWith('file:')) return platform.fileSource(id.slice('file:'.length))
+  const saved = store.snapshot().coverFiles[id]
+  if (saved) return platform.fileSource(saved)
   return client?.cover(id, size)
 }
 
