@@ -11,6 +11,11 @@ local.properties
 .kotlin/
 *.apk
 *.aab
+
+# Подпись Android: сам ключ и пароли к нему живут вне репозитория.
+keystore.properties
+*.jks
+*.keystore
 .swiftpm/
 **/build/
 

@@ -1,7 +1,26 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.plugin.compose")
 }
+
+/**
+ * Данные подписи: из keystore.properties рядом с проектом или из переменных окружения — так
+ * собирают и вручную, и в CI. Самих паролей в репозитории нет и быть не должно.
+ */
+val signing = Properties().apply {
+    val file = rootProject.file("keystore.properties")
+    if (file.exists()) file.inputStream().use { load(it) }
+    listOf(
+        "storeFile" to "ANDROID_KEYSTORE",
+        "storePassword" to "ANDROID_KEYSTORE_PASSWORD",
+        "keyAlias" to "ANDROID_KEY_ALIAS",
+        "keyPassword" to "ANDROID_KEY_PASSWORD",
+    ).forEach { (key, variable) -> System.getenv(variable)?.let { setProperty(key, it) } }
+}
+val keystoreFile = signing.getProperty("storeFile")?.let(::file)?.takeIf { it.exists() }
+
 android {
     namespace = "app.nocturne.music"
     compileSdk = 36
@@ -12,6 +31,24 @@ android {
         versionCode = 1
         versionName = "0.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+    signingConfigs {
+        if (keystoreFile != null) create("release") {
+            storeFile = keystoreFile
+            storePassword = signing.getProperty("storePassword")
+            keyAlias = signing.getProperty("keyAlias")
+            keyPassword = signing.getProperty("keyPassword")
+        }
+    }
+    buildTypes {
+        release {
+            // R8 убирает неиспользованный код и имена: без него apk почти вдвое толще.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            // Без ключа сборка не падает, а получается неподписанной: так CI собирает проверочный apk.
+            signingConfig = signingConfigs.findByName("release")
+        }
     }
     buildFeatures { compose = true; buildConfig = true }
     compileOptions {
