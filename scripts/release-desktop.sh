@@ -51,7 +51,8 @@ BUNDLE=desktop/src-tauri/target/release/bundle
 OUT=build/desktop-release
 rm -rf "$OUT" && mkdir -p "$OUT"
 # Установщики — людям, архивы с подписью — обновлялке.
-find "$BUNDLE" -type f \( -name '*.dmg' -o -name '*.msi' -o -name '*.exe' -o -name '*.deb' -o -name '*.AppImage' \
+# rw.*.dmg — незавершённый образ, который остаётся после сорвавшейся сборки; людям он не нужен.
+find "$BUNDLE" -type f ! -name 'rw.*' \( -name '*.dmg' -o -name '*.msi' -o -name '*.exe' -o -name '*.deb' -o -name '*.AppImage' \
   -o -name '*.tar.gz' -o -name '*.zip' -o -name '*.sig' \) -exec cp {} "$OUT/" \;
 # Пустой latest.json хуже отсутствующего: обновлялка приняла бы его за «обновлений нет».
 python3 scripts/updater_manifest.py "$VERSION" "$OUT" "${NOCTURNE_UPDATE_URL:-}" "$(uname -m)" > "$OUT/latest.json" \
