@@ -146,6 +146,13 @@ const english: Record<string, string> = {
   'Отключить сервер': 'Disconnect the server',
   'Музыка': 'Music',
 
+  // Обновления
+  'Вышла версия {version}': 'Version {version} is out',
+  'Установить': 'Install',
+  'Позже': 'Later',
+  'Загружаю обновление…': 'Downloading the update…',
+  'Не удалось установить обновление.': 'Could not install the update.',
+
   // Сообщения
   'Сыграет следующим': 'Plays next',
   'Следующими: {n}': 'Next in line: {n}',

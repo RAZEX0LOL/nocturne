@@ -83,6 +83,8 @@ export interface State {
   sleepAt?: number
   sleepAtTrackEnd: boolean
   lyrics?: Lyrics
+  /** Вышедшая версия: показывается предложением обновиться, пока человек его не закроет. */
+  update?: platform.PendingUpdate
   settings: Settings
 }
 
@@ -232,6 +234,35 @@ class Store {
     this.patch({ client, status: 'ready' })
     await this.reconnect()
     await this.restoreQueue()
+  }
+
+  /**
+   * Новая версия приложения. Молча: не вышла или сервер обновлений недоступен — человеку
+   * об этом знать незачем, он не просил проверять.
+   */
+  async checkForUpdate() {
+    try {
+      const update = await platform.checkForUpdate()
+      if (update) this.patch({ update })
+    } catch {
+      // Сервер обновлений недоступен — приложение от этого работать не перестаёт.
+    }
+  }
+
+  async installUpdate() {
+    const update = this.state.update
+    if (!update) return
+    this.showNotice(t('Загружаю обновление…'))
+    try {
+      await update.install()
+    } catch (error) {
+      // Причину показываем рядом: без неё «не удалось» не говорит ничего ни человеку, ни отчёту.
+      this.patch({ update: undefined, error: `${t('Не удалось установить обновление.')} ${String(error)}` })
+    }
+  }
+
+  dismissUpdate() {
+    this.patch({ update: undefined })
   }
 
   /** Проверяет связь с сервером; при успехе подтягивает библиотеку и досылает отметки. */

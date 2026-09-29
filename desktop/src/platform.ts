@@ -83,3 +83,29 @@ export async function downloads(): Promise<DownloadedTrack[]> {
 export async function removeDownload(id: string) {
   await invoke('remove_download', { id })
 }
+
+export interface PendingUpdate {
+  version: string
+  notes?: string
+  install: () => Promise<void>
+}
+
+/**
+ * Обновление приложения. Файлы и подпись лежат на своём сервере (см. scripts/release.sh);
+ * в обычном браузере при разработке интерфейса обновляться нечему.
+ */
+export async function checkForUpdate(): Promise<PendingUpdate | undefined> {
+  if (!isDesktop()) return undefined
+  const { check } = await import('@tauri-apps/plugin-updater')
+  const update = await check()
+  if (!update) return undefined
+  return {
+    version: update.version,
+    notes: update.body,
+    install: async () => {
+      await update.downloadAndInstall()
+      const { relaunch } = await import('@tauri-apps/plugin-process')
+      await relaunch()
+    },
+  }
+}

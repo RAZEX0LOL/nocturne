@@ -37,6 +37,7 @@
   "bundle": {
     "active": true,
     "targets": [
+      "app",
       "deb",
       "appimage",
       "msi",
@@ -52,6 +53,18 @@
     ],
     "category": "Music",
     "shortDescription": "Клиент Navidrome",
-    "longDescription": "Слушай свою музыку с домашнего сервера Navidrome или прямо с этого компьютера."
+    "longDescription": "Слушай свою музыку с домашнего сервера Navidrome или прямо с этого компьютера.",
+    "createUpdaterArtifacts": true
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://nocturne.example.com/nocturne/latest.json"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDNFQjQ0OTkyMDZEQzcxNTkKUldSWmNkd0dra20wUGdqZVlGTnE4NzB2RFNXYk5UWnFkUnlNRDN5N0x5OEoxTHZQNnR3VDZGUDgK",
+      "windows": {
+        "installMode": "passive"
+      }
+    }
   }
 }

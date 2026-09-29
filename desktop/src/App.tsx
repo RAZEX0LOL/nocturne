@@ -84,6 +84,8 @@ export function App() {
 
   useEffect(() => {
     void store.restore()
+    // Проверяем обновление один раз при запуске: чаще незачем, приложение не сервис.
+    void store.checkForUpdate()
   }, [])
 
   // Новая страница открывается сверху, а не с прокруткой предыдущей.
@@ -113,7 +115,15 @@ export function App() {
   if (status === 'connecting') {
     return <div className="grid h-full place-items-center text-secondary">{t('Загружаю…')}</div>
   }
-  if (status === 'signed-out') return <Connect />
+  if (status === 'signed-out')
+    return (
+      <div className="flex h-full flex-col">
+        <div className="min-h-0 flex-1">
+          <Connect />
+        </div>
+        <UpdateBanner />
+      </div>
+    )
 
   const active = sectionOf[view.kind]
 
@@ -170,9 +180,29 @@ export function App() {
         </div>
       )}
       {notice && <div className="pointer-events-none fixed left-1/2 top-4 -translate-x-1/2 rounded-lg bg-surface-strong px-4 py-2 text-sm shadow-lg">{notice}</div>}
+      <UpdateBanner />
 
       <Player panel={panel} onPanel={setPanel} />
       {settingsOpen && <Settings onClose={() => setSettingsOpen(false)} />}
+    </div>
+  )
+}
+
+/** Предложение обновиться. Видно на любом экране: обновление не зависит от того, подключён ли сервер. */
+function UpdateBanner() {
+  const { update } = useStore()
+  if (!update) return null
+  return (
+    <div className="mx-6 mb-2 flex items-center justify-between gap-4 rounded-lg bg-surface-strong px-4 py-2 text-sm">
+      <span>{t('Вышла версия {version}', { version: update.version })}</span>
+      <span className="flex gap-3">
+        <button onClick={() => void store.installUpdate()} className="text-accent">
+          {t('Установить')}
+        </button>
+        <button onClick={() => store.dismissUpdate()} className="text-secondary hover:text-primary">
+          {t('Позже')}
+        </button>
+      </span>
     </div>
   )
 }
