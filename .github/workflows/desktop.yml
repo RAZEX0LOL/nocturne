@@ -43,8 +43,22 @@ jobs:
 
       - run: bun install --frozen-lockfile
         working-directory: desktop
-      - run: bun run tauri build
+
+      # Архив обновления подписывается ключом, которого в репозитории нет. Если секрет не задан,
+      # собираем только установщики: иначе сборка падает на отсутствующем ключе.
+      - name: Собрать установщики
         working-directory: desktop
+        shell: bash
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: |
+          if [ -z "$TAURI_SIGNING_PRIVATE_KEY" ]; then
+            echo '{"bundle":{"createUpdaterArtifacts":false}}' > src-tauri/tauri.ci.json
+            bun run tauri build --config src-tauri/tauri.ci.json
+          else
+            bun run tauri build
+          fi
 
       # Разбор имён файлов, безопасные имена загрузок, форматы — проверки Rust-стороны.
       - if: matrix.name == 'linux'
