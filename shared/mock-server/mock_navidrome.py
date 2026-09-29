@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """Minimal Subsonic/Navidrome mock for simulator checks: 1 album, 3 short WAV tracks, PNG covers."""
-import io, json, math, struct, sys, time, wave, zlib
+import hashlib, io, json, math, os, struct, sys, time, wave, zlib
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 
 TRACK_SECONDS = float(sys.argv[1]) if len(sys.argv) > 1 else 8
+# Пароль, которым подписаны запросы: тестовый, для проверки алгоритма подписи.
+PASSWORD = os.environ.get("NOCTURNE_MOCK_PASSWORD", "demo")
 FAIL_STREAMS = set()  # song ids whose stream returns 500 once (retry check)
 
 # 22 кГц, а не телефонные 8: WebKit пропускает 8-килогерцовый звук через Web Audio тишиной, и
@@ -49,9 +51,25 @@ class Handler(BaseHTTPRequestHandler):
     def ok(self, **payload):
         self.reply(json.dumps({"subsonic-response": {"status": "ok", "version": "1.16.1", **payload}}).encode())
 
+    def failed(self, code, message):
+        # Subsonic отвечает кодом 200 даже на ошибку: важен status внутри тела.
+        body = {"status": "failed", "version": "1.16.1", "error": {"code": code, "message": message}}
+        self.reply(json.dumps({"subsonic-response": body}).encode())
+
+    def signed(self, q):
+        """Токен из пароля и соли — то же правило, что в shared/spec/api.md."""
+        token, salt = q.get("t"), q.get("s")
+        if not token or not salt:
+            return False
+        return token.lower() == hashlib.md5((PASSWORD + salt).encode()).hexdigest()
+
     def do_GET(self):
         url = urlparse(self.path); q = {k: v[0] for k, v in parse_qs(url.query).items()}
         endpoint = url.path.rsplit("/", 1)[-1].replace(".view", "")
+        # Подпись проверяется по-настоящему: иначе ошибку в алгоритме заметит только живой Navidrome.
+        if not self.signed(q):
+            print(time.strftime("%H:%M:%S"), endpoint, "неверная подпись", flush=True)
+            return self.failed(40, "Wrong username or password.")
         extra = {k: q[k] for k in ("id", "query", "size", "format", "maxBitRate", "offset", "type", "submission", "name", "genre", "playlistId", "songIdToAdd", "songIndexToRemove") if k in q}
         print(time.strftime("%H:%M:%S"), endpoint, extra, "range=" + self.headers.get("Range", "-"), flush=True)
         if endpoint == "ping": return self.ok()
