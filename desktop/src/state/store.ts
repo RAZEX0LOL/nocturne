@@ -10,7 +10,26 @@ import { chooseSource, isLocalId, type Availability } from '../core/source'
 import * as platform from '../platform'
 import { forgetCredentials, loadCredentials, saveCredentials } from './vault'
 
+export interface Shelves {
+  played: Album[]
+  frequent: Album[]
+  random: Album[]
+  /** Карусели ещё не пришли с сервера — показываются заготовки. */
+  loaded: boolean
+}
+
+export interface CoverPalette {
+  coverArt: string
+  accent: string
+  colors: string[]
+  base: string
+}
+
+/** Откуда акцент: система (Windows, Mac), обложка играющего трека или фирменный фиолетовый. */
+export type AccentMode = 'system' | 'cover' | 'brand'
+
 export interface Settings {
+  accent: AccentMode
   quality: StreamQuality
   replayGain: ReplayGainMode
   fadeSeconds: number
@@ -52,6 +71,10 @@ export interface State {
   view: View
   history: View[]
   recent: Album[]
+  /** Карусели главной: недавно слушал, часто слушаю, случайные. Недавно добавленные — это `recent`. */
+  shelves: Shelves
+  /** Цвета обложки текущего трека: живой фон плеера и акцент «из обложки». */
+  palette?: CoverPalette
   albums: Album[]
   albumsComplete: boolean
   artists: Artist[]
@@ -105,6 +128,7 @@ const PENDING_SCROBBLES_KEY = 'nocturne.pendingScrobbles'
 const PAGE = 60
 
 const defaultSettings: Settings = {
+  accent: 'system',
   quality: 'mp3High',
   replayGain: 'off',
   fadeSeconds: 0,
@@ -137,6 +161,7 @@ class Store {
     view: { kind: 'home' },
     history: [],
     recent: [],
+    shelves: { played: [], frequent: [], random: [], loaded: false },
     albums: [],
     albumsComplete: false,
     artists: [],
@@ -319,6 +344,8 @@ class Store {
       offline: false,
       serverless: false,
       recent: [],
+      shelves: { played: [], frequent: [], random: [], loaded: false },
+      palette: undefined,
       albums: [],
       albumsComplete: false,
       artists: [],
@@ -401,9 +428,16 @@ class Store {
     const client = this.state.client
     if (!client) return
     try {
-      const [recent, starred] = await Promise.all([client.albums('newest', 0, 24), client.starred()])
+      const [recent, starred, played, frequent, random] = await Promise.all([
+        client.albums('newest', 0, 24),
+        client.starred(),
+        client.albums('recent', 0, 24),
+        client.albums('frequent', 0, 24),
+        client.albums('random', 0, 24),
+      ])
       this.patch({
         recent,
+        shelves: { played, frequent, random, loaded: true },
         starred: starred.songs,
         starredIds: new Set(starred.songs.map((song) => song.id)),
         offline: false,
@@ -414,6 +448,34 @@ class Store {
       if (error instanceof MusicError && error.kind === 'auth') return this.patch({ error: error.message })
       this.patch({ offline: true })
     }
+  }
+
+  /** «Случайные альбомы» — новая подборка по кнопке, остальные карусели не трогаем. */
+  async shuffleShelf() {
+    const client = this.state.client
+    if (!client || !this.online) return
+    try {
+      const random = await client.albums('random', 0, 24)
+      this.patch({ shelves: { ...this.state.shelves, random } })
+    } catch {
+      // Подборка останется прежней — не беда.
+    }
+  }
+
+  /** Альбом с карточки целиком, не открывая его страницу: кнопка «играть» поверх обложки. */
+  async playAlbum(album: Album, shuffle = false) {
+    const client = this.state.client
+    let songs = this.state.songs[album.id]
+    if (!songs && client && this.online) {
+      try {
+        songs = await client.albumSongs(album.id)
+        this.putSongs(album.id, songs)
+      } catch (error) {
+        return this.patch({ error: error instanceof MusicError ? error.message : t('Не удалось загрузить раздел.') })
+      }
+    }
+    if (!songs?.length) return
+    await this.play(songs, shuffle ? Math.floor(Math.random() * songs.length) : 0, shuffle)
   }
 
   /** Все альбомы по алфавиту, порциями: большие библиотеки иначе грузились бы минуту. */
@@ -663,7 +725,32 @@ class Store {
     if (from > 0) this.engine.seek(from)
     this.patch({ position: from, duration: song.duration ?? 0 })
     void this.updateNowPlaying(song)
+    void this.loadPalette(song)
     void this.prepareNext()
+  }
+
+  /** Цвета обложки считаются один раз на обложку: альбом обычно играет подряд. */
+  private palettes = new Map<string, CoverPalette | null>()
+
+  private async loadPalette(song: Song) {
+    const id = song.coverArt
+    if (!id) return this.patch({ palette: undefined })
+    if (this.state.palette?.coverArt === id) return
+    let palette = this.palettes.get(id)
+    if (palette === undefined) {
+      const saved = id.startsWith('file:') ? id.slice('file:'.length) : this.state.coverFiles[id]
+      const client = this.online ? this.state.client : undefined
+      const found = saved
+        ? await platform.coverPalette({ path: saved })
+        : client
+          ? await platform.coverPalette({ url: await client.cover(id, 300) })
+          : undefined
+      palette = found ? { coverArt: id, ...found } : null
+      this.palettes.set(id, palette)
+    }
+    // Пока цвета считались, мог заиграть другой трек — его цвета важнее.
+    if (this.state.queue?.current?.song.coverArt !== id) return
+    this.patch({ palette: palette ?? undefined })
   }
 
   /** Следующий трек скачивается заранее: переход между треками не должен ждать сети. */

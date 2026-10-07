@@ -2,6 +2,11 @@ import {
   ArrowLeft,
   Check,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Maximize2,
+  PictureInPicture2,
+  Minimize2,
   CircleX,
   Disc3,
   Download,
@@ -81,6 +86,11 @@ const icons = {
   more: ['', Ellipsis],
   check: ['', Check],
   chevronDown: ['', ChevronDown],
+  chevronLeft: ['\uE76B', ChevronLeft],
+  chevronRight: ['\uE76C', ChevronRight],
+  expand: ['\uE740', Maximize2],
+  collapse: ['\uE73F', Minimize2],
+  miniPlayer: ['\uE8A7', PictureInPicture2],
 } satisfies Record<string, [string, LucideIcon]>
 
 export type IconName = keyof typeof icons

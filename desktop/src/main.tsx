@@ -1,17 +1,34 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { App } from './App'
 import { platformName } from './native'
-import { startShell } from './shell'
 import './styles.css'
 
 // Оформление выбирается до первого кадра: шрифт, значки и вид элементов зависят от системы.
 document.documentElement.dataset.platform = platformName
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-)
+const root = createRoot(document.getElementById('root')!)
 
-void startShell()
+/**
+ * Мини-плеер — то же приложение в маленьком окне, но без своего плеера: звук остаётся в главном
+ * окне, поэтому стор с аудиодвижком здесь даже не загружается.
+ */
+if (new URLSearchParams(location.search).has('mini')) {
+  document.documentElement.classList.add('mini')
+  void import('./ui/MiniPlayer').then(({ MiniPlayer }) =>
+    root.render(
+      <StrictMode>
+        <MiniPlayer />
+      </StrictMode>,
+    ),
+  )
+} else {
+  void Promise.all([import('./App'), import('./shell'), import('./theme')]).then(([{ App }, { startShell }, { startTheme }]) => {
+    root.render(
+      <StrictMode>
+        <App />
+      </StrictMode>,
+    )
+    startTheme()
+    void startShell()
+  })
+}

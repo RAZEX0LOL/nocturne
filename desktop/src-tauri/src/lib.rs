@@ -2,6 +2,7 @@
 #[cfg_attr(not(windows), allow(dead_code))]
 mod glyphs;
 mod library;
+mod palette;
 
 #[cfg(windows)]
 mod windows_shell;
@@ -104,6 +105,24 @@ fn delete_credentials(account: String) -> Result<(), String> {
     }
 }
 
+/// Цвета обложки — с сервера по адресу или с диска по пути. Обложка не открылась — цвета нет,
+/// окно останется со своим акцентом.
+#[tauri::command]
+async fn cover_palette(url: Option<String>, path: Option<String>) -> Option<palette::Palette> {
+    let bytes = match (path, url) {
+        (Some(path), _) => tokio::fs::read(path).await.ok()?,
+        (None, Some(url)) => {
+            let response = reqwest::get(url).await.ok()?;
+            if !response.status().is_success() {
+                return None;
+            }
+            response.bytes().await.ok()?.to_vec()
+        }
+        (None, None) => return None,
+    };
+    tauri::async_runtime::spawn_blocking(move || palette::from_image(&bytes)).await.ok()?
+}
+
 /// Журнал событий звука в терминал — только в отладочной сборке, в релизе команда молчит.
 #[tauri::command]
 fn debug_log(line: String) {
@@ -147,6 +166,7 @@ pub fn run() {
             load_credentials,
             delete_credentials,
             debug_log,
+            cover_palette,
             library::local_library,
             library::import_items,
             library::remove_local,

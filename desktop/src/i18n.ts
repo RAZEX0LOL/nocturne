@@ -211,6 +211,26 @@ const english: Record<string, string> = {
   'Откл.': 'Off',
   'Navidrome не подключён': 'Navidrome is not connected',
   'Играет только музыка с этого компьютера.': 'Only music from this computer is playing.',
+  // Главная, полноэкранный плеер, мини-плеер
+  'Доброе утро': 'Good morning',
+  'Добрый день': 'Good afternoon',
+  'Добрый вечер': 'Good evening',
+  'Доброй ночи': 'Good night',
+  'Недавно слушал': 'Recently played',
+  'Часто слушаю': 'Most played',
+  'Случайные альбомы': 'Random albums',
+  'Другие': 'Shuffle',
+  'Слушать альбом {name}': 'Play the album {name}',
+  'Текст': 'Lyrics',
+  'Свернуть плеер': 'Collapse player',
+  'Мини-плеер': 'Mini player',
+  'Развернуть': 'Expand',
+  'Во весь экран (F11)': 'Full screen (F11)',
+  'Выйти из полноэкранного режима': 'Exit full screen',
+  'Цвет акцента': 'Accent colour',
+  'Кнопки, ползунки и выделение.': 'Buttons, sliders and selection.',
+  'Из обложки': 'From the cover',
+  'Вперёд': 'Forward',
 }
 
 let language: Language = 'auto'

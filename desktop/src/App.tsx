@@ -4,6 +4,8 @@ import { Connect } from './ui/Connect'
 import { Icon, type IconName } from './ui/Icon'
 import { InfoBar } from './ui/InfoBar'
 import { Player, type Panel } from './ui/Player'
+import { NowPlaying } from './ui/NowPlaying'
+import { openMiniPlayer } from './shell'
 import { LyricsPanel } from './ui/LyricsPanel'
 import { QueuePanel } from './ui/QueuePanel'
 import { SettingsView } from './ui/SettingsView'
@@ -87,6 +89,7 @@ export function App() {
   const { status, error, notice, view, history, serverless, offline, dragging } = useStore()
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [panel, setPanel] = useState<Panel>(null)
+  const [nowPlaying, setNowPlaying] = useState(false)
   const main = useRef<HTMLElement>(null)
 
   useEffect(() => {
@@ -110,7 +113,8 @@ export function App() {
       const mod = event.metaKey || event.ctrlKey
       // Escape закрывает настройки и боковую панель — и из поля ввода тоже.
       if (event.key === 'Escape') {
-        if (settingsOpen) setSettingsOpen(false)
+        if (nowPlaying) setNowPlaying(false)
+        else if (settingsOpen) setSettingsOpen(false)
         else if (panel) setPanel(null)
         return
       }
@@ -181,7 +185,8 @@ export function App() {
     <div className="flex h-full flex-col">
       <div className="flex min-h-0 flex-1">
         <nav className="flex w-60 shrink-0 flex-col gap-0.5 px-1.5 pb-2 pt-1">
-          <div className="flex h-12 items-center gap-1 px-1">
+          <div className="titlebar-space" data-tauri-drag-region />
+          <div className="flex h-12 items-center gap-1 px-1" data-tauri-drag-region>
             <button onClick={goBack} disabled={!canGoBack} className="icon-btn" title={t('Назад')} aria-label={t('Назад')}>
               <Icon name="back" />
             </button>
@@ -214,8 +219,13 @@ export function App() {
           </button>
         </nav>
 
-        <main ref={main} className="content-layer min-w-0 flex-1 overflow-y-auto">
-          <div className="mx-auto max-w-[1400px] space-y-4 px-9 pb-8 pt-7">
+        <main ref={main} className="content-layer relative min-w-0 flex-1 overflow-y-auto">
+          {/* На Mac заголовка окна нет: за верхнюю полосу содержимого окно тоже перетаскивается. */}
+          <div className="titlebar-space sticky top-0 z-10 -mb-7" data-tauri-drag-region />
+          <div
+            key={settingsOpen ? 'settings' : JSON.stringify(view)}
+            className="page-enter mx-auto max-w-[1400px] space-y-4 px-9 pb-8 pt-7"
+          >
             {settingsOpen ? <SettingsView /> : <Content view={view} />}
           </div>
         </main>
@@ -234,7 +244,8 @@ export function App() {
       )}
       <UpdateBanner />
 
-      <Player panel={panel} onPanel={setPanel} />
+      <Player panel={panel} onPanel={setPanel} onExpand={() => setNowPlaying(true)} onMini={() => void openMiniPlayer()} />
+      {nowPlaying && <NowPlaying onClose={() => setNowPlaying(false)} onMini={() => void openMiniPlayer()} />}
       {dragging && <DropOverlay />}
     </div>
   )

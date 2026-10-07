@@ -3,6 +3,7 @@ import { EQ_BANDS, EQ_PRESETS } from '../audio/engine'
 import { store, useStore } from '../state/store'
 import { Icon, type IconName } from './Icon'
 import { Slider } from './Slider'
+import { accentModes } from '../theme'
 import { t } from '../i18n'
 
 /** Строка настроек — как SettingsCard в «Параметрах»: значок, название, пояснение, управление справа. */
@@ -145,6 +146,19 @@ export function SettingsView() {
       </Group>
 
       <Group title={t('Приложение')}>
+        <SettingsCard icon="settings" title={t('Цвет акцента')} description={t('Кнопки, ползунки и выделение.')}>
+          <select
+            value={settings.accent === 'system' && !accentModes.includes('system') ? 'brand' : settings.accent}
+            onChange={(event) => store.update({ accent: event.target.value as typeof settings.accent })}
+            className="select"
+          >
+            {accentModes.map((mode) => (
+              <option key={mode} value={mode}>
+                {{ system: t('Как в системе'), cover: t('Из обложки'), brand: t('Nocturne') }[mode]}
+              </option>
+            ))}
+          </select>
+        </SettingsCard>
         <SettingsCard icon="info" title={t('Язык')}>
           <select
             value={settings.language}

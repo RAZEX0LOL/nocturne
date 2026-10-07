@@ -11,7 +11,10 @@ export interface Song {
   id: string
   title: string
   artist?: string
+  /** Есть у треков с сервера: по нему из плеера открывается страница исполнителя. */
+  artistId?: string
   album?: string
+  albumId?: string
   coverArt?: string
   /** Секунды, дробные: сервер отдаёт длительность с долями. */
   duration?: number

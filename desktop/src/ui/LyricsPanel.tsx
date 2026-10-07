@@ -4,10 +4,11 @@ import { Icon } from './Icon'
 import { t } from '../i18n'
 
 /**
- * Текст песни сбоку. Синхронизированный текст подсвечивает текущую строку и сам едет за ней,
- * а по строке можно перемотать — как в приложении на iPhone.
+ * Текст песни. Синхронизированный текст подсвечивает текущую строку и сам едет за ней,
+ * а по строке можно перемотать — как в приложении на iPhone. Крупный вариант — для
+ * полноэкранного плеера: строки как в «Музыке» Apple, прошедшие и будущие приглушены.
  */
-export function LyricsPanel({ onClose }: { onClose: () => void }) {
+export function Lyrics({ large = false }: { large?: boolean }) {
   const { queue, lyrics, position } = useStore()
   const song = queue?.current?.song
   const container = useRef<HTMLDivElement>(null)
@@ -28,6 +29,49 @@ export function LyricsPanel({ onClose }: { onClose: () => void }) {
     container.current?.querySelector(`[data-line="${active}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   }, [active])
 
+  const hint = large ? 'text-lg text-white/60' : 'text-sm text-secondary'
+  if (!song) return <p className={hint}>{t('Ничего не играет.')}</p>
+  if (lyrics?.songID !== song.id || lyrics.state === 'loading') return <p className={hint}>{t('Загружаем текст…')}</p>
+  if (lyrics.state === 'failed')
+    return (
+      <div className="space-y-2">
+        <p className={hint}>{t('Не удалось загрузить текст.')}</p>
+        <button onClick={() => void store.loadLyrics()} className="btn">
+          {t('Попробовать снова')}
+        </button>
+      </div>
+    )
+  if (!lines.length) return <p className={hint}>{t('Navidrome не нашёл текст для этого трека.')}</p>
+
+  const lineClass = (index: number) => {
+    if (large) {
+      const base = synced ? 'cursor-pointer text-[1.75rem] leading-snug font-bold tracking-tight transition-all duration-300' : 'text-xl font-semibold'
+      if (!synced || index === active) return `${base} text-white`
+      return `${base} text-white/35 hover:text-white/60 ${index < active ? 'blur-[0.5px]' : ''}`
+    }
+    const base = synced ? 'cursor-pointer text-base font-medium' : 'text-sm'
+    return `${base} ${!synced || index === active ? 'text-primary' : 'text-secondary/50'}`
+  }
+
+  return (
+    <div ref={container} className={synced ? (large ? 'space-y-6 py-[30vh]' : 'space-y-4') : 'space-y-1'}>
+      {lines.map((line, index) => (
+        <p
+          key={index}
+          data-line={index}
+          onClick={() => synced && line.start !== undefined && store.seek(line.start / 1000)}
+          className={lineClass(index)}
+        >
+          {line.value || ' '}
+        </p>
+      ))}
+    </div>
+  )
+}
+
+export function LyricsPanel({ onClose }: { onClose: () => void }) {
+  const { queue } = useStore()
+  const song = queue?.current?.song
   return (
     <aside className="content-layer flex w-80 shrink-0 flex-col border-l border-stroke">
       <div className="flex items-center justify-between px-4 py-3">
@@ -36,36 +80,8 @@ export function LyricsPanel({ onClose }: { onClose: () => void }) {
           <Icon name="close" size={12} />
         </button>
       </div>
-      <div ref={container} className="flex-1 overflow-y-auto px-4 pb-6">
-        {!song ? (
-          <p className="text-sm text-secondary">{t('Ничего не играет.')}</p>
-        ) : lyrics?.songID !== song.id || lyrics.state === 'loading' ? (
-          <p className="text-sm text-secondary">{t('Загружаем текст…')}</p>
-        ) : lyrics.state === 'failed' ? (
-          <div className="space-y-2">
-            <p className="text-sm text-secondary">{t('Не удалось загрузить текст.')}</p>
-            <button onClick={() => void store.loadLyrics()} className="btn">
-              {t('Попробовать снова')}
-            </button>
-          </div>
-        ) : lines.length === 0 ? (
-          <p className="text-sm text-secondary">{t('Navidrome не нашёл текст для этого трека.')}</p>
-        ) : (
-          <div className={synced ? 'space-y-4' : 'space-y-1'}>
-            {lines.map((line, index) => (
-              <p
-                key={index}
-                data-line={index}
-                onClick={() => synced && line.start !== undefined && store.seek(line.start / 1000)}
-                className={`${synced ? 'cursor-pointer text-base font-medium' : 'text-sm'} ${
-                  !synced || index === active ? 'text-primary' : 'text-secondary/50'
-                }`}
-              >
-                {line.value || ' '}
-              </p>
-            ))}
-          </div>
-        )}
+      <div className="flex-1 overflow-y-auto px-4 pb-6">
+        <Lyrics />
       </div>
     </aside>
   )

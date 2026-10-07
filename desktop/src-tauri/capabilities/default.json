@@ -1,13 +1,21 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Права главного окна: открыть ссылку в браузере, показать папку музыки, системный выбор файлов, проверка и установка обновлений, трек в заголовке окна.",
+  "description": "Права окон (главное и мини-плеер): открыть ссылку в браузере, показать папку музыки, системный выбор файлов, обновления, трек в заголовке, полноэкранный режим, мини-плеер поверх окон.",
   "windows": [
-    "main"
+    "main",
+    "mini"
   ],
   "permissions": [
     "core:default",
     "core:window:allow-set-title",
+    "core:webview:allow-create-webview-window",
+    "core:window:allow-unminimize",
+    "core:window:allow-show",
+    "core:window:allow-set-focus",
+    "core:window:allow-close",
+    "core:window:allow-start-dragging",
+    "core:window:allow-set-fullscreen",
     {
       "identifier": "opener:allow-open-path",
       "allow": [

@@ -84,6 +84,17 @@ export async function removeDownload(id: string) {
   await invoke('remove_download', { id })
 }
 
+/** Цвета обложки считает Rust: картинка с сервера не обязана разрешать окну читать свои пиксели. */
+export async function coverPalette(source: { url?: string; path?: string }) {
+  // В браузере при разработке интерфейса Rust нет: цвета грубо считаются по картинке, чтобы
+  // полноэкранный плеер можно было посмотреть и там. В сборку этот код не попадает.
+  if (!isDesktop()) return import.meta.env.DEV && source.url ? previewPalette(source.url) : undefined
+  return invoke<{ accent: string; colors: string[]; base: string } | null>('cover_palette', source).then(
+    (palette) => palette ?? undefined,
+    () => undefined,
+  )
+}
+
 export interface PendingUpdate {
   version: string
   notes?: string
@@ -108,4 +119,19 @@ export async function checkForUpdate(): Promise<PendingUpdate | undefined> {
       await relaunch()
     },
   }
+}
+
+async function previewPalette(url: string) {
+  const image = new Image()
+  image.crossOrigin = 'anonymous'
+  image.src = url
+  await image.decode().catch(() => undefined)
+  const canvas = document.createElement('canvas')
+  canvas.width = canvas.height = 24
+  const context = canvas.getContext('2d')
+  if (!context || !image.naturalWidth) return undefined
+  context.drawImage(image, 0, 0, 24, 24)
+  const [r, g, b] = Array.from(context.getImageData(12, 12, 1, 1).data)
+  const hex = `#${[r, g, b].map((value) => (value ?? 0).toString(16).padStart(2, '0')).join('')}`
+  return { accent: hex, colors: [hex], base: '#15121c' }
 }

@@ -1,8 +1,9 @@
 import type { Song } from './core/models'
 import { t } from './i18n'
-import { isWindows } from './native'
+import { isMac, isWindows } from './native'
 import { isDesktop } from './platform'
-import { store, type State } from './state/store'
+import { coverUrl, store, type State } from './state/store'
+import { setSystemAccent } from './theme'
 
 /**
  * Связь окна с системой вокруг него: системный плеер Windows, кнопки в превью на панели задач,
@@ -29,9 +30,7 @@ async function invoke<T>(command: string, args: Record<string, unknown> = {}): P
 }
 
 function applyAccent(accent: Accent) {
-  const root = document.documentElement.style
-  root.setProperty('--accent', accent.fill)
-  root.setProperty('--accent-text', accent.text)
+  setSystemAccent(accent.fill, accent.text)
 }
 
 export async function startShell() {
@@ -40,16 +39,9 @@ export async function startShell() {
   quietBrowserBehaviour()
   followTitle()
   void followDragDrop()
-  if (!isWindows) return
-
-  try {
-    const style = await invoke<NativeStyle>('native_style')
-    document.documentElement.classList.toggle('mica', style.mica)
-    if (style.accent) applyAccent(style.accent)
-  } catch {
-    // Без сведений о системе остаётся непрозрачный фон и свой акцент — тоже нормально.
-  }
-  await listen<Accent>('accent-changed', (event) => applyAccent(event.payload))
+  // Окно Mac прозрачное, под боковой панелью — системное стекло (tauri.macos.conf.json).
+  if (isMac) document.documentElement.classList.add('vibrancy')
+  // Кнопки системного плеера Windows и мини-плеера приходят одним событием.
   await listen<{ action: MediaAction; position?: number }>('media-command', ({ payload }) => {
     switch (payload.action) {
       case 'play': return store.resume()
@@ -60,6 +52,17 @@ export async function startShell() {
       case 'seek': return payload.position !== undefined && store.seek(payload.position)
     }
   })
+  void followMini()
+  if (!isWindows) return
+
+  try {
+    const style = await invoke<NativeStyle>('native_style')
+    document.documentElement.classList.toggle('mica', style.mica)
+    if (style.accent) applyAccent(style.accent)
+  } catch {
+    // Без сведений о системе остаётся непрозрачный фон и свой акцент — тоже нормально.
+  }
+  await listen<Accent>('accent-changed', (event) => applyAccent(event.payload))
   followPlayer()
 }
 
@@ -123,6 +126,67 @@ function followPlayer() {
 
   store.subscribe(sync)
   sync()
+}
+
+// MARK: - Мини-плеер
+
+const MINI = 'mini'
+
+/** Маленькое окно поверх остальных; повторный вызов просто показывает уже открытое. */
+export async function openMiniPlayer() {
+  if (!isDesktop()) return
+  const { WebviewWindow } = await import('@tauri-apps/api/webviewWindow')
+  const existing = await WebviewWindow.getByLabel(MINI)
+  if (existing) {
+    await existing.setFocus()
+    return
+  }
+  new WebviewWindow(MINI, {
+    url: 'index.html?mini',
+    title: 'Nocturne',
+    width: 380,
+    height: 128,
+    resizable: false,
+    maximizable: false,
+    decorations: false,
+    alwaysOnTop: true,
+    skipTaskbar: true,
+    shadow: true,
+    focus: true,
+  })
+}
+
+/** Главное окно — источник звука: мини-плееру отсюда уходит всё, что ему показать. */
+async function followMini() {
+  const { emitTo, listen } = await import('@tauri-apps/api/event')
+  let key = ''
+  const send = async (force = false) => {
+    const state = store.snapshot()
+    const song = state.queue?.current?.song
+    const next = `${song?.id}|${state.playing}|${Math.floor(state.position)}|${state.palette?.coverArt}`
+    if (next === key && !force) return
+    key = next
+    const cover = song ? await coverUrl(song.coverArt, state.offline ? undefined : state.client, 300).catch(() => undefined) : undefined
+    await emitTo(MINI, 'player-state', {
+      title: song?.title,
+      artist: song?.artist,
+      cover,
+      playing: state.playing,
+      position: state.position,
+      duration: state.duration || song?.duration || 0,
+      colors: state.palette?.colors ?? [],
+      accent: state.palette?.accent,
+    }).catch(() => {})
+  }
+  store.subscribe(() => void send())
+  await listen('mini-ready', () => void send(true))
+  await listen('mini-expand', async () => {
+    const { getCurrentWindow } = await import('@tauri-apps/api/window')
+    const window = getCurrentWindow()
+    await window.unminimize()
+    await window.show()
+    await window.setFocus()
+  })
 }
 
 // MARK: - Заголовок окна

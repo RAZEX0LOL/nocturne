@@ -5,6 +5,7 @@ import { Cover } from './Cover'
 import { SongList } from './SongList'
 import { Icon } from './Icon'
 import { InfoBar } from './InfoBar'
+import { AlbumCard, AlbumCardSkeleton, Shelf, SongListSkeleton } from './Shelf'
 import { isMac, isWindows } from '../native'
 import { t } from '../i18n'
 
@@ -47,20 +48,12 @@ function PlayButtons({ songs, downloadable = false }: { songs: Song[]; downloada
   )
 }
 
-export function AlbumGrid({ albums }: { albums: Album[] }) {
+export function AlbumGrid({ albums, loading = false }: { albums: Album[]; loading?: boolean }) {
   return (
-    <div className="grid grid-cols-[repeat(auto-fill,minmax(168px,1fr))] gap-2">
-      {albums.map((album) => (
-        <button
-          key={album.id}
-          onClick={() => store.open({ kind: 'album', album })}
-          className="list-row min-w-0 space-y-2 rounded-[var(--radius-card)] p-2 text-left"
-        >
-          <Cover id={album.coverArt} size={180} fluid />
-          <div className="truncate text-sm font-medium">{album.name}</div>
-          <div className="truncate text-xs text-secondary">{album.artist ?? t('Неизвестный исполнитель')}</div>
-        </button>
-      ))}
+    <div className="-mx-2 grid grid-cols-[repeat(auto-fill,minmax(176px,1fr))]">
+      {loading
+        ? Array.from({ length: 12 }, (_, index) => <AlbumCardSkeleton key={index} />)
+        : albums.map((album, index) => <AlbumCard key={`${album.id}-${index}`} album={album} />)}
     </div>
   )
 }
@@ -83,7 +76,7 @@ export function OfflineBanner() {
 }
 
 export function HomeView() {
-  const { recent, starred, offline, serverless, local, downloadedSongs } = useStore()
+  const { recent, starred, offline, serverless, local, downloadedSongs, shelves } = useStore()
   if (offline || serverless) {
     const onDisk = [...local, ...downloadedSongs]
     return (
@@ -96,22 +89,49 @@ export function HomeView() {
   }
   return (
     <div className="space-y-8">
+      <h1 className="page-title">{greeting()}</h1>
+      <Shelf title={t('Недавно слушал')} albums={shelves.played} loading={!shelves.loaded} />
+      <Shelf
+        title={t('Недавно добавленные')}
+        albums={recent}
+        loading={!shelves.loaded}
+        action={
+          <button onClick={() => store.section({ kind: 'albums' })} className="btn btn-subtle">
+            {t('Все альбомы')}
+          </button>
+        }
+      />
       {starred.length > 0 && (
-        <section className="space-y-3">
+        <section className="space-y-2">
           <Title action={<button onClick={() => store.section({ kind: 'favorites' })} className="btn btn-subtle">{t('Все')}</button>}>
-            {t('Любимые треки')}
+            <span className="section-title">{t('Любимые треки')}</span>
           </Title>
           <SongList songs={starred.slice(0, 5)} showAlbum />
         </section>
       )}
-      <section className="space-y-4">
-        <Title action={<button onClick={() => store.section({ kind: 'albums' })} className="btn btn-subtle">{t('Все альбомы')}</button>}>
-          {t('Недавно добавленные')}
-        </Title>
-        <AlbumGrid albums={recent} />
-      </section>
+      <Shelf title={t('Часто слушаю')} albums={shelves.frequent} loading={!shelves.loaded} />
+      <Shelf
+        title={t('Случайные альбомы')}
+        albums={shelves.random}
+        loading={!shelves.loaded}
+        action={
+          <button onClick={() => void store.shuffleShelf()} className="btn btn-subtle">
+            <Icon name="shuffle" size={14} />
+            {t('Другие')}
+          </button>
+        }
+      />
     </div>
   )
+}
+
+/** Приветствие по времени суток — главная выглядит живой, а не как список разделов. */
+function greeting() {
+  const hour = new Date().getHours()
+  if (hour < 5) return t('Доброй ночи')
+  if (hour < 12) return t('Доброе утро')
+  if (hour < 18) return t('Добрый день')
+  return t('Добрый вечер')
 }
 
 export function AlbumsView() {
@@ -130,15 +150,16 @@ export function AlbumsView() {
   return (
     <div className="space-y-6">
       <Title>{t('Альбомы')}</Title>
-      <AlbumGrid albums={albums} />
-      {!albumsComplete && <div ref={sentinel} className="py-6 text-center text-sm text-secondary">{t('Загружаю…')}</div>}
+      <AlbumGrid albums={albums} loading={!albums.length && !albumsComplete} />
+      {!albumsComplete && albums.length > 0 && <div ref={sentinel} className="h-8" />}
     </div>
   )
 }
 
 export function AlbumView({ album }: { album: Album }) {
   const { songs } = useStore()
-  const list = songs[album.id] ?? []
+  const loaded = songs[album.id]
+  const list = loaded ?? []
   return (
     <div className="space-y-6">
       <div className="flex gap-6">
@@ -162,7 +183,7 @@ export function AlbumView({ album }: { album: Album }) {
           </div>
         </div>
       </div>
-      <SongList songs={list} numbered />
+      {loaded ? <SongList songs={list} numbered /> : <SongListSkeleton />}
     </div>
   )
 }

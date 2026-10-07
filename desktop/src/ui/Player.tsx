@@ -4,29 +4,33 @@ import { popupMenu } from '../shell'
 import { Cover } from './Cover'
 import { Icon } from './Icon'
 import { Slider } from './Slider'
+import { SeekBar, Transport } from './Transport'
 import { t } from '../i18n'
 
 export type Panel = 'queue' | 'lyrics' | null
-
-function time(seconds: number) {
-  if (!Number.isFinite(seconds) || seconds < 0) return '0:00'
-  const minutes = Math.floor(seconds / 60)
-  return `${minutes}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`
-}
 
 /**
  * Нижняя панель, как у «Медиаплеера» Windows: слева — что играет, в центре — управление
  * и перемотка, справа — громкость и боковые панели.
  */
-export function Player({ panel, onPanel }: { panel: Panel; onPanel: (panel: Panel) => void }) {
-  const { queue, playing, buffering, position, duration, settings, starredIds, client, offline } = useStore()
+export function Player({
+  panel,
+  onPanel,
+  onExpand,
+  onMini,
+}: {
+  panel: Panel
+  onPanel: (panel: Panel) => void
+  onExpand: () => void
+  onMini: () => void
+}) {
+  const { queue, settings, starredIds, client, offline } = useStore()
   // Громкость до выключения звука: кнопка возвращает её, а не 100 %.
   const unmuted = useRef(1)
   const song = queue?.current?.song
   if (!song) return null
   const starred = starredIds.has(song.id)
   const canStar = !!client && !offline && !song.id.startsWith('local:')
-  const total = duration || song.duration || 0
   const muted = settings.volume === 0
 
   const toggleMute = () => {
@@ -40,11 +44,16 @@ export function Player({ panel, onPanel }: { panel: Panel; onPanel: (panel: Pane
   return (
     <footer className="grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)_minmax(0,1fr)] items-center gap-4 border-t border-stroke px-4 py-2.5">
       <div className="flex min-w-0 items-center gap-3">
-        <Cover id={song.coverArt} size={56} rounded="rounded-[var(--radius-card)]" />
-        <div className="min-w-0">
-          <div className="truncate font-semibold">{song.title}</div>
+        <button onClick={onExpand} className="group relative shrink-0" title={t('Сейчас играет')} aria-label={t('Сейчас играет')}>
+          <Cover id={song.coverArt} size={56} rounded="rounded-[var(--radius-card)]" />
+          <span className="absolute inset-0 grid place-items-center rounded-[var(--radius-card)] bg-black/50 text-white opacity-0 transition-opacity group-hover:opacity-100">
+            <Icon name="expand" size={16} />
+          </span>
+        </button>
+        <button onClick={onExpand} className="min-w-0 text-left">
+          <div className="truncate font-semibold hover:underline">{song.title}</div>
           <div className="truncate text-xs text-secondary">{song.artist ?? t('Неизвестный исполнитель')}</div>
-        </div>
+        </button>
         {canStar && (
           <button
             onClick={() => void store.toggleStar(song)}
@@ -59,58 +68,15 @@ export function Player({ panel, onPanel }: { panel: Panel; onPanel: (panel: Pane
       </div>
 
       <div className="flex flex-col items-center gap-0.5">
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => store.setShuffle(!queue.shuffle)}
-            className="icon-btn"
-            aria-pressed={queue.shuffle}
-            title={queue.shuffle ? t('Перемешивание: вкл.') : t('Перемешивание: откл.')}
-            aria-label={t('Перемешивать')}
-          >
-            <Icon name="shuffle" />
-          </button>
-          <button onClick={() => void store.previous()} className="icon-btn text-primary" title={t('Предыдущий трек')} aria-label={t('Предыдущий трек')}>
-            <Icon name="previous" />
-          </button>
-          <button
-            onClick={() => store.toggle()}
-            className="btn-accent mx-1 grid h-10 w-10 place-items-center rounded-full transition-colors"
-            title={playing ? t('Пауза') : t('Воспроизвести')}
-            aria-label={playing ? t('Пауза') : t('Воспроизвести')}
-          >
-            <Icon name={playing ? 'pause' : 'play'} size={16} className={buffering ? 'animate-pulse' : ''} />
-          </button>
-          <button onClick={() => void store.advance()} className="icon-btn text-primary" title={t('Следующий трек')} aria-label={t('Следующий трек')}>
-            <Icon name="next" />
-          </button>
-          <button
-            onClick={() => store.cycleRepeat()}
-            className="icon-btn"
-            aria-pressed={queue.repeatMode !== 'off'}
-            title={
-              queue.repeatMode === 'one' ? t('Повтор: один трек') : queue.repeatMode === 'all' ? t('Повтор: все') : t('Повтор: откл.')
-            }
-            aria-label={t('Режим повтора')}
-          >
-            <Icon name={queue.repeatMode === 'one' ? 'repeatOne' : 'repeat'} />
-          </button>
-        </div>
-        <div className="flex w-full max-w-2xl items-center gap-3">
-          <span className="w-10 text-right text-xs tabular-nums text-secondary">{time(position)}</span>
-          <Slider
-            value={Math.min(position, total)}
-            max={Math.max(total, 1)}
-            step={0.5}
-            onChange={(value) => store.seek(value)}
-            label={t('Перемотка')}
-            className="flex-1"
-          />
-          <span className="w-10 text-xs tabular-nums text-secondary">{time(total)}</span>
-        </div>
+        <Transport />
+        <SeekBar className="w-full max-w-2xl" />
       </div>
 
       <div className="flex items-center justify-end gap-1">
         <SleepTimerButton />
+        <button onClick={onMini} className="icon-btn" title={t('Мини-плеер')} aria-label={t('Мини-плеер')}>
+          <Icon name="miniPlayer" />
+        </button>
         <button
           onClick={() => onPanel(panel === 'lyrics' ? null : 'lyrics')}
           className="icon-btn"
