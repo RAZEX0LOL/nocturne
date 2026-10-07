@@ -307,6 +307,9 @@ const english: Record<string, string> = {
   'Глобальные сочетания клавиш': 'Global keyboard shortcuts',
   'Работают в любой программе: {mod}Пробел — пауза, {mod}→ и ← — трек, {mod}↑ и ↓ — громкость.':
     'Work in any app: {mod}Space — pause, {mod}→ and ← — song, {mod}↑ and ↓ — volume.',
+  'Кроссфейд': 'Crossfade',
+  'Треки плавно перетекают друг в друга. «Нет» — следующий трек начинается встык, без паузы.':
+    'Songs blend into each other. “Off” — the next song starts right away, with no gap.',
 }
 
 let language: Language = 'auto'

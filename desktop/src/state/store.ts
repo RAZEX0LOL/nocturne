@@ -243,6 +243,14 @@ class Store {
 
   constructor() {
     this.engine.onEnded = () => void this.advance(true)
+    // Кроссфейд или стык без паузы: следующий трек уже звучит, очередь догоняет его.
+    this.engine.onAdvance = () => void this.advance(true)
+    this.engine.canAdvance = (songID) => {
+      const queue = this.state.queue
+      if (!queue || this.state.sleepAtTrackEnd) return false
+      const next = queue.nextPosition(true)
+      return next !== null && queue.items[next]?.song.id === songID
+    }
     this.engine.onTimeUpdate = (position, duration) => {
       this.patch({ position, duration })
       // Прослушивание засчитывается после половины трека или четырёх минут — как у Navidrome.
@@ -289,6 +297,8 @@ class Store {
     this.patch({ queueVersion: this.state.queueVersion + 1 })
     this.saveQueue()
     this.scheduleQueueSync()
+    // Очередь поменялась — следующим может оказаться другой трек: готовим именно его.
+    void this.prepareNext()
   }
 
   // MARK: - Очередь на сервере
@@ -1082,7 +1092,7 @@ class Store {
     // Повтор одного трека и недоступные треки готовить не нужно: играть будет нечего или то же самое.
     if (!song || song.id === queue.current?.song.id || !this.isPlayable(song)) return
     const url = await this.sourceUrl(song)
-    if (url) this.engine.prepare(url, song.id)
+    if (url) this.engine.prepare(url, song, this.state.settings.replayGain)
   }
 
   /** Явные «играть» и «пауза» — для системных кнопок: им нужен не переключатель, а команда. */

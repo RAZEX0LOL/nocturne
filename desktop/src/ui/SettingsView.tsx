@@ -94,7 +94,11 @@ export function SettingsView() {
           </select>
         </SettingsCard>
 
-        <SettingsCard icon="shuffle" title={t('Плавные переходы')} description={t('Затухание в конце трека и нарастание в начале.')}>
+        <SettingsCard
+          icon="shuffle"
+          title={t('Кроссфейд')}
+          description={t('Треки плавно перетекают друг в друга. «Нет» — следующий трек начинается встык, без паузы.')}
+        >
           <span className="w-12 text-right text-sm tabular-nums text-secondary">
             {settings.fadeSeconds ? t('{n} с', { n: settings.fadeSeconds }) : t('Нет')}
           </span>
