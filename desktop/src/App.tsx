@@ -12,6 +12,7 @@ import { SettingsView } from './ui/SettingsView'
 import { SidebarPlaylists } from './ui/SidebarPlaylists'
 import { DialogHost } from './ui/Dialogs'
 import { DragGhost } from './ui/DragGhost'
+import { SmartEditor } from './ui/SmartEditor'
 import {
   DownloadsView,
   LocalView,
@@ -73,6 +74,7 @@ const sectionOf: Record<View['kind'], View['kind']> = {
   genres: 'genres',
   genre: 'genres',
   radio: 'radio',
+  smart: 'playlists',
 }
 
 function Content({ view }: { view: View }) {
@@ -91,6 +93,7 @@ function Content({ view }: { view: View }) {
     case 'genres': return <GenresView />
     case 'genre': return <GenreView genre={view.genre} />
     case 'radio': return <RadioView />
+    case 'smart': return <SmartEditor id={view.id} />
   }
 }
 

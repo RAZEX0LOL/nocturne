@@ -16,6 +16,7 @@ import {
 } from '../core/models'
 import { moveItems } from '../core/order'
 import { lrclibLyrics } from '../core/lrc'
+import { fromNsp, toNsp, type Nsp, type SmartForm } from '../core/smart'
 import { PlaybackQueue, type RepeatMode } from '../core/queue'
 import type { ReplayGainMode } from '../core/replaygain'
 import { keepScrobble, orderedScrobbles, remainingScrobbles, type ScrobblePlay } from '../core/scrobbles'
@@ -50,6 +51,9 @@ export interface Settings {
   globalShortcuts: boolean
   /** Полосы спектра под обложкой в полноэкранном плеере. */
   visualizer: boolean
+  /** «Слушает … в Nocturne» в статусе Discord; нужен ID своего приложения Discord. */
+  discord: boolean
+  discordClientId: string
   accent: AccentMode
   quality: StreamQuality
   replayGain: ReplayGainMode
@@ -72,6 +76,8 @@ export type View =
   | { kind: 'genres' }
   | { kind: 'genre'; genre: string }
   | { kind: 'radio' }
+  /** Редактор умного плейлиста: без id — новый. */
+  | { kind: 'smart'; id?: string }
   | { kind: 'playlist'; playlist: Playlist }
   | { kind: 'favorites' }
   | { kind: 'search' }
@@ -111,6 +117,8 @@ export interface State {
   /** Страница исполнителя: популярные треки и сведения Last.fm. */
   artistExtras: Record<string, { top: Song[]; info: ArtistInfo }>
   albumNotes: Record<string, string>
+  /** Какие плейлисты умные (собираются сервером по правилам); null — сервер не Navidrome. */
+  smartIds: Set<string> | null
   /** Очередь с другого устройства, которую можно продолжить здесь. */
   remoteQueue?: RemoteQueue
   starred: Song[]
@@ -167,6 +175,8 @@ const defaultSettings: Settings = {
   closeToTray: false,
   globalShortcuts: true,
   visualizer: true,
+  discord: false,
+  discordClientId: '',
   accent: 'system',
   quality: 'mp3High',
   replayGain: 'off',
@@ -209,6 +219,7 @@ class Store {
     genres: [],
     genreAlbums: {},
     radio: [],
+    smartIds: new Set(),
     artistExtras: {},
     albumNotes: {},
     starred: [],
@@ -588,6 +599,7 @@ class Store {
     if (!client) return
     try {
       void client.playlists().then((playlists) => this.patch({ playlists })).catch(() => {})
+      void this.loadSmartIds()
       const [recent, starred, played, frequent, random] = await Promise.all([
         client.albums('newest', 0, 24),
         client.starred(),
@@ -831,6 +843,55 @@ class Store {
     if (!client) return
     await this.playlistAction(() => client.deletePlaylist(playlist.id), t('Не удалось удалить плейлист.'))
     if (this.state.view.kind === 'playlist' && this.state.view.playlist.id === playlist.id) this.section({ kind: 'playlists' })
+  }
+
+  // MARK: - Умные плейлисты (собственный API Navidrome)
+
+  private get navidromeLogin(): platform.NavidromeLogin | undefined {
+    const credentials = this.state.client?.credentials
+    if (!credentials) return undefined
+    return { server: credentials.server.toString(), username: credentials.username, password: credentials.password }
+  }
+
+  /** Какие из плейлистов умные: у них есть правила. Не Navidrome (Gonic, Airsonic) — null. */
+  async loadSmartIds() {
+    const login = this.navidromeLogin
+    if (!login || !this.online) return
+    try {
+      const list = await platform.navidromeApi<Array<{ id: string; rules?: unknown }>>(login, 'GET', '/api/playlist')
+      this.patch({ smartIds: new Set(list.filter((one) => one.rules).map((one) => one.id)) })
+    } catch {
+      this.patch({ smartIds: null })
+    }
+  }
+
+  async loadSmartPlaylist(id: string): Promise<SmartForm> {
+    const login = this.navidromeLogin
+    if (!login) throw new MusicError(t('Нет подключения к серверу.'))
+    const playlist = await platform.navidromeApi<{ name: string; rules?: Nsp | null }>(login, 'GET', `/api/playlist/${id}`)
+    return fromNsp(playlist.name, playlist.rules)
+  }
+
+  /** Сохраняет правила; сервер сам пересоберёт треки. Возвращает id плейлиста. */
+  async saveSmartPlaylist(form: SmartForm, id?: string): Promise<string | undefined> {
+    const login = this.navidromeLogin
+    const client = this.state.client
+    if (!login || !client) return
+    const body = { name: form.name.trim(), rules: toNsp(form), public: false }
+    try {
+      const saved = id
+        ? (await platform.navidromeApi(login, 'PUT', `/api/playlist/${id}`, body), id)
+        : (await platform.navidromeApi<{ id: string }>(login, 'POST', '/api/playlist', body)).id
+      this.patch({ playlists: await client.playlists().catch(() => this.state.playlists) })
+      await this.loadSmartIds()
+      // Старые треки плейлиста больше не верны — пусть страница возьмёт свежие.
+      const { [saved]: _stale, ...songs } = this.state.songs
+      this.patch({ songs })
+      this.showNotice(t('Умный плейлист «{name}» сохранён', { name: body.name }))
+      return saved
+    } catch {
+      this.patch({ error: t('Не удалось сохранить умный плейлист. Он работает только с Navidrome.') })
+    }
   }
 
   // MARK: - Своя музыка и загрузки

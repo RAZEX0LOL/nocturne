@@ -3,8 +3,11 @@
 mod glyphs;
 mod library;
 mod palette;
+mod nd_api;
 #[cfg(desktop)]
 mod tray;
+#[cfg(desktop)]
+mod discord;
 
 #[cfg(target_os = "macos")]
 mod sf_symbols;
@@ -204,6 +207,7 @@ pub fn run() {
             delete_credentials,
             debug_log,
             cover_palette,
+            nd_api::navidrome_api,
             sf_symbols::system_symbols,
             library::local_library,
             library::import_items,
@@ -220,7 +224,11 @@ pub fn run() {
             #[cfg(desktop)]
             tray::set_close_to_tray,
             #[cfg(desktop)]
-            tray::tray_update
+            tray::tray_update,
+            #[cfg(desktop)]
+            discord::discord_presence,
+            #[cfg(desktop)]
+            discord::discord_disconnect
         ])
         .build(tauri::generate_context!())
         .expect("не удалось запустить приложение")

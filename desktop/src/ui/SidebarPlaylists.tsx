@@ -9,10 +9,12 @@ import { t } from '../i18n'
 
 /** Правый клик по плейлисту: играть, переименовать, удалить — как в «Музыке» Apple. */
 export function playlistMenu(playlist: Playlist) {
+  const smart = store.snapshot().smartIds?.has(playlist.id) ?? false
   return popupMenu([
     { text: t('Играть'), action: () => void store.playPlaylist(playlist) },
     { text: t('Перемешать'), action: () => void store.playPlaylist(playlist, true) },
     'separator',
+    smart && { text: t('Изменить правила…'), action: () => store.open({ kind: 'smart', id: playlist.id }) },
     {
       text: t('Переименовать…'),
       action: () =>
@@ -31,6 +33,14 @@ export function playlistMenu(playlist: Playlist) {
   ])
 }
 
+/** «+» у плейлистов: обычный или умный (последний — только у Navidrome). */
+export function newPlaylistMenu() {
+  return popupMenu([
+    { text: t('Новый плейлист…'), action: () => void newPlaylist() },
+    store.snapshot().smartIds !== null && { text: t('Новый умный плейлист…'), action: () => store.open({ kind: 'smart' }) },
+  ])
+}
+
 export function newPlaylist() {
   return askText(t('Новый плейлист'), { label: t('Название'), confirm: t('Создать') }).then(async (name) => {
     if (!name) return
@@ -42,11 +52,14 @@ export function newPlaylist() {
 /** Один плейлист в боковой панели — он же цель для перетащенных треков. */
 function PlaylistItem({ playlist, active, onNavigate }: { playlist: Playlist; active: boolean; onNavigate: () => void }) {
   const drag = useDrag()
+  const { smartIds } = useStore()
+  const smart = smartIds?.has(playlist.id) ?? false
   const key = `sidebar-playlist:${playlist.id}`
-  useEffect(() => registerDrop(key, (payload) => void store.addToPlaylist(playlist, payload.songs)), [key, playlist])
+  // В умный плейлист треки не бросают: его собирает сервер по правилам.
+  useEffect(() => (smart ? undefined : registerDrop(key, (payload) => void store.addToPlaylist(playlist, payload.songs))), [key, playlist, smart])
   return (
     <button
-      data-drop={key}
+      data-drop={smart ? undefined : key}
       onClick={() => {
         onNavigate()
         store.open({ kind: 'playlist', playlist })
@@ -59,7 +72,7 @@ function PlaylistItem({ playlist, active, onNavigate }: { playlist: Playlist; ac
       aria-current={active ? 'page' : undefined}
       title={playlist.name}
     >
-      <Icon name="playlist" />
+      <Icon name={smart ? 'smart' : 'playlist'} />
       <span className="truncate">{playlist.name}</span>
     </button>
   )
@@ -81,12 +94,13 @@ export function SidebarPlaylists({ onNavigate }: { onNavigate: () => void }) {
   )
   const openId = view.kind === 'playlist' ? view.playlist.id : undefined
   return (
-    <section className="mt-4 space-y-0.5">
+    // data-user-content: названия плейлистов — данные человека, их не переводят (сквозной тест знает).
+    <section className="mt-4 space-y-0.5" data-user-content>
       <div className="flex items-center justify-between px-3 pb-1">
         <span className="text-xs font-semibold text-secondary">{t('Плейлисты')}</span>
         <button
           data-drop={newKey}
-          onClick={() => void newPlaylist()}
+          onClick={() => void newPlaylistMenu()}
           className={`icon-btn h-6 w-6 ${drag?.target === newKey ? 'drop-target' : ''}`}
           title={t('Новый плейлист')}
           aria-label={t('Новый плейлист')}

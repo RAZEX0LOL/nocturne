@@ -29,6 +29,7 @@ AUDIO = {s["id"]: wav(330 + 110 * i) for i, s in enumerate(SONGS)}
 SONG_BY_ID = {s["id"]: s for s in SONGS}
 PLAYLISTS = {}
 RATINGS = {}
+NATIVE_TOKEN = "mock-native-token"
 PLAY_QUEUE = {}
 STARRED = {"t0"}
 ALBUM = {"id": "al-1", "name": "Mock Album", "artist": "Mock Artist", "artistId": "ar-1", "coverArt": "al-1", "songCount": 3, "year": 2026}
@@ -45,10 +46,45 @@ class Handler(BaseHTTPRequestHandler):
         # Веб-версия ходит сюда с другого порта (Vite), иначе браузер отклонит ответ.
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Headers", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
         self.send_header("Access-Control-Expose-Headers", "Content-Length, Content-Range")
 
     def do_OPTIONS(self):
         self.send_response(204); self.cors(); self.send_header("Content-Length", "0"); self.end_headers()
+
+    # Собственный API Navidrome (не Subsonic): вход по JSON и плейлисты с правилами умных.
+    def native(self, method):
+        url = urlparse(self.path)
+        length = int(self.headers.get("Content-Length") or 0)
+        body = json.loads(self.rfile.read(length) or b"{}") if length else {}
+        if url.path == "/auth/login" and method == "POST":
+            if body.get("password") != PASSWORD: return self.reply(b'{"error":"Invalid credentials"}', status=401)
+            return self.reply(json.dumps({"id": "u1", "name": body.get("username"), "token": NATIVE_TOKEN}).encode())
+        if self.headers.get("X-ND-Authorization") != f"Bearer {NATIVE_TOKEN}": return self.reply(b"{}", status=401)
+        parts = url.path.rstrip("/").split("/")
+        if url.path.rstrip("/") == "/api/playlist":
+            if method == "GET":
+                return self.reply(json.dumps([{"id": pid, "name": p["name"], "rules": p.get("rules")} for pid, p in PLAYLISTS.items()]).encode())
+            if method == "POST":
+                pid = f"pl{len(PLAYLISTS) + 1}"; PLAYLISTS[pid] = {"name": body["name"], "songs": [], "rules": body.get("rules")}
+                return self.reply(json.dumps({"id": pid}).encode())
+        if len(parts) == 4 and parts[2] == "playlist" and parts[3] in PLAYLISTS:
+            p = PLAYLISTS[parts[3]]
+            if method == "GET": return self.reply(json.dumps({"id": parts[3], "name": p["name"], "rules": p.get("rules")}).encode())
+            if method == "PUT":
+                p["name"] = body.get("name", p["name"]); p["rules"] = body.get("rules"); return self.reply(b"{}")
+        return self.reply(b"{}", status=404)
+
+    def do_POST(self): return self.native("POST")
+    def do_PUT(self): return self.native("PUT")
+
+    @staticmethod
+    def smart_songs(rules):
+        """Грубая сборка умного плейлиста: «в избранном» — избранные, иначе все; потом лимит."""
+        conditions = (rules or {}).get("all") or (rules or {}).get("any") or []
+        loved = any(c.get("is", {}).get("loved") is True for c in conditions)
+        songs = [s for s in SONGS if s["id"] in STARRED] if loved else list(SONGS)
+        return songs[: rules.get("limit") or len(songs)]
 
     def ok(self, **payload):
         self.reply(json.dumps({"subsonic-response": {"status": "ok", "version": "1.16.1", **payload}}).encode())
@@ -69,6 +105,7 @@ class Handler(BaseHTTPRequestHandler):
         url = urlparse(self.path); q = {k: v[0] for k, v in parse_qs(url.query).items()}
         endpoint = url.path.rsplit("/", 1)[-1].replace(".view", "")
         # Интернет-радио — чужой поток без подписи Subsonic и без CORS, как у настоящих станций.
+        if url.path.startswith("/api/"): return self.native("GET")
         if url.path == "/radio":
             data = next(iter(AUDIO.values()))
             self.send_response(200); self.send_header("Content-Type", "audio/wav"); self.send_header("Content-Length", str(len(data)))
@@ -95,7 +132,9 @@ class Handler(BaseHTTPRequestHandler):
         if endpoint == "getPlaylists":
             return self.ok(playlists={"playlist": [{"id": pid, "name": p["name"], "songCount": len(p["songs"]), "coverArt": "al-1"} for pid, p in PLAYLISTS.items()]})
         if endpoint == "getPlaylist":
-            p = PLAYLISTS[q["id"]]; return self.ok(playlist={"id": q["id"], "name": p["name"], "entry": [SONG_BY_ID[i] for i in p["songs"]]})
+            p = PLAYLISTS[q["id"]]
+            entries = self.smart_songs(p["rules"]) if p.get("rules") else [SONG_BY_ID[i] for i in p["songs"]]
+            return self.ok(playlist={"id": q["id"], "name": p["name"], "entry": entries})
         if endpoint == "createPlaylist":
             pid = f"pl{len(PLAYLISTS) + 1}"; PLAYLISTS[pid] = {"name": q["name"], "songs": parse_qs(url.query).get("songId", [])}; return self.ok()
         if endpoint == "updatePlaylist":

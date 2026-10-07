@@ -56,6 +56,7 @@ export async function startShell() {
   })
   void followMini()
   followSystemSettings()
+  followDiscord()
   if (!isMac) followTray()
   if (!isWindows) return
 
@@ -171,6 +172,46 @@ function followTray() {
       playing: state.playing,
       title,
     }).catch(() => {})
+  }
+  store.subscribe(sync)
+  sync()
+}
+
+// MARK: - Discord
+
+/**
+ * Статус в Discord: что играет и полоса времени. Обновляется при смене трека, паузе и перемотке;
+ * на паузе статус убирается, как у Spotify. Discord не запущен — молча ждём следующего раза.
+ */
+function followDiscord() {
+  let sent = ''
+  let lastPosition = 0
+  const sync = () => {
+    const { settings, queue, playing, position, duration } = store.snapshot()
+    const jumped = Math.abs(position - lastPosition) > 3
+    lastPosition = position
+    const clientId = settings.discordClientId.trim()
+    if (!settings.discord || !clientId) {
+      if (sent) void invoke('discord_disconnect').catch(() => {})
+      sent = ''
+      return
+    }
+    const song = queue?.current?.song
+    const key = `${clientId}|${song?.id}|${playing}|${Math.round(duration)}`
+    if (key === sent && !jumped) return
+    sent = key
+    const startedAt = Date.now() - position * 1000
+    const total = duration || song?.duration || 0
+    void invoke('discord_presence', {
+      clientId,
+      presence:
+        song && playing
+          ? { title: song.title, artist: song.artist, album: song.album, startedAt: Math.round(startedAt), endsAt: total ? Math.round(startedAt + total * 1000) : null }
+          : null,
+    }).catch(() => {
+      // Discord не запущен или ID неверный — попробуем снова при следующем изменении.
+      sent = ''
+    })
   }
   store.subscribe(sync)
   sync()

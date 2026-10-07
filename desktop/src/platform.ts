@@ -135,3 +135,33 @@ async function previewPalette(url: string) {
   const hex = `#${[r, g, b].map((value) => (value ?? 0).toString(16).padStart(2, '0')).join('')}`
   return { accent: hex, colors: [hex], base: '#15121c' }
 }
+
+export interface NavidromeLogin {
+  server: string
+  username: string
+  password: string
+}
+
+/**
+ * Собственный API Navidrome (правила умных плейлистов). В приложении запрос идёт через Rust —
+ * Navidrome не обязан пускать окно к своему API; в браузере при разработке — напрямую.
+ */
+export async function navidromeApi<T>(login: NavidromeLogin, method: string, path: string, body?: unknown): Promise<T> {
+  if (isDesktop()) return invoke<T>('navidrome_api', { login, method, path, body })
+  const base = login.server.replace(/\/$/, '')
+  const auth = await fetch(`${base}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username: login.username, password: login.password }),
+  })
+  if (!auth.ok) throw new Error(`Navidrome ${auth.status}`)
+  const { token } = (await auth.json()) as { token: string }
+  const response = await fetch(`${base}${path}`, {
+    method,
+    headers: { 'X-ND-Authorization': `Bearer ${token}`, ...(body ? { 'Content-Type': 'application/json' } : {}) },
+    body: body ? JSON.stringify(body) : undefined,
+  })
+  if (!response.ok) throw new Error(`Navidrome ${response.status}`)
+  const text = await response.text()
+  return (text ? JSON.parse(text) : null) as T
+}

@@ -7,7 +7,7 @@ import { Icon } from './Icon'
 import { InfoBar } from './InfoBar'
 import { AlbumCard, AlbumCardSkeleton, Shelf, SongListSkeleton } from './Shelf'
 import { songMenu } from './SongList'
-import { playlistMenu, newPlaylist } from './SidebarPlaylists'
+import { playlistMenu, newPlaylistMenu } from './SidebarPlaylists'
 import { registerDrop, useDrag } from './drag'
 import { popupMenu, type MenuEntry } from '../shell'
 import { isMac, isWindows } from '../native'
@@ -326,7 +326,7 @@ export function PlaylistsView() {
     <div className="space-y-6">
       <Title
         action={
-          <button onClick={() => void newPlaylist()} className="btn btn-accent">
+          <button onClick={() => void newPlaylistMenu()} className="btn btn-accent">
             <Icon name="add" size={14} />
             {t('Новый плейлист')}
           </button>
@@ -360,7 +360,8 @@ export function PlaylistsView() {
 }
 
 export function PlaylistView({ playlist }: { playlist: Playlist }) {
-  const { songs, playlists } = useStore()
+  const { songs, playlists, smartIds } = useStore()
+  const smart = smartIds?.has(playlist.id) ?? false
   const loaded = songs[playlist.id]
   const list = loaded ?? []
   // Свежие сведения (название, число треков) — из общего списка: страница могла открыться до правки.
@@ -370,13 +371,19 @@ export function PlaylistView({ playlist }: { playlist: Playlist }) {
       <div className="flex gap-6">
         <Cover id={current.coverArt} size={180} />
         <div className="flex min-w-0 flex-col justify-end gap-2">
-          <p className="text-xs uppercase tracking-wider text-secondary">{t('Плейлист')}</p>
+          <p className="text-xs uppercase tracking-wider text-secondary">{smart ? t('Умный плейлист') : t('Плейлист')}</p>
           <h1 className="page-title">{current.name}</h1>
           <p className="text-sm text-secondary">
             {[t('{n} треков', { n: list.length || current.songCount || 0 }), list.length ? totalTime(list) : ''].filter(Boolean).join(' · ')}
           </p>
           <div className="flex gap-2 pt-2">
             <PlayButtons songs={list} downloadable />
+            {smart && (
+              <button onClick={() => store.open({ kind: 'smart', id: current.id })} className="btn">
+                <Icon name="smart" size={14} />
+                {t('Правила')}
+              </button>
+            )}
             <button onClick={() => void playlistMenu(current)} className="btn" title={t('Ещё')} aria-label={t('Ещё')}>
               <Icon name="more" size={14} />
             </button>
@@ -384,7 +391,9 @@ export function PlaylistView({ playlist }: { playlist: Playlist }) {
         </div>
       </div>
       {loaded ? (
-        list.length ? (
+        list.length && smart ? (
+          <SongList songs={list} showAlbum />
+        ) : list.length ? (
           <>
             <p className="text-xs text-secondary">{t('Порядок меняется перетаскиванием строк. Треки можно перетащить сюда из любого списка.')}</p>
             <SongList
@@ -397,6 +406,8 @@ export function PlaylistView({ playlist }: { playlist: Playlist }) {
               removeLabel={t('Убрать из плейлиста')}
             />
           </>
+        ) : smart ? (
+          <p className="card p-6 text-secondary">{t('Под правила пока не подходит ни один трек.')}</p>
         ) : (
           <PlaylistEmpty playlist={current} />
         )

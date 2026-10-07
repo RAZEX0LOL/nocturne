@@ -3,6 +3,7 @@ import {
   Check,
   ChevronDown,
   Star,
+  ListFilter,
   Radio,
   Tags,
   ListPlus,
@@ -102,6 +103,7 @@ const icons = {
   genre: ['\uE8EC', Tags],
   playlistAdd: ['\uE710', ListPlus],
   grip: ['\uE76F', GripVertical],
+  smart: ['\uE71C', ListFilter],
 } satisfies Record<string, [string, LucideIcon]>
 
 export type IconName = keyof typeof icons
@@ -155,6 +157,7 @@ const symbols: Record<IconName, string> = {
   genre: 'guitars',
   playlistAdd: 'text.badge.plus',
   grip: 'line.3.horizontal',
+  smart: 'line.3.horizontal.decrease.circle',
 }
 
 let symbolImages: Partial<Record<IconName, string>> = {}
