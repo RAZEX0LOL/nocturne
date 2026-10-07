@@ -291,6 +291,76 @@ a {
   }
 }
 
+/* Длинные списки (тысячи треков в избранном): строки за пределами экрана не рисуются вовсе. */
+.song-row {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 48px;
+}
+.song-table:focus {
+  outline: none;
+}
+/* Выделенная строка — подложка цвета акцента, как выделение в Finder и проводнике. */
+.song-row.is-selected,
+.song-row.is-selected:hover {
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+}
+.song-table:not(:focus-within) .song-row.is-selected {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+/* Куда встанут треки при перетаскивании: линия цвета акцента между строками. */
+.drop-before::before,
+.drop-after::after {
+  content: "";
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--accent);
+  pointer-events: none;
+}
+.drop-before::before { top: -1px; }
+.drop-after::after { bottom: -1px; }
+body.dragging-songs,
+body.dragging-songs * {
+  cursor: grabbing !important;
+  user-select: none;
+}
+/* Цель перетаскивания под курсором (плейлист в боковой панели, очередь) подсвечивается. */
+.drop-target {
+  box-shadow: inset 0 0 0 2px var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent) !important;
+}
+
+/* Плитки жанров — у каждого свой оттенок, как плитки категорий в «Музыке» Apple. */
+.genre-tile {
+  background: linear-gradient(135deg, hsl(var(--hue) 55% 42%), hsl(calc(var(--hue) + 40) 60% 24%));
+  color: #fff;
+}
+.genre-tile:hover {
+  filter: brightness(1.12);
+}
+
+.dialog-pop {
+  animation: dialog-pop 200ms cubic-bezier(0.1, 0.9, 0.2, 1);
+}
+@keyframes dialog-pop {
+  from { opacity: 0; transform: scale(1.05); }
+  to { opacity: 1; transform: none; }
+}
+:root[data-platform="windows"] .dialog-footer {
+  background: #202020;
+  border-top: 1px solid var(--stroke);
+}
+:root[data-platform="windows"] .dialog-footer > .btn {
+  flex: 1;
+}
+/* На Mac главная кнопка — справа, как в листах AppKit. */
+:root[data-platform="macos"] .dialog-footer {
+  flex-direction: row-reverse;
+  justify-content: flex-start;
+}
+
 @layer components {
   /* Типографика: на Windows — шкала Fluent (Title 28, Subtitle 20, Body 14, Caption 12). */
   .page-title {
@@ -358,6 +428,15 @@ a {
   .btn-accent:active:enabled {
     background: color-mix(in srgb, var(--accent) 80%, transparent);
     color: color-mix(in srgb, var(--on-accent) 60%, transparent);
+  }
+
+  .btn-danger {
+    background: #c42b1c;
+    border-color: transparent;
+    color: #fff;
+  }
+  .btn-danger:hover:enabled {
+    background: #b22a1d;
   }
 
   /* Кнопка без фона: значки в плеере, пункты меню, ссылки-действия. */

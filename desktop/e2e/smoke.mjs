@@ -22,7 +22,8 @@ const pressed = (loc) => loc.getAttribute('aria-pressed')
 await page.goto('http://localhost:1431/'); await wait(700)
 const inputs = page.locator('input')
 await inputs.nth(0).fill('http://127.0.0.1:4533'); await inputs.nth(1).fill('test'); await inputs.nth(2).fill('demo')
-await page.locator('button[type=submit]').click(); await wait(1500)
+await page.locator('button[type=submit]').click()
+await page.locator('nav button', { hasText: 'Альбомы' }).waitFor({ timeout: 15000 }); await wait(500)
 check(await page.locator('nav button', { hasText: 'Альбомы' }).count() === 1, 'вход в mock-сервер')
 
 for (const name of ['Поиск', 'На компьютере', 'Загрузки', 'Альбомы', 'Артисты', 'Плейлисты', 'Избранное', 'Главная']) {
@@ -34,7 +35,7 @@ for (const name of ['Поиск', 'На компьютере', 'Загрузки
 await page.locator('nav button', { hasText: 'Альбомы' }).click(); await wait(600)
 await page.locator('main .group > button').first().click(); await wait(800)
 check(await page.locator('main h1').innerText() === 'Mock Album', 'страница альбома')
-await page.locator('main ol li button').first().click(); await wait(1500)
+await page.locator('main .song-row').first().dblclick(); await wait(1500)
 check(await page.locator('footer').count() === 1, 'нижний плеер появился')
 const playBtn = page.locator('footer button[aria-label="Пауза"], footer button[aria-label="Воспроизвести"]').first()
 check((await playBtn.getAttribute('aria-label')) === 'Пауза', 'трек играет')

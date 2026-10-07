@@ -1,7 +1,9 @@
+import { useEffect } from 'react'
 import { store, useStore } from '../state/store'
 import { Cover } from './Cover'
 import { formatTime } from './SongList'
 import { Icon } from './Icon'
+import { beginDrag, registerDrop, useDrag } from './drag'
 import { t } from '../i18n'
 
 /** Очередь сбоку: что играет и что дальше; клик переключает, крестик убирает из очереди. */
@@ -39,14 +41,42 @@ export function QueuePanel({ onClose }: { onClose: () => void }) {
 /** Что играет дальше; клик переключает, крестик убирает из очереди. */
 export function UpcomingList({ onDark = false }: { onDark?: boolean }) {
   const { queue } = useStore()
+  const drag = useDrag()
   const upcoming = queue?.upcoming ?? []
   const base = (queue?.position ?? 0) + 1
   const muted = onDark ? 'text-white/60' : 'text-secondary'
+  const listKey = onDark ? 'queue-large' : 'queue'
+
+  // Строки очереди меняют порядок перетаскиванием; треки из любых списков встают туда, куда их бросили.
+  useEffect(
+    () =>
+      registerDrop(listKey, (payload, insertAt) => {
+        if (payload.source?.list === listKey) {
+          if (insertAt !== undefined) store.moveInQueue(payload.source.indexes, insertAt)
+          return
+        }
+        store.insertIntoQueue(payload.songs, insertAt)
+      }),
+    [listKey],
+  )
+  const line = (position: number) => drag?.target === listKey && drag.insertAt === position
+
   return (
-    <section className="space-y-1">
+    <section className="space-y-1" data-drop={listKey}>
       <h3 className={`px-1 text-xs font-semibold ${muted}`}>{upcoming.length ? t('Дальше') : t('Дальше ничего нет')}</h3>
       {upcoming.map((entry, offset) => (
-        <div key={entry.id} className="list-row group flex items-center rounded-[var(--radius-control)]">
+        <div
+          key={entry.id}
+          data-drop-row={offset}
+          data-drop-list={listKey}
+          onMouseDown={(event) => {
+            if ((event.target as HTMLElement).closest('[data-no-drag]')) return
+            beginDrag(event, () => ({ songs: [entry.song], source: { list: listKey, indexes: [offset] } }))
+          }}
+          className={`list-row group relative flex items-center rounded-[var(--radius-control)] ${line(offset) ? 'drop-before' : ''} ${
+            line(offset + 1) && offset === upcoming.length - 1 ? 'drop-after' : ''
+          }`}
+        >
           <button onClick={() => void store.select(base + offset)} className="flex min-w-0 flex-1 items-center gap-3 p-2 text-left">
             <Cover id={entry.song.coverArt} size={36} rounded="rounded-[var(--radius-control)]" />
             <span className="min-w-0 flex-1">
@@ -56,6 +86,7 @@ export function UpcomingList({ onDark = false }: { onDark?: boolean }) {
             <span className={`text-xs tabular-nums ${muted}`}>{formatTime(entry.song.duration)}</span>
           </button>
           <button
+            data-no-drag
             onClick={() => store.removeFromQueue(entry.id)}
             className="icon-btn h-8 w-8 opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
             aria-label={t('Убрать из очереди')}

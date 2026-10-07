@@ -2,7 +2,18 @@ import { useSyncExternalStore } from 'react'
 import { AudioEngine, EQ_PRESETS, type EqSettings } from '../audio/engine'
 import { setLanguage, t, type Language } from '../i18n'
 import { Credentials, NavidromeClient, type StreamQuality } from '../core/client'
-import { MusicError, type Album, type Artist, type LyricLine, type Playlist, type Song } from '../core/models'
+import {
+  MusicError,
+  type Album,
+  type Artist,
+  type ArtistInfo,
+  type Genre,
+  type LyricLine,
+  type Playlist,
+  type RadioStation,
+  type Song,
+} from '../core/models'
+import { moveItems } from '../core/order'
 import { PlaybackQueue, type RepeatMode } from '../core/queue'
 import type { ReplayGainMode } from '../core/replaygain'
 import { keepScrobble, orderedScrobbles, remainingScrobbles, type ScrobblePlay } from '../core/scrobbles'
@@ -48,6 +59,9 @@ export type View =
   | { kind: 'artists' }
   | { kind: 'artist'; artist: Artist }
   | { kind: 'playlists' }
+  | { kind: 'genres' }
+  | { kind: 'genre'; genre: string }
+  | { kind: 'radio' }
   | { kind: 'playlist'; playlist: Playlist }
   | { kind: 'favorites' }
   | { kind: 'search' }
@@ -79,6 +93,14 @@ export interface State {
   albumsComplete: boolean
   artists: Artist[]
   playlists: Playlist[]
+  /** Оценки, поставленные в этом сеансе: поверх userRating из списков, чтобы звёзды менялись сразу. */
+  ratings: Record<string, number>
+  genres: Genre[]
+  genreAlbums: Record<string, Album[]>
+  radio: RadioStation[]
+  /** Страница исполнителя: популярные треки и сведения Last.fm. */
+  artistExtras: Record<string, { top: Song[]; info: ArtistInfo }>
+  albumNotes: Record<string, string>
   starred: Song[]
   starredIds: Set<string>
   /** Треки альбомов и плейлистов по их id; альбомы артиста — по id артиста. */
@@ -166,6 +188,12 @@ class Store {
     albumsComplete: false,
     artists: [],
     playlists: [],
+    ratings: {},
+    genres: [],
+    genreAlbums: {},
+    radio: [],
+    artistExtras: {},
+    albumNotes: {},
     starred: [],
     starredIds: new Set(),
     songs: {},
@@ -391,6 +419,10 @@ class Store {
       switch (view.kind) {
         case 'album':
           if (!this.state.songs[view.album.id]) this.putSongs(view.album.id, await client.albumSongs(view.album.id))
+          if (this.state.albumNotes[view.album.id] === undefined) {
+            const notes = await client.albumNotes(view.album.id).catch(() => undefined)
+            this.patch({ albumNotes: { ...this.state.albumNotes, [view.album.id]: notes ?? '' } })
+          }
           break
         case 'playlist':
           this.putSongs(view.playlist.id, await client.playlistSongs(view.playlist.id))
@@ -399,6 +431,14 @@ class Store {
           if (!this.state.artistAlbums[view.artist.id]) {
             const { albums } = await client.artist(view.artist.id)
             this.patch({ artistAlbums: { ...this.state.artistAlbums, [view.artist.id]: albums } })
+          }
+          if (!this.state.artistExtras[view.artist.id]) {
+            // Last.fm может быть не настроен на сервере — тогда страница просто без этих блоков.
+            const [top, info] = await Promise.all([
+              client.topSongs(view.artist.name).catch(() => []),
+              client.artistInfo(view.artist.id).catch(() => ({})),
+            ])
+            this.patch({ artistExtras: { ...this.state.artistExtras, [view.artist.id]: { top, info } } })
           }
           break
         case 'albums':
@@ -409,6 +449,16 @@ class Store {
           break
         case 'playlists':
           this.patch({ playlists: await client.playlists() })
+          break
+        case 'genres':
+          if (!this.state.genres.length) this.patch({ genres: await client.genres() })
+          break
+        case 'genre':
+          if (!this.state.genreAlbums[view.genre])
+            this.patch({ genreAlbums: { ...this.state.genreAlbums, [view.genre]: await client.albumsByGenre(view.genre) } })
+          break
+        case 'radio':
+          this.patch({ radio: await client.radioStations() })
           break
         default:
           break
@@ -428,6 +478,7 @@ class Store {
     const client = this.state.client
     if (!client) return
     try {
+      void client.playlists().then((playlists) => this.patch({ playlists })).catch(() => {})
       const [recent, starred, played, frequent, random] = await Promise.all([
         client.albums('newest', 0, 24),
         client.starred(),
@@ -509,7 +560,7 @@ class Store {
 
   async toggleStar(song: Song) {
     const client = this.state.client
-    if (!client || isLocalId(song.id)) return
+    if (!client || isLocalId(song.id) || isRadio(song)) return
     const starred = !this.state.starredIds.has(song.id)
     const ids = new Set(this.state.starredIds)
     if (starred) ids.add(song.id)
@@ -525,6 +576,143 @@ class Store {
       await this.refresh()
       this.patch({ error: t('Не удалось изменить избранное.') })
     }
+  }
+
+  /** Оценка звёздами сразу в интерфейсе; не дошла до сервера — возвращается прежняя. */
+  async setRating(songs: Song[], rating: number) {
+    const client = this.state.client
+    const targets = songs.filter((song) => !isLocalId(song.id))
+    if (!client || !targets.length) return
+    const previous = { ...this.state.ratings }
+    this.patch({ ratings: { ...this.state.ratings, ...Object.fromEntries(targets.map((song) => [song.id, rating])) } })
+    try {
+      await Promise.all(targets.map((song) => client.setRating(song.id, rating)))
+    } catch {
+      this.patch({ ratings: previous, error: t('Не удалось поставить оценку.') })
+    }
+  }
+
+  ratingOf(song: Song) {
+    return this.state.ratings[song.id] ?? song.userRating ?? 0
+  }
+
+  /** Плейлист целиком — из меню в боковой панели, не открывая его. */
+  async playPlaylist(playlist: Playlist, shuffle = false) {
+    const client = this.state.client
+    let songs = this.state.songs[playlist.id]
+    if (!songs && client && this.online) {
+      try {
+        songs = await client.playlistSongs(playlist.id)
+        this.putSongs(playlist.id, songs)
+      } catch (error) {
+        return this.patch({ error: error instanceof MusicError ? error.message : t('Не удалось загрузить раздел.') })
+      }
+    }
+    if (!songs?.length) return this.showNotice(t('В плейлисте пока нет треков'))
+    await this.play(songs, shuffle ? Math.floor(Math.random() * songs.length) : 0, shuffle)
+  }
+
+  /** Радиостанция играет как трек без длительности: обложки и отметок о прослушивании у неё нет. */
+  async playRadio(station: RadioStation) {
+    await this.play([{ id: `radio:${station.id}`, title: station.name, artist: t('Интернет-радио'), streamUrl: station.streamUrl }], 0)
+  }
+
+  /** «Микс по треку»: сам трек и похожие на него, как кнопка «Похожие» на телефоне. */
+  async playMix(song: Song) {
+    const client = this.state.client
+    if (!client || !this.online) return
+    try {
+      const similar = await client.similarSongs(song.id)
+      if (!similar.length) return this.showNotice(t('Похожих треков не нашлось'))
+      await this.play([song, ...similar.filter((one) => one.id !== song.id)], 0)
+    } catch (error) {
+      this.patch({ error: error instanceof MusicError ? error.message : t('Не удалось собрать микс.') })
+    }
+  }
+
+  /** Перейти к альбому трека: сведений об альбоме у трека немного, остальное догрузит страница. */
+  openAlbumOf(song: Song) {
+    if (!song.albumId) return
+    this.open({ kind: 'album', album: { id: song.albumId, name: song.album ?? '', artist: song.artist, artistId: song.artistId, coverArt: song.coverArt } })
+  }
+
+  openArtistOf(song: Song) {
+    if (!song.artistId) return
+    this.open({ kind: 'artist', artist: { id: song.artistId, name: song.artist ?? '' } })
+  }
+
+  // MARK: - Плейлисты
+
+  private async playlistAction(action: () => Promise<void>, failure: string) {
+    try {
+      await action()
+    } catch (error) {
+      this.patch({ error: error instanceof MusicError ? error.message : failure })
+    }
+    const client = this.state.client
+    if (client) this.patch({ playlists: await client.playlists().catch(() => this.state.playlists) })
+  }
+
+  async createPlaylist(name: string, songs: Song[] = []) {
+    const client = this.state.client
+    const title = name.trim()
+    if (!client || !title) return
+    let created: Playlist | undefined
+    await this.playlistAction(async () => {
+      created = await client.createPlaylist(title, songs.filter((song) => !isLocalId(song.id)).map((song) => song.id))
+    }, t('Не удалось создать плейлист.'))
+    this.showNotice(t('Плейлист «{name}» создан', { name: title }))
+    return created
+  }
+
+  async addToPlaylist(playlist: Playlist, songs: Song[]) {
+    const client = this.state.client
+    const ids = songs.filter((song) => !isLocalId(song.id)).map((song) => song.id)
+    if (!client || !ids.length) return
+    await this.playlistAction(async () => {
+      await client.addToPlaylist(playlist.id, ids)
+      const cached = this.state.songs[playlist.id]
+      if (cached) this.putSongs(playlist.id, [...cached, ...songs.filter((song) => ids.includes(song.id))])
+    }, t('Не удалось добавить в плейлист.'))
+    this.showNotice(t('Добавлено в «{name}»: {n}', { name: playlist.name, n: ids.length }))
+  }
+
+  /** Позиции — в текущем порядке плейлиста: один трек может стоять в нём несколько раз. */
+  async removeFromPlaylist(playlist: Playlist, indexes: number[]) {
+    const client = this.state.client
+    if (!client || !indexes.length) return
+    const cached = this.state.songs[playlist.id] ?? []
+    this.putSongs(playlist.id, cached.filter((_, index) => !indexes.includes(index)))
+    await this.playlistAction(() => client.removeFromPlaylist(playlist.id, indexes), t('Не удалось изменить плейлист.'))
+  }
+
+  /** Перестановка перетаскиванием: сразу на экране, потом одним запросом на сервер. */
+  async reorderPlaylist(playlist: Playlist, from: number[], to: number) {
+    const client = this.state.client
+    const cached = this.state.songs[playlist.id]
+    if (!client || !cached) return
+    const reordered = moveItems(cached, from, to)
+    this.putSongs(playlist.id, reordered)
+    await this.playlistAction(
+      () => client.replacePlaylistSongs(playlist.id, reordered.map((song) => song.id)),
+      t('Не удалось изменить плейлист.'),
+    )
+  }
+
+  async renamePlaylist(playlist: Playlist, name: string) {
+    const client = this.state.client
+    const title = name.trim()
+    if (!client || !title || title === playlist.name) return
+    await this.playlistAction(() => client.renamePlaylist(playlist.id, title), t('Не удалось переименовать плейлист.'))
+    if (this.state.view.kind === 'playlist' && this.state.view.playlist.id === playlist.id)
+      this.patch({ view: { kind: 'playlist', playlist: { ...playlist, name: title } } })
+  }
+
+  async deletePlaylist(playlist: Playlist) {
+    const client = this.state.client
+    if (!client) return
+    await this.playlistAction(() => client.deletePlaylist(playlist.id), t('Не удалось удалить плейлист.'))
+    if (this.state.view.kind === 'playlist' && this.state.view.playlist.id === playlist.id) this.section({ kind: 'playlists' })
   }
 
   // MARK: - Своя музыка и загрузки
@@ -692,12 +880,35 @@ class Store {
     this.showNotice(playable.length === 1 ? t('Добавлено в очередь') : t('В очередь: {n}', { n: playable.length }))
   }
 
+  /** Треки, брошенные в очередь: встают на место вставки среди тех, что играют дальше. */
+  insertIntoQueue(songs: Song[], at?: number) {
+    const queue = this.state.queue
+    const playable = songs.filter((song) => this.isPlayable(song))
+    if (!playable.length) return
+    if (!queue) return void this.play(playable, 0)
+    const before = queue.upcoming.length
+    queue.append(playable)
+    if (at !== undefined && at < before) {
+      queue.moveUpcoming(playable.map((_, index) => before + index), at)
+    }
+    this.touchQueue()
+    this.showNotice(playable.length === 1 ? t('Добавлено в очередь') : t('В очередь: {n}', { n: playable.length }))
+  }
+
+  /** Перетаскивание в очереди; позиции — среди тех, что играют дальше. */
+  moveInQueue(from: number[], to: number) {
+    // `to` — место среди всех строк, а moveUpcoming считает его уже без переносимых.
+    this.state.queue?.moveUpcoming(from, to - from.filter((index) => index < to).length)
+    this.touchQueue()
+  }
+
   removeFromQueue(entryId: string) {
     this.state.queue?.remove(entryId)
     this.touchQueue()
   }
 
   private async sourceUrl(song: Song): Promise<string | undefined> {
+    if (isRadio(song)) return this.online ? song.streamUrl : undefined
     switch (this.sourceOf(song.id)) {
       case 'local':
         return platform.fileSource(this.localPaths.get(song.id)!)
@@ -868,7 +1079,7 @@ class Store {
     if (!song) return
     if (this.state.lyrics?.songID === song.id && this.state.lyrics.state !== 'failed') return
     const client = this.state.client
-    if (isLocalId(song.id) || !client || !this.online) {
+    if (isLocalId(song.id) || isRadio(song) || !client || !this.online) {
       this.patch({ lyrics: { songID: song.id, state: 'ready', synced: false, lines: [] } })
       return
     }
@@ -889,7 +1100,7 @@ class Store {
 
   private async scrobble() {
     const song = this.state.queue?.current?.song
-    if (!song || isLocalId(song.id) || this.state.serverless) return
+    if (!song || isLocalId(song.id) || isRadio(song) || this.state.serverless) return
     this.scrobbled = true
     const pending: ScrobblePlay = { id: song.id, time: this.startedAt }
     const client = this.state.client
@@ -1039,6 +1250,8 @@ export async function coverUrl(id: string | undefined, client: NavidromeClient |
   if (saved) return platform.fileSource(saved)
   return client?.cover(id, size)
 }
+
+export const isRadio = (song: Song) => song.id.startsWith('radio:')
 
 function byAlbumThenTrack(a: Song, b: Song) {
   return (

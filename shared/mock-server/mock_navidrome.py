@@ -24,10 +24,11 @@ def png(r, g, b, size=64):
     return b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", size, size, 8, 2, 0, 0, 0)) + chunk(b"IDAT", zlib.compress(raw)) + chunk(b"IEND", b"")
 
 SONGS = [{"id": f"t{i}", "title": f"Тестовый трек {i + 1}", "artist": "Mock Artist", "album": "Mock Album",
-          "coverArt": "al-1", "duration": TRACK_SECONDS, "track": i + 1} for i in range(3)]
+          "albumId": "al-1", "artistId": "ar-1", "coverArt": "al-1", "duration": TRACK_SECONDS, "track": i + 1} for i in range(3)]
 AUDIO = {s["id"]: wav(330 + 110 * i) for i, s in enumerate(SONGS)}
 SONG_BY_ID = {s["id"]: s for s in SONGS}
 PLAYLISTS = {}
+RATINGS = {}
 STARRED = {"t0"}
 ALBUM = {"id": "al-1", "name": "Mock Album", "artist": "Mock Artist", "artistId": "ar-1", "coverArt": "al-1", "songCount": 3, "year": 2026}
 ARTIST = {"id": "ar-1", "name": "Mock Artist", "albumCount": 1, "coverArt": "al-1"}
@@ -66,6 +67,11 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         url = urlparse(self.path); q = {k: v[0] for k, v in parse_qs(url.query).items()}
         endpoint = url.path.rsplit("/", 1)[-1].replace(".view", "")
+        # Интернет-радио — чужой поток без подписи Subsonic и без CORS, как у настоящих станций.
+        if url.path == "/radio":
+            data = next(iter(AUDIO.values()))
+            self.send_response(200); self.send_header("Content-Type", "audio/wav"); self.send_header("Content-Length", str(len(data)))
+            self.end_headers(); self.wfile.write(data); return
         # Подпись проверяется по-настоящему: иначе ошибку в алгоритме заметит только живой Navidrome.
         if not self.signed(q):
             print(time.strftime("%H:%M:%S"), endpoint, "неверная подпись", flush=True)
@@ -93,6 +99,7 @@ class Handler(BaseHTTPRequestHandler):
             pid = f"pl{len(PLAYLISTS) + 1}"; PLAYLISTS[pid] = {"name": q["name"], "songs": parse_qs(url.query).get("songId", [])}; return self.ok()
         if endpoint == "updatePlaylist":
             p = PLAYLISTS[q["playlistId"]]; multi = parse_qs(url.query)
+            if "name" in q: p["name"] = q["name"]
             for idx in sorted((int(i) for i in multi.get("songIndexToRemove", [])), reverse=True): p["songs"].pop(idx)
             p["songs"] += multi.get("songIdToAdd", []); return self.ok()
         if endpoint == "deletePlaylist": PLAYLISTS.pop(q["id"], None); return self.ok()
@@ -104,6 +111,13 @@ class Handler(BaseHTTPRequestHandler):
         if endpoint == "getLyricsBySongId":
             return self.ok(lyricsList={"structuredLyrics": [{"lang": "rus", "synced": True, "line": [{"start": i * 5000, "value": f"Строка {i + 1}"} for i in range(8)]}]})
         if endpoint == "getAlbum": return self.ok(album={**ALBUM, "song": SONGS})
+        if endpoint == "getSimilarSongs2": return self.ok(similarSongs2={"song": [x for x in SONGS if x["id"] != q.get("id")]})
+        if endpoint == "getArtistInfo2":
+            return self.ok(artistInfo2={"biography": "Mock Artist — вымышленный исполнитель для проверок. <a href=\"https://last.fm\">Read more on Last.fm</a>", "similarArtist": [{"id": "ar-2", "name": "Похожий исполнитель", "albumCount": 0}]})
+        if endpoint == "getAlbumInfo2": return self.ok(albumInfo={"notes": "Альбом для проверок: три синусоиды разной частоты."})
+        if endpoint == "getInternetRadioStations":
+            return self.ok(internetRadioStations={"internetRadioStation": [{"id": "rd1", "name": "Тестовое радио", "streamUrl": "http://127.0.0.1:4533/radio"}]})
+        if endpoint == "setRating": RATINGS[q.get("id")] = int(q.get("rating", 0)); return self.ok()
         if endpoint == "scrobble": return self.ok()
         if endpoint == "getCoverArt": return self.reply(png(140, 90, 200, min(int(q.get("size", 64)), 256)), "image/png")
         if endpoint == "stream":

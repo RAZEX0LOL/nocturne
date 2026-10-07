@@ -9,6 +9,9 @@ import { openMiniPlayer } from './shell'
 import { LyricsPanel } from './ui/LyricsPanel'
 import { QueuePanel } from './ui/QueuePanel'
 import { SettingsView } from './ui/SettingsView'
+import { SidebarPlaylists } from './ui/SidebarPlaylists'
+import { DialogHost } from './ui/Dialogs'
+import { DragGhost } from './ui/DragGhost'
 import {
   DownloadsView,
   LocalView,
@@ -17,7 +20,10 @@ import {
   ArtistsView,
   ArtistView,
   FavoritesView,
+  GenresView,
+  GenreView,
   HomeView,
+  RadioView,
   PlaylistsView,
   PlaylistView,
   SearchView,
@@ -40,6 +46,8 @@ const SERVER: Section[] = [
   { view: { kind: 'artists' }, label: 'Артисты', icon: 'artist' },
   { view: { kind: 'playlists' }, label: 'Плейлисты', icon: 'playlist' },
   { view: { kind: 'favorites' }, label: 'Избранное', icon: 'heart' },
+  { view: { kind: 'genres' }, label: 'Жанры', icon: 'genre' },
+  { view: { kind: 'radio' }, label: 'Радио', icon: 'radio' },
 ]
 
 /** Без сервера — только своя музыка; без связи — то, что на диске; иначе всё. */
@@ -62,6 +70,9 @@ const sectionOf: Record<View['kind'], View['kind']> = {
   playlists: 'playlists',
   playlist: 'playlists',
   favorites: 'favorites',
+  genres: 'genres',
+  genre: 'genres',
+  radio: 'radio',
 }
 
 function Content({ view }: { view: View }) {
@@ -77,6 +88,9 @@ function Content({ view }: { view: View }) {
     case 'playlists': return <PlaylistsView />
     case 'playlist': return <PlaylistView playlist={view.playlist} />
     case 'favorites': return <FavoritesView />
+    case 'genres': return <GenresView />
+    case 'genre': return <GenreView genre={view.genre} />
+    case 'radio': return <RadioView />
   }
 }
 
@@ -192,6 +206,7 @@ export function App() {
             </button>
             <span className="px-2 text-xs font-semibold tracking-[0.2em] text-secondary">NOCTURNE</span>
           </div>
+          <div className="sidebar-scroll -mx-1.5 flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-1.5">
           {sectionsFor(serverless, offline).map((section) => (
             <button
               key={section.view.kind}
@@ -206,7 +221,8 @@ export function App() {
               {t(section.label)}
             </button>
           ))}
-          <div className="flex-1" />
+          {!serverless && !offline && <SidebarPlaylists onNavigate={() => setSettingsOpen(false)} />}
+          </div>
           {!serverless && (
             <button onClick={() => void (offline ? store.reconnect() : store.refresh())} className="nav-item">
               <Icon name="refresh" />
@@ -247,6 +263,8 @@ export function App() {
       <Player panel={panel} onPanel={setPanel} onExpand={() => setNowPlaying(true)} onMini={() => void openMiniPlayer()} />
       {nowPlaying && <NowPlaying onClose={() => setNowPlaying(false)} onMini={() => void openMiniPlayer()} />}
       {dragging && <DropOverlay />}
+      <DragGhost />
+      <DialogHost />
     </div>
   )
 }

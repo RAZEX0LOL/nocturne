@@ -6,6 +6,10 @@ import { SongList } from './SongList'
 import { Icon } from './Icon'
 import { InfoBar } from './InfoBar'
 import { AlbumCard, AlbumCardSkeleton, Shelf, SongListSkeleton } from './Shelf'
+import { songMenu } from './SongList'
+import { playlistMenu, newPlaylist } from './SidebarPlaylists'
+import { registerDrop, useDrag } from './drag'
+import { popupMenu, type MenuEntry } from '../shell'
 import { isMac, isWindows } from '../native'
 import { t } from '../i18n'
 
@@ -156,8 +160,46 @@ export function AlbumsView() {
   )
 }
 
+/** Описание альбома или биография из Last.fm: HTML со ссылкой «Read more» — показываем только текст. */
+function plainText(html: string) {
+  const text = new DOMParser().parseFromString(html, 'text/html').body.textContent ?? ''
+  return text.replace(/Read more on Last\.fm\.?/i, '').trim()
+}
+
+function About({ html }: { html?: string }) {
+  const [open, setOpen] = useState(false)
+  const text = html ? plainText(html) : ''
+  if (!text) return null
+  return (
+    <section className="card max-w-3xl space-y-2 p-5">
+      <p className={`whitespace-pre-line text-sm leading-relaxed text-secondary ${open ? '' : 'line-clamp-4'}`}>{text}</p>
+      {text.length > 320 && (
+        <button onClick={() => setOpen(!open)} className="btn btn-subtle -ml-3 text-accent-text">
+          {open ? t('Свернуть') : t('Читать дальше')}
+        </button>
+      )}
+    </section>
+  )
+}
+
+function totalTime(songs: Song[]) {
+  const seconds = songs.reduce((sum, song) => sum + (song.duration ?? 0), 0)
+  const hours = Math.floor(seconds / 3600)
+  const minutes = Math.round((seconds % 3600) / 60)
+  return hours ? t('{h} ч {m} мин', { h: hours, m: minutes }) : t('{m} мин', { m: minutes })
+}
+
+/** Кнопка «⋯» у заголовка: то же меню, что у выделенных треков, но для всего альбома или плейлиста. */
+function MoreButton({ entries }: { entries: () => MenuEntry[] }) {
+  return (
+    <button onClick={() => void popupMenu(entries())} className="btn" title={t('Ещё')} aria-label={t('Ещё')}>
+      <Icon name="more" size={14} />
+    </button>
+  )
+}
+
 export function AlbumView({ album }: { album: Album }) {
-  const { songs } = useStore()
+  const { songs, albumNotes } = useStore()
   const loaded = songs[album.id]
   const list = loaded ?? []
   return (
@@ -175,15 +217,18 @@ export function AlbumView({ album }: { album: Album }) {
             {album.artist ?? t('Неизвестный исполнитель')}
           </button>
           <p className="text-sm text-secondary">
-            {album.year ? `${album.year} · ` : ''}
-            {t('{n} треков', { n: list.length || album.songCount || 0 })}
+            {[album.year, album.genre, t('{n} треков', { n: list.length || album.songCount || 0 }), list.length ? totalTime(list) : '']
+              .filter(Boolean)
+              .join(' · ')}
           </p>
-          <div className="pt-2">
+          <div className="flex gap-2 pt-2">
             <PlayButtons songs={list} downloadable />
+            {list.length > 0 && <MoreButton entries={() => songMenu(list)} />}
           </div>
         </div>
       </div>
       {loaded ? <SongList songs={list} numbered /> : <SongListSkeleton />}
+      <About html={albumNotes[album.id]} />
     </div>
   )
 }
@@ -233,12 +278,44 @@ function ArtistRow({ artist }: { artist: Artist }) {
 }
 
 export function ArtistView({ artist }: { artist: Artist }) {
-  const { artistAlbums } = useStore()
-  const albums = artistAlbums[artist.id] ?? []
+  const { artistAlbums, artistExtras } = useStore()
+  const albums = artistAlbums[artist.id]
+  const extras = artistExtras[artist.id]
+  const similar = extras?.info.similarArtist ?? []
   return (
-    <div className="space-y-6">
-      <Title>{artist.name}</Title>
-      <AlbumGrid albums={albums} />
+    <div className="space-y-8">
+      <div className="flex items-end gap-6">
+        <Cover id={artist.coverArt ?? albums?.[0]?.coverArt} size={160} rounded="rounded-full" />
+        <div className="min-w-0 space-y-2">
+          <p className="text-xs uppercase tracking-wider text-secondary">{t('Исполнитель')}</p>
+          <h1 className="page-title">{artist.name}</h1>
+          {albums && <p className="text-sm text-secondary">{t('Альбомов: {n}', { n: albums.length })}</p>}
+          {extras && extras.top.length > 0 && <PlayButtons songs={extras.top} />}
+        </div>
+      </div>
+      {extras && extras.top.length > 0 && (
+        <section className="space-y-2">
+          <h2 className="section-title">{t('Популярные треки')}</h2>
+          <SongList songs={extras.top.slice(0, 10)} showAlbum />
+        </section>
+      )}
+      <section className="space-y-2">
+        <h2 className="section-title">{t('Альбомы')}</h2>
+        <AlbumGrid albums={albums ?? []} loading={!albums} />
+      </section>
+      <About html={extras?.info.biography} />
+      {similar.length > 0 && (
+        <section className="space-y-2">
+          <h2 className="section-title">{t('Похожие исполнители')}</h2>
+          <ul className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-2">
+            {similar.map((one) => (
+              <li key={one.id}>
+                <ArtistRow artist={one} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   )
 }
@@ -247,18 +324,31 @@ export function PlaylistsView() {
   const { playlists } = useStore()
   return (
     <div className="space-y-6">
-      <Title>{t('Плейлисты')}</Title>
-      {!playlists.length && <p className="text-sm text-secondary">{t('Плейлистов на сервере пока нет.')}</p>}
+      <Title
+        action={
+          <button onClick={() => void newPlaylist()} className="btn btn-accent">
+            <Icon name="add" size={14} />
+            {t('Новый плейлист')}
+          </button>
+        }
+      >
+        {t('Плейлисты')}
+      </Title>
+      {!playlists.length && <p className="text-secondary">{t('Плейлистов на сервере пока нет.')}</p>}
       <ul className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-2">
         {playlists.map((playlist) => (
           <li key={playlist.id}>
             <button
               onClick={() => store.open({ kind: 'playlist', playlist })}
+              onContextMenu={(event) => {
+                event.preventDefault()
+                void playlistMenu(playlist)
+              }}
               className="card list-row flex w-full items-center gap-3 p-2 text-left"
             >
               <Cover id={playlist.coverArt} size={56} rounded="rounded-[var(--radius-control)]" />
               <span className="min-w-0">
-                <span className="block truncate text-sm font-medium">{playlist.name}</span>
+                <span className="block truncate font-medium">{playlist.name}</span>
                 <span className="block text-xs text-secondary">{t('Треков: {n}', { n: playlist.songCount ?? 0 })}</span>
               </span>
             </button>
@@ -270,22 +360,63 @@ export function PlaylistsView() {
 }
 
 export function PlaylistView({ playlist }: { playlist: Playlist }) {
-  const { songs } = useStore()
-  const list = songs[playlist.id] ?? []
+  const { songs, playlists } = useStore()
+  const loaded = songs[playlist.id]
+  const list = loaded ?? []
+  // Свежие сведения (название, число треков) — из общего списка: страница могла открыться до правки.
+  const current = playlists.find((one) => one.id === playlist.id) ?? playlist
   return (
     <div className="space-y-6">
       <div className="flex gap-6">
-        <Cover id={playlist.coverArt} size={180} />
+        <Cover id={current.coverArt} size={180} />
         <div className="flex min-w-0 flex-col justify-end gap-2">
           <p className="text-xs uppercase tracking-wider text-secondary">{t('Плейлист')}</p>
-          <h1 className="page-title">{playlist.name}</h1>
-          <p className="text-sm text-secondary">{t('{n} треков', { n: list.length || playlist.songCount || 0 })}</p>
-          <div className="pt-2">
+          <h1 className="page-title">{current.name}</h1>
+          <p className="text-sm text-secondary">
+            {[t('{n} треков', { n: list.length || current.songCount || 0 }), list.length ? totalTime(list) : ''].filter(Boolean).join(' · ')}
+          </p>
+          <div className="flex gap-2 pt-2">
             <PlayButtons songs={list} downloadable />
+            <button onClick={() => void playlistMenu(current)} className="btn" title={t('Ещё')} aria-label={t('Ещё')}>
+              <Icon name="more" size={14} />
+            </button>
           </div>
         </div>
       </div>
-      <SongList songs={list} showAlbum />
+      {loaded ? (
+        list.length ? (
+          <>
+            <p className="text-xs text-secondary">{t('Порядок меняется перетаскиванием строк. Треки можно перетащить сюда из любого списка.')}</p>
+            <SongList
+              songs={list}
+              showAlbum
+              listKey={`playlist:${playlist.id}`}
+              onReorder={(from, to) => void store.reorderPlaylist(current, from, to)}
+              onDropSongs={(dropped) => void store.addToPlaylist(current, dropped)}
+              onRemove={(_, indexes) => void store.removeFromPlaylist(current, indexes)}
+              removeLabel={t('Убрать из плейлиста')}
+            />
+          </>
+        ) : (
+          <PlaylistEmpty playlist={current} />
+        )
+      ) : (
+        <SongListSkeleton />
+      )}
+    </div>
+  )
+}
+
+/** Пустой плейлист — сам цель для перетаскивания: сюда можно бросить треки из любого списка. */
+function PlaylistEmpty({ playlist }: { playlist: Playlist }) {
+  const drag = useDrag()
+  const key = `playlist-empty:${playlist.id}`
+  useEffect(() => registerDrop(key, (payload) => void store.addToPlaylist(playlist, payload.songs)), [key, playlist])
+  return (
+    <div data-drop={key} className={`card grid place-items-center gap-2 border border-dashed border-stroke p-10 text-center ${drag?.target === key ? 'drop-target' : ''}`}>
+      <Icon name="playlistAdd" size={28} className="text-secondary" />
+      <p className="font-medium">{t('Плейлист пуст')}</p>
+      <p className="text-sm text-secondary">{t('Перетащи сюда треки или добавь их через меню «Добавить в плейлист».')}</p>
     </div>
   )
 }
@@ -355,6 +486,86 @@ export function SearchView() {
   )
 }
 
+export function GenresView() {
+  const { genres } = useStore()
+  return (
+    <div className="space-y-6">
+      <Title>{t('Жанры')}</Title>
+      {!genres.length ? (
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-2">
+          {Array.from({ length: 12 }, (_, index) => (
+            <div key={index} className="skeleton h-20 rounded-[var(--radius-card)]" />
+          ))}
+        </div>
+      ) : (
+        <ul className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-2">
+          {genres.map((genre, index) => (
+            <li key={genre.value}>
+              <button
+                onClick={() => store.open({ kind: 'genre', genre: genre.value })}
+                className="genre-tile list-row relative flex h-20 w-full flex-col justify-end overflow-hidden rounded-[var(--radius-card)] p-3 text-left"
+                style={{ '--hue': `${(index * 47) % 360}` } as React.CSSProperties}
+              >
+                <span className="relative truncate font-semibold">{genre.value}</span>
+                <span className="relative text-xs text-white/70">{t('Альбомов: {n}', { n: genre.albumCount ?? 0 })}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
+export function GenreView({ genre }: { genre: string }) {
+  const { genreAlbums } = useStore()
+  const albums = genreAlbums[genre]
+  return (
+    <div className="space-y-6">
+      <div>
+        <p className="text-xs uppercase tracking-wider text-secondary">{t('Жанр')}</p>
+        <h1 className="page-title">{genre}</h1>
+      </div>
+      <AlbumGrid albums={albums ?? []} loading={!albums} />
+    </div>
+  )
+}
+
+export function RadioView() {
+  const { radio, queue, playing } = useStore()
+  const current = queue?.current?.song.id
+  return (
+    <div className="space-y-6">
+      <Title>{t('Радио')}</Title>
+      {!radio.length ? (
+        <div className="card p-6 text-sm text-secondary">
+          <p className="font-medium text-primary">{t('Радиостанций пока нет')}</p>
+          <p className="mt-2">{t('Добавь их в веб-интерфейсе Navidrome: «Радио» → «Создать». Они появятся здесь и на телефоне.')}</p>
+        </div>
+      ) : (
+        <ul className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-2">
+          {radio.map((station) => {
+            const on = current === `radio:${station.id}`
+            return (
+              <li key={station.id}>
+                <button onClick={() => void store.playRadio(station)} className={`card list-row flex w-full items-center gap-3 p-3 text-left ${on ? 'is-current' : ''}`}>
+                  <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-full ${on ? 'btn-accent' : 'bg-surface-strong text-secondary'}`}>
+                    <Icon name={on && playing ? 'volume' : 'radio'} size={18} />
+                  </span>
+                  <span className="min-w-0">
+                    <span className={`block truncate font-medium ${on ? 'text-accent-text' : ''}`}>{station.name}</span>
+                    <span className="block truncate text-xs text-secondary">{station.streamUrl.replace(/^https?:\/\//, '')}</span>
+                  </span>
+                </button>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+    </div>
+  )
+}
+
 function LocalEmpty() {
   const { musicFolder } = useStore()
   return (
@@ -397,7 +608,7 @@ export function LocalView() {
       {local.length ? (
         <>
           <p className="text-xs text-secondary">{t('Треков: {n}', { n: local.length })}</p>
-          <SongList songs={local} showAlbum onRemove={(song) => void store.removeLocal(song)} removeLabel={t('Удалить файл с компьютера')} />
+          <SongList songs={local} showAlbum onRemove={(songs) => songs.forEach((song) => void store.removeLocal(song))} removeLabel={t('Удалить файл с компьютера')} />
         </>
       ) : (
         <LocalEmpty />
@@ -415,7 +626,7 @@ export function DownloadsView() {
       <p className="text-sm text-secondary">
         {t('Треки с сервера, сохранённые для прослушивания без сети.')}{pending ? ` ${t('Сейчас скачивается: {n}.', { n: pending })}` : ''}
       </p>
-      <SongList songs={downloadedSongs} showAlbum onRemove={(song) => void store.removeDownload(song)} removeLabel={t('Удалить загрузку')} />
+      <SongList songs={downloadedSongs} showAlbum onRemove={(songs) => songs.forEach((song) => void store.removeDownload(song))} removeLabel={t('Удалить загрузку')} />
     </div>
   )
 }

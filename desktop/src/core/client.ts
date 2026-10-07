@@ -1,5 +1,15 @@
 import { md5 } from './md5'
-import { MusicError, type Album, type Artist, type Playlist, type Song, type StructuredLyrics } from './models'
+import {
+  MusicError,
+  type Album,
+  type Artist,
+  type ArtistInfo,
+  type Genre,
+  type Playlist,
+  type RadioStation,
+  type Song,
+  type StructuredLyrics,
+} from './models'
 import { t } from '../i18n'
 
 /** Правила адресов и подписи описаны в shared/spec/api.md и проверяются shared/cases. */
@@ -211,6 +221,83 @@ export class NavidromeClient {
     const text = (plain.lyrics?.value as string | undefined) ?? ''
     if (!text.trim()) return undefined
     return { synced: false, line: text.split('\n').map((value) => ({ value })) }
+  }
+
+  // MARK: - Плейлисты
+
+  /** Новый плейлист сразу с треками; возвращает его, чтобы открыть без перезагрузки списка. */
+  async createPlaylist(name: string, songIds: string[] = []): Promise<Playlist | undefined> {
+    const response = await this.request('createPlaylist', { name }, songIds.map((id) => ['songId', id]))
+    return response.playlist
+  }
+
+  /**
+   * Новый порядок или состав плейлиста целиком: createPlaylist с playlistId заменяет его треки.
+   * Так перестановка — один запрос, а не удаление и добавление по одному.
+   */
+  async replacePlaylistSongs(id: string, songIds: string[]) {
+    await this.request('createPlaylist', { playlistId: id }, songIds.map((songId) => ['songId', songId]))
+  }
+
+  async addToPlaylist(id: string, songIds: string[]) {
+    await this.request('updatePlaylist', { playlistId: id }, songIds.map((songId) => ['songIdToAdd', songId]))
+  }
+
+  /** Индексы — позиции в плейлисте: один и тот же трек может стоять в нём дважды. */
+  async removeFromPlaylist(id: string, indexes: number[]) {
+    await this.request('updatePlaylist', { playlistId: id }, indexes.map((index) => ['songIndexToRemove', String(index)]))
+  }
+
+  async renamePlaylist(id: string, name: string) {
+    await this.request('updatePlaylist', { playlistId: id, name })
+  }
+
+  async deletePlaylist(id: string) {
+    await this.request('deletePlaylist', { id })
+  }
+
+  // MARK: - Оценки, похожее, сведения
+
+  /** Оценка от 1 до 5; 0 снимает её. */
+  async setRating(id: string, rating: number) {
+    await this.request('setRating', { id, rating: String(Math.min(Math.max(Math.round(rating), 0), 5)) })
+  }
+
+  /** «Микс по треку»: похожие треки от Last.fm через Navidrome. */
+  async similarSongs(id: string, count = 50): Promise<Song[]> {
+    const response = await this.request('getSimilarSongs2', { id, count: String(count) })
+    return response.similarSongs2?.song ?? []
+  }
+
+  async topSongs(artist: string, count = 10): Promise<Song[]> {
+    const response = await this.request('getTopSongs', { artist, count: String(count) })
+    return response.topSongs?.song ?? []
+  }
+
+  async artistInfo(id: string): Promise<ArtistInfo> {
+    const response = await this.request('getArtistInfo2', { id, count: '12' })
+    return response.artistInfo2 ?? {}
+  }
+
+  async albumNotes(id: string): Promise<string | undefined> {
+    const response = await this.request('getAlbumInfo2', { id })
+    return response.albumInfo?.notes
+  }
+
+  async genres(): Promise<Genre[]> {
+    const response = await this.request('getGenres')
+    const list: Genre[] = response.genres?.genre ?? []
+    return list.sort((a, b) => (b.albumCount ?? 0) - (a.albumCount ?? 0))
+  }
+
+  async albumsByGenre(genre: string, offset = 0, size = 60): Promise<Album[]> {
+    const response = await this.request('getAlbumList2', { type: 'byGenre', genre, size: String(size), offset: String(offset) })
+    return response.albumList2?.album ?? []
+  }
+
+  async radioStations(): Promise<RadioStation[]> {
+    const response = await this.request('getInternetRadioStations')
+    return response.internetRadioStations?.internetRadioStation ?? []
   }
 
   stream(id: string, quality: StreamQuality = 'mp3High') {

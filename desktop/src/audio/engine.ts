@@ -25,9 +25,14 @@ class Deck {
   /** Чей трек уже загружен в элемент; адрес потока каждый раз новый, поэтому помним id. */
   songID?: string
 
-  constructor() {
+  /**
+   * `shared` — элемент идёт через Web Audio (эквалайзер, фейды), и ему нужен CORS. Интернет-радио
+   * CORS обычно не отдаёт: такой поток через Web Audio звучал бы тишиной, поэтому для него — свой
+   * элемент мимо эквалайзера.
+   */
+  constructor(shared = true) {
     this.element.preload = 'auto'
-    this.element.crossOrigin = 'anonymous'
+    if (shared) this.element.crossOrigin = 'anonymous'
   }
 
   hold(songID: string, url: string) {
@@ -52,7 +57,7 @@ class Deck {
  * между треками не ждёт сети.
  */
 export class AudioEngine {
-  private readonly decks = [new Deck(), new Deck()]
+  private readonly decks = [new Deck(), new Deck(), new Deck(false)]
   private active = 0
   private context?: AudioContext
   private filters: BiquadFilterNode[] = []
@@ -118,9 +123,12 @@ export class AudioEngine {
     return this.decks[this.active]!
   }
 
+  /** Второй из двух обычных элементов; радио (третий) в смене треков не участвует. */
   private get spare() {
-    return this.decks[1 - this.active]!
+    return this.decks[this.active === 0 ? 1 : 0]!
   }
+
+  private static readonly RADIO = 2
 
   private get element() {
     return this.deck.element
@@ -150,7 +158,7 @@ export class AudioEngine {
     chain.forEach((node, index) => chain[index + 1] && node.connect(chain[index + 1]!))
     analyser.connect(context.destination)
     // Оба элемента идут через одну и ту же цепочку: эквалайзер и фейды одинаковы, кто бы ни играл.
-    for (const deck of this.decks) context.createMediaElementSource(deck.element).connect(this.filters[0]!)
+    for (const deck of this.decks.slice(0, AudioEngine.RADIO)) context.createMediaElementSource(deck.element).connect(this.filters[0]!)
     context.onstatechange = () => debugLog(`context ${context.state}`)
     this.context = context
     this.gainNode = gain
@@ -159,7 +167,13 @@ export class AudioEngine {
 
   async load(url: string, song: Song, mode: ReplayGainMode, autoplay: boolean) {
     this.pausedOnPurpose = true
-    if (this.spare.songID === song.id) {
+    const radio = song.id.startsWith('radio:')
+    if (radio || this.active === AudioEngine.RADIO) {
+      // Переход на радио или с него: прежний элемент замолкает, новый начинает с чистого листа.
+      this.deck.release()
+      this.active = radio ? AudioEngine.RADIO : 0
+      this.deck.hold(song.id, url)
+    } else if (this.spare.songID === song.id) {
       // Трек уже скачан во второй элемент — играем его, а не начинаем загрузку заново.
       debugLog(`swap to prepared deck ${1 - this.active}`)
       this.deck.release()
@@ -187,6 +201,7 @@ export class AudioEngine {
 
   /** Готовит следующий трек заранее; повторный вызов с тем же треком ничего не делает. */
   prepare(url: string, songID: string) {
+    if (this.active === AudioEngine.RADIO || songID.startsWith('radio:')) return
     if (this.spare.songID === songID || this.deck.songID === songID) return
     debugLog(`prepare next in deck ${1 - this.active}`)
     this.spare.hold(songID, url)
@@ -247,6 +262,8 @@ export class AudioEngine {
   }
 
   private setGain(value: number) {
+    // Радио идёт мимо Web Audio: его громкость — только громкость самого элемента.
+    if (this.active === AudioEngine.RADIO) return
     if (this.gainNode) this.gainNode.gain.value = value
     else this.element.volume = Math.min(Math.max(value * this.volume, 0), 1)
   }

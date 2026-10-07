@@ -243,22 +243,38 @@ function quietBrowserBehaviour() {
   })
 }
 
-export type MenuEntry = { text: string; action: () => void; enabled?: boolean } | 'separator' | false | null | undefined
+export type MenuEntry =
+  | { text: string; action: () => void; enabled?: boolean }
+  | { text: string; items: MenuEntry[]; enabled?: boolean }
+  | 'separator'
+  | false
+  | null
+  | undefined
+
+type MenuApi = typeof import('@tauri-apps/api/menu')
+
+async function buildItems(api: MenuApi, entries: MenuEntry[]): Promise<any[]> {
+  const present = entries.filter((entry): entry is Exclude<MenuEntry, false | null | undefined> => !!entry)
+  // Разделитель в начале, в конце и два подряд выглядят как поломка — убираем лишние.
+  const tidy = present.filter((entry, index) => entry !== 'separator' || (index > 0 && index < present.length - 1 && present[index - 1] !== 'separator'))
+  return Promise.all(
+    tidy.map(async (entry) => {
+      if (entry === 'separator') return api.PredefinedMenuItem.new({ item: 'Separator' })
+      if ('items' in entry) return api.Submenu.new({ text: entry.text, enabled: entry.enabled ?? true, items: await buildItems(api, entry.items) })
+      return api.MenuItem.new({ text: entry.text, enabled: entry.enabled ?? true, action: entry.action })
+    }),
+  )
+}
 
 /** Системное контекстное меню — такое же, как у проводника, а не нарисованное страницей. */
 export async function popupMenu(entries: MenuEntry[]) {
-  if (!isDesktop()) return
-  const { Menu, MenuItem, PredefinedMenuItem } = await import('@tauri-apps/api/menu')
-  const items = await Promise.all(
-    entries
-      .filter((entry): entry is Exclude<MenuEntry, false | null | undefined> => !!entry)
-      .map((entry) =>
-        entry === 'separator'
-          ? PredefinedMenuItem.new({ item: 'Separator' })
-          : MenuItem.new({ text: entry.text, enabled: entry.enabled ?? true, action: entry.action }),
-      ),
-  )
-  const menu = await Menu.new({ items })
+  if (!isDesktop()) {
+    // В браузере (превью и сквозной тест) меню нет — пункты видны в консоли отладки.
+    if (import.meta.env.DEV) (window as any).__lastMenu = entries
+    return
+  }
+  const api = await import('@tauri-apps/api/menu')
+  const menu = await api.Menu.new({ items: await buildItems(api, entries) })
   await menu.popup()
   // Выбор пункта доходит до окна чуть позже закрытия меню — освобождаем его не сразу.
   setTimeout(() => void menu.close().catch(() => {}), 2000)

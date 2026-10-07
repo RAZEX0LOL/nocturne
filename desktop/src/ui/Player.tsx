@@ -30,7 +30,7 @@ export function Player({
   const song = queue?.current?.song
   if (!song) return null
   const starred = starredIds.has(song.id)
-  const canStar = !!client && !offline && !song.id.startsWith('local:')
+  const canStar = !!client && !offline && !song.id.startsWith('local:') && !song.id.startsWith('radio:')
   const muted = settings.volume === 0
 
   const toggleMute = () => {

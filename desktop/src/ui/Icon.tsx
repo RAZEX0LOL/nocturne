@@ -2,6 +2,11 @@ import {
   ArrowLeft,
   Check,
   ChevronDown,
+  Star,
+  Radio,
+  Tags,
+  ListPlus,
+  GripVertical,
   ChevronLeft,
   ChevronRight,
   Maximize2,
@@ -91,6 +96,12 @@ const icons = {
   expand: ['\uE740', Maximize2],
   collapse: ['\uE73F', Minimize2],
   miniPlayer: ['\uE8A7', PictureInPicture2],
+  star: ['\uE734', Star],
+  starFilled: ['\uE735', Star],
+  radio: ['\uE704', Radio],
+  genre: ['\uE8EC', Tags],
+  playlistAdd: ['\uE710', ListPlus],
+  grip: ['\uE76F', GripVertical],
 } satisfies Record<string, [string, LucideIcon]>
 
 export type IconName = keyof typeof icons
@@ -138,6 +149,12 @@ const symbols: Record<IconName, string> = {
   expand: 'arrow.up.left.and.arrow.down.right',
   collapse: 'arrow.down.right.and.arrow.up.left',
   miniPlayer: 'pip',
+  star: 'star',
+  starFilled: 'star.fill',
+  radio: 'dot.radiowaves.left.and.right',
+  genre: 'guitars',
+  playlistAdd: 'text.badge.plus',
+  grip: 'line.3.horizontal',
 }
 
 let symbolImages: Partial<Record<IconName, string>> = {}
@@ -180,7 +197,7 @@ export function Icon({ name, size = 16, className = '' }: { name: IconName; size
       />
     )
   }
-  const filled = name === 'heartFilled' || name === 'play' || name === 'pause'
+  const filled = name === 'heartFilled' || name === 'starFilled' || name === 'play' || name === 'pause'
   return (
     <Vector
       aria-hidden

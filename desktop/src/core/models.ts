@@ -22,6 +22,10 @@ export interface Song {
   starred?: string
   userRating?: number
   genre?: string
+  year?: number
+  playCount?: number
+  /** Только у интернет-радио: прямой адрес потока, мимо Navidrome. */
+  streamUrl?: string
   replayGain?: ReplayGain
 }
 
@@ -49,6 +53,23 @@ export interface Playlist {
   name: string
   songCount?: number
   coverArt?: string
+  /** Длительность всего плейлиста в секундах. */
+  duration?: number
+  comment?: string
+  owner?: string
+}
+
+/** Сведения об исполнителе из Last.fm через Navidrome: биография, фото, похожие исполнители. */
+export interface ArtistInfo {
+  biography?: string
+  largeImageUrl?: string
+  similarArtist?: Artist[]
+}
+
+export interface Genre {
+  value: string
+  albumCount?: number
+  songCount?: number
 }
 
 export interface RadioStation {
