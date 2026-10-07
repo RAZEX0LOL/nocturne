@@ -307,6 +307,12 @@ export class NavidromeClient {
     return response.albumList2?.album ?? []
   }
 
+  /** Публичная ссылка Navidrome (нужно EnableSharing на сервере); её откроют без аккаунта. */
+  async createShare(id: string): Promise<string | undefined> {
+    const response = await this.request('createShare', { id })
+    return response.shares?.share?.[0]?.url
+  }
+
   async radioStations(): Promise<RadioStation[]> {
     const response = await this.request('getInternetRadioStations')
     return response.internetRadioStations?.internetRadioStation ?? []

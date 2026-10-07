@@ -32,12 +32,14 @@ function useBigCover(id: string | undefined) {
  * (см. palette.rs), без них остаётся одна размытая обложка — тоже красиво.
  */
 function LivingBackground({ cover }: { cover?: string }) {
-  const { palette } = useStore()
-  const colors = palette?.colors.length ? palette.colors : []
+  const { palette, settings } = useStore()
+  const style = settings.playerBackground
+  // «Однотонный» — один глубокий цвет обложки, «размытая обложка» — без плывущих пятен.
+  const colors = style === 'living' && palette?.colors.length ? palette.colors : []
   const base = palette?.base ?? '#121218'
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden" style={{ background: base }} aria-hidden>
-      {cover && (
+      {cover && style !== 'solid' && (
         <img src={cover} alt="" draggable={false} className="absolute inset-0 h-full w-full scale-125 object-cover opacity-60 blur-[80px] saturate-150" />
       )}
       {colors.map((color, index) => (
@@ -101,7 +103,9 @@ export function NowPlaying({ onClose, onMini }: { onClose: () => void; onMini: (
   return (
     <div className="now-playing fixed inset-0 z-30 flex flex-col text-white" role="dialog" aria-label={t('Сейчас играет')}>
       <LivingBackground cover={cover} />
-      {settings.visualizer && <Visualizer className="pointer-events-none absolute inset-x-0 bottom-0 h-40 w-full opacity-40" />}
+      {settings.visualizer && (
+        <Visualizer style={settings.visualizerStyle} className="pointer-events-none absolute inset-x-0 bottom-0 h-40 w-full opacity-40" />
+      )}
 
       <header data-tauri-drag-region className="relative flex items-center gap-2 px-5 pb-2 pt-4">
         <span className="titlebar-space w-16" data-tauri-drag-region />

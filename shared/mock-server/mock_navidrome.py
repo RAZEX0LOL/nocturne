@@ -26,7 +26,11 @@ def png(r, g, b, size=64):
 SONGS = [{"id": f"t{i}", "title": f"Тестовый трек {i + 1}", "artist": "Mock Artist", "album": "Mock Album",
           "albumId": "al-1", "artistId": "ar-1", "coverArt": "al-1", "duration": TRACK_SECONDS, "track": i + 1} for i in range(3)]
 AUDIO = {s["id"]: wav(330 + 110 * i) for i, s in enumerate(SONGS)}
-SONG_BY_ID = {s["id"]: s for s in SONGS}
+# Трек не из альбома: его отдаёт только «похожее» — проверка бесконечного воспроизведения.
+SIMILAR = {"id": "s9", "title": "Похожий трек", "artist": "Another Artist", "album": "Elsewhere", "albumId": "al-9",
+           "artistId": "ar-9", "coverArt": "al-1", "duration": TRACK_SECONDS, "track": 1}
+AUDIO[SIMILAR["id"]] = wav(880)
+SONG_BY_ID = {s["id"]: s for s in SONGS + [SIMILAR]}
 PLAYLISTS = {}
 RATINGS = {}
 NATIVE_TOKEN = "mock-native-token"
@@ -158,7 +162,9 @@ class Handler(BaseHTTPRequestHandler):
             if not PLAY_QUEUE.get("ids"): return self.ok()
             return self.ok(playQueue={"entry": [SONG_BY_ID[i] for i in PLAY_QUEUE["ids"] if i in SONG_BY_ID], "current": PLAY_QUEUE["current"],
                                       "position": PLAY_QUEUE["position"], "changed": PLAY_QUEUE["changed"], "changedBy": PLAY_QUEUE["changedBy"], "username": "test"})
-        if endpoint == "getSimilarSongs2": return self.ok(similarSongs2={"song": [x for x in SONGS if x["id"] != q.get("id")]})
+        if endpoint == "getSimilarSongs2": return self.ok(similarSongs2={"song": [x for x in SONGS + [SIMILAR] if x["id"] != q.get("id")]})
+        if endpoint == "createShare":
+            return self.ok(shares={"share": [{"id": "sh1", "url": f"http://127.0.0.1:4533/share/{q.get('id')}", "entry": []}]})
         if endpoint == "getArtistInfo2":
             return self.ok(artistInfo2={"biography": "Mock Artist — вымышленный исполнитель для проверок. <a href=\"https://last.fm\">Read more on Last.fm</a>", "similarArtist": [{"id": "ar-2", "name": "Похожий исполнитель", "albumCount": 0}]})
         if endpoint == "getAlbumInfo2": return self.ok(albumInfo={"notes": "Альбом для проверок: три синусоиды разной частоты."})

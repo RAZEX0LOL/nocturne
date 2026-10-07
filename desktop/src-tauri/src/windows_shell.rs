@@ -252,11 +252,15 @@ pub struct NativeStyle {
 }
 
 #[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Accent {
     /// Заливки (кнопки, ползунки) — SystemAccentColorLight2, как у WinUI в тёмной теме.
     fill: String,
     /// Текст и ссылки — SystemAccentColorLight3.
     text: String,
+    /// В светлой теме WinUI берёт тёмные оттенки: Dark1 для заливок и Dark2 для текста.
+    fill_light: String,
+    text_light: String,
 }
 
 fn hex(color: windows::UI::Color) -> String {
@@ -267,6 +271,8 @@ fn accent(settings: &UISettings) -> Option<Accent> {
     Some(Accent {
         fill: hex(settings.GetColorValue(UIColorType::AccentLight2).ok()?),
         text: hex(settings.GetColorValue(UIColorType::AccentLight3).ok()?),
+        fill_light: hex(settings.GetColorValue(UIColorType::AccentDark1).ok()?),
+        text_light: hex(settings.GetColorValue(UIColorType::AccentDark2).ok()?),
     })
 }
 

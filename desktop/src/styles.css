@@ -38,6 +38,17 @@
   --radius-card: 0.75rem;
   --radius-overlay: 1rem;
   --font: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --card: 176px;
+  /* «Чернила» для полупрозрачных наложений: белые на тёмном фоне, чёрные на светлом. */
+  --ink: 255 255 255;
+  --thumb: var(--thumb);
+  --solid: #202020;
+  --info-bg: rgb(39 39 39 / 0.9);
+  --warning-bg: #433519;
+  --error-bg: #442726;
+  --warning-icon: #fce100;
+  --error-icon: #ff99a4;
+  --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5' fill='none' stroke='white' stroke-opacity='.8' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 }
 
 /*
@@ -106,6 +117,93 @@
 :root[data-platform="windows"].mica {
   --base: transparent;
   --layer: rgb(58 58 58 / 0.3);
+}
+
+/*
+ * Темы. «Как в системе» превращается в светлую или тёмную ещё в theme.ts, здесь — только три.
+ * Светлая — на каждой системе своя: Fluent на Windows, «Музыка» на Mac, фирменная на Linux.
+ * OLED-чёрная — настоящий #000: пиксели OLED-экрана в нём не светятся вовсе.
+ */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --ink: 0 0 0;
+  --base: #f6f6f9;
+  --layer: #f6f6f9;
+  --surface: #ffffff;
+  --surface-strong: #ececf3;
+  --stroke: #e2e2ea;
+  --accent: #8b5cf6;
+  --accent-text: #6d28d9;
+  --on-accent: #ffffff;
+  --primary: #15151d;
+  --secondary: #66667a;
+  --control: #ececf3;
+  --control-hover: #e2e2eb;
+  --control-pressed: #f3f3f7;
+  --overlay: #ffffff;
+  --thumb: #ffffff;
+  --solid: #f3f3f3;
+  --info-bg: #ffffff;
+  --warning-bg: #fff4ce;
+  --error-bg: #fde7e9;
+  --warning-icon: #9d5d00;
+  --error-icon: #c42b1c;
+  --chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5' fill='none' stroke='black' stroke-opacity='.65' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+:root[data-platform="windows"][data-theme="light"] {
+  --base: #f3f3f3;
+  --layer: #f9f9f9;
+  --surface: rgb(255 255 255 / 0.7);
+  --surface-strong: rgb(0 0 0 / 0.0373);
+  --stroke: rgb(0 0 0 / 0.0578);
+  --accent: #005fb8;
+  --accent-text: #003e92;
+  --primary: rgb(0 0 0 / 0.8956);
+  --secondary: rgb(0 0 0 / 0.6063);
+  --control: rgb(255 255 255 / 0.7);
+  --control-hover: rgb(249 249 249 / 0.5);
+  --control-pressed: rgb(249 249 249 / 0.3);
+  --control-stroke: rgb(0 0 0 / 0.0578);
+  --overlay: #f9f9f9;
+}
+:root[data-platform="windows"][data-theme="light"].mica {
+  --base: transparent;
+  --layer: rgb(255 255 255 / 0.5);
+}
+
+:root[data-platform="macos"][data-theme="light"] {
+  --base: #f5f5f7;
+  --layer: #ffffff;
+  --surface: rgb(0 0 0 / 0.03);
+  --surface-strong: rgb(0 0 0 / 0.06);
+  --stroke: rgb(0 0 0 / 0.1);
+  --accent: #007aff;
+  --accent-text: #0066d6;
+  --primary: #1d1d1f;
+  --secondary: rgb(0 0 0 / 0.55);
+  --control: rgb(0 0 0 / 0.05);
+  --control-hover: rgb(0 0 0 / 0.08);
+  --control-pressed: rgb(0 0 0 / 0.12);
+  --overlay: #ffffff;
+}
+:root[data-platform="macos"][data-theme="light"].vibrancy {
+  --base: transparent;
+}
+
+:root[data-theme="black"],
+:root[data-theme="black"].mica,
+:root[data-theme="black"].vibrancy {
+  --base: #000000;
+  --layer: #000000;
+  --surface: #0d0d10;
+  --surface-strong: #18181d;
+  --stroke: #1c1c22;
+  --control: #15151a;
+  --control-hover: #1f1f26;
+  --control-pressed: #0f0f13;
+  --overlay: #111115;
+  --solid: #000000;
 }
 
 html,
@@ -194,13 +292,13 @@ a {
   height: 12px;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgb(255 255 255 / 0.25);
+  background: rgb(var(--ink) / 0.25);
   border: 4px solid transparent;
   background-clip: content-box;
   border-radius: 6px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgb(255 255 255 / 0.55);
+  background: rgb(var(--ink) / 0.55);
   border-width: 3px;
   background-clip: content-box;
 }
@@ -211,7 +309,7 @@ a {
 
 /* Заготовки на время загрузки: мягкий перелив вместо надписи «Загружаю…». */
 .skeleton {
-  background: linear-gradient(90deg, rgb(255 255 255 / 0.05) 25%, rgb(255 255 255 / 0.1) 50%, rgb(255 255 255 / 0.05) 75%);
+  background: linear-gradient(90deg, rgb(var(--ink) / 0.05) 25%, rgb(var(--ink) / 0.1) 50%, rgb(var(--ink) / 0.05) 75%);
   background-size: 300% 100%;
   animation: skeleton 1.4s ease-in-out infinite;
 }
@@ -291,6 +389,20 @@ a {
   }
 }
 
+/* Компактная плотность: больше строк на экране, как «компактный» вид в проводнике. */
+.compact .song-row {
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+.compact .nav-item {
+  min-height: 30px;
+}
+.compact .settings-card {
+  min-height: 52px;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
 /* Длинные списки (тысячи треков в избранном): строки за пределами экрана не рисуются вовсе. */
 .song-row {
   content-visibility: auto;
@@ -341,6 +453,15 @@ body.dragging-songs * {
   filter: brightness(1.12);
 }
 
+/* Выбранная строка командной палитры. */
+.palette-active {
+  background: var(--control-hover);
+}
+:root[data-platform="windows"] .palette-active,
+:root[data-platform="macos"] .palette-active {
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
 .dialog-pop {
   animation: dialog-pop 200ms cubic-bezier(0.1, 0.9, 0.2, 1);
 }
@@ -349,7 +470,7 @@ body.dragging-songs * {
   to { opacity: 1; transform: none; }
 }
 :root[data-platform="windows"] .dialog-footer {
-  background: #202020;
+  background: var(--solid);
   border-top: 1px solid var(--stroke);
 }
 :root[data-platform="windows"] .dialog-footer > .btn {
@@ -386,6 +507,9 @@ body.dragging-songs * {
 
   :root[data-platform="macos"] .content-layer {
     border-left: 1px solid rgb(0 0 0 / 0.5);
+  }
+  :root[data-platform="macos"][data-theme="light"] .content-layer {
+    border-left-color: rgb(0 0 0 / 0.1);
   }
 
   /* Обычная кнопка. */
@@ -552,7 +676,7 @@ body.dragging-songs * {
     background: transparent;
   }
   :root[data-platform="macos"] .nav-item[aria-current="page"] {
-    background: rgb(255 255 255 / 0.12);
+    background: rgb(var(--ink) / 0.12);
   }
 
   /* Карточка: список треков, строки настроек, плитки. */
@@ -592,7 +716,7 @@ body.dragging-songs * {
     box-shadow: 0 0 0 2px var(--accent);
   }
   :root[data-platform="windows"] .field {
-    border-bottom-color: rgb(255 255 255 / 0.5442);
+    border-bottom-color: rgb(var(--ink) / 0.5442);
   }
   :root[data-platform="windows"] .field:focus {
     box-shadow: inset 0 -2px 0 var(--accent);
@@ -609,7 +733,7 @@ body.dragging-songs * {
     background-color: var(--control);
     border: 1px solid var(--control-stroke);
     color: var(--primary);
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5' fill='none' stroke='white' stroke-opacity='.8' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-image: var(--chevron);
     background-repeat: no-repeat;
     background-position: right 0.7rem center;
   }
@@ -632,7 +756,7 @@ body.dragging-songs * {
   .slider::-webkit-slider-runnable-track {
     height: 4px;
     border-radius: 2px;
-    background: linear-gradient(to right, var(--accent) var(--fill), rgb(255 255 255 / 0.25) var(--fill));
+    background: linear-gradient(to right, var(--accent) var(--fill), rgb(var(--ink) / 0.25) var(--fill));
   }
   .slider::-webkit-slider-thumb {
     appearance: none;
@@ -652,22 +776,22 @@ body.dragging-songs * {
     opacity: 0.4;
   }
   :root[data-platform="windows"] .slider::-webkit-slider-runnable-track {
-    background: linear-gradient(to right, var(--accent) var(--fill), rgb(255 255 255 / 0.5442) var(--fill));
+    background: linear-gradient(to right, var(--accent) var(--fill), rgb(var(--ink) / 0.5442) var(--fill));
   }
   :root[data-platform="windows"] .slider::-webkit-slider-thumb {
     width: 20px;
     height: 20px;
     margin-top: -8px;
     opacity: 1;
-    background: radial-gradient(circle, var(--accent) 0 5.5px, #454545 6px);
-    box-shadow: 0 0 0 1px rgb(255 255 255 / 0.093);
+    background: radial-gradient(circle, var(--accent) 0 5.5px, var(--thumb) 6px);
+    box-shadow: 0 0 0 1px rgb(var(--ink) / 0.093);
     transition: background 83ms linear;
   }
   :root[data-platform="windows"] .slider:hover::-webkit-slider-thumb {
-    background: radial-gradient(circle, var(--accent) 0 6.5px, #454545 7px);
+    background: radial-gradient(circle, var(--accent) 0 6.5px, var(--thumb) 7px);
   }
   :root[data-platform="windows"] .slider:active::-webkit-slider-thumb {
-    background: radial-gradient(circle, var(--accent) 0 4.5px, #454545 5px);
+    background: radial-gradient(circle, var(--accent) 0 4.5px, var(--thumb) 5px);
   }
 
   /* Вертикальный ползунок (эквалайзер): дорожка и заливка идут снизу вверх. */
@@ -679,14 +803,14 @@ body.dragging-songs * {
     width: 4px;
     height: 100%;
     margin: 0 auto;
-    background: linear-gradient(to top, var(--accent) var(--fill), rgb(255 255 255 / 0.25) var(--fill));
+    background: linear-gradient(to top, var(--accent) var(--fill), rgb(var(--ink) / 0.25) var(--fill));
   }
   .slider.slider-vertical::-webkit-slider-thumb {
     margin-top: 0;
     margin-left: -4px;
   }
   :root[data-platform="windows"] .slider.slider-vertical::-webkit-slider-runnable-track {
-    background: linear-gradient(to top, var(--accent) var(--fill), rgb(255 255 255 / 0.5442) var(--fill));
+    background: linear-gradient(to top, var(--accent) var(--fill), rgb(var(--ink) / 0.5442) var(--fill));
   }
   :root[data-platform="windows"] .slider.slider-vertical::-webkit-slider-thumb {
     margin-left: -8px;
@@ -714,7 +838,7 @@ body.dragging-songs * {
     width: 40px;
     height: 20px;
     border-radius: 10px;
-    border: 1px solid rgb(255 255 255 / 0.6);
+    border: 1px solid rgb(var(--ink) / 0.6);
     background: rgb(0 0 0 / 0.1);
     transition: background-color 83ms linear;
   }
@@ -726,7 +850,7 @@ body.dragging-songs * {
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    background: rgb(255 255 255 / 0.8);
+    background: rgb(var(--ink) / 0.8);
     transition: left 167ms cubic-bezier(0, 0, 0, 1), width 83ms linear;
   }
   .toggle:hover::after {
@@ -742,6 +866,123 @@ body.dragging-songs * {
   }
   .toggle:checked:hover::after {
     left: 21px;
+  }
+
+  /* Вкладки настроек: на Windows — подчёркнутые, как Pivot; на Mac — «таблетки» сегмента. */
+  .settings-tabs {
+    display: flex;
+    gap: 0.25rem;
+    padding-bottom: 0.75rem;
+  }
+  .settings-tab {
+    position: relative;
+    padding: 0.4rem 0.9rem;
+    border-radius: var(--radius-control);
+    color: var(--secondary);
+    font-weight: 500;
+  }
+  .settings-tab:hover {
+    color: var(--primary);
+    background: var(--control-hover);
+  }
+  .settings-tab[aria-selected="true"] {
+    color: var(--primary);
+    background: var(--control);
+  }
+  :root[data-platform="windows"] .settings-tab[aria-selected="true"] {
+    background: transparent;
+  }
+  :root[data-platform="windows"] .settings-tab[aria-selected="true"]::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: -2px;
+    width: 16px;
+    height: 3px;
+    margin-left: -8px;
+    border-radius: 2px;
+    background: var(--accent);
+  }
+
+  /* Сегментный переключатель: варианты в одной «капсуле», выбранный приподнят. */
+  .segmented {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    padding: 2px;
+    border-radius: calc(var(--radius-control) + 2px);
+    background: var(--control);
+    border: 1px solid var(--control-stroke);
+  }
+  .segment {
+    padding: 0.3rem 0.8rem;
+    border-radius: var(--radius-control);
+    color: var(--secondary);
+    font-size: 13px;
+    transition: background-color 83ms linear;
+  }
+  .segment:hover {
+    color: var(--primary);
+  }
+  .segment[aria-checked="true"] {
+    background: var(--overlay);
+    color: var(--primary);
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.18);
+  }
+  :root[data-platform="windows"] .segment[aria-checked="true"] {
+    background: var(--accent);
+    color: var(--on-accent);
+    box-shadow: none;
+  }
+
+  /* Плитка темы с мини-окном. */
+  .theme-tile {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    border: 2px solid transparent;
+    text-align: left;
+  }
+  .theme-tile:hover {
+    background: var(--surface-strong);
+  }
+  .theme-tile.is-active {
+    border-color: var(--accent);
+  }
+  .theme-preview {
+    position: relative;
+    display: block;
+    aspect-ratio: 16 / 10;
+    border-radius: calc(var(--radius-card) - 2px);
+    border: 1px solid rgb(var(--ink) / 0.12);
+    overflow: hidden;
+  }
+
+  /* Образцы цвета акцента; последний — системный выбор любого цвета. */
+  .swatch {
+    position: relative;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.15);
+    overflow: hidden;
+  }
+  .swatch.is-active {
+    border-color: var(--primary);
+  }
+  .swatch-picker {
+    background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red);
+    cursor: pointer;
+  }
+  .swatch-picker input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
   }
 
   /* Строка настроек — SettingsCard из «Параметров» Windows: значок, подпись, управление справа. */
@@ -766,13 +1007,13 @@ body.dragging-songs * {
     font-size: 14px;
   }
   .infobar-info {
-    background: rgb(39 39 39 / 0.9);
+    background: var(--info-bg);
   }
   .infobar-warning {
-    background: #433519;
+    background: var(--warning-bg);
   }
   .infobar-error {
-    background: #442726;
+    background: var(--error-bg);
   }
 
   /* Всплывающее (подсказка о действии, меню) — плотный слой с тенью. */

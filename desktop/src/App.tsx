@@ -13,6 +13,7 @@ import { SidebarPlaylists } from './ui/SidebarPlaylists'
 import { DialogHost } from './ui/Dialogs'
 import { DragGhost } from './ui/DragGhost'
 import { SmartEditor } from './ui/SmartEditor'
+import { CommandPalette } from './ui/CommandPalette'
 import {
   DownloadsView,
   LocalView,
@@ -103,10 +104,11 @@ function isTyping(target: EventTarget | null) {
 }
 
 export function App() {
-  const { status, error, notice, view, history, serverless, offline, dragging } = useStore()
+  const { status, error, notice, view, history, serverless, offline, dragging, settings } = useStore()
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [panel, setPanel] = useState<Panel>(null)
   const [nowPlaying, setNowPlaying] = useState(false)
+  const [palette, setPalette] = useState(false)
   const main = useRef<HTMLElement>(null)
 
   useEffect(() => {
@@ -114,6 +116,12 @@ export function App() {
     // Проверяем обновление один раз при запуске: чаще незачем, приложение не сервис.
     void store.checkForUpdate()
   }, [])
+
+  // Переход на любую страницу (из палитры, меню трека, мини-плеера) закрывает настройки:
+  // иначе страница открылась бы под ними, невидимой.
+  useEffect(() => {
+    setSettingsOpen(false)
+  }, [view])
 
   // Новая страница открывается сверху, а не с прокруткой предыдущей.
   useEffect(() => {
@@ -133,6 +141,14 @@ export function App() {
         if (nowPlaying) setNowPlaying(false)
         else if (settingsOpen) setSettingsOpen(false)
         else if (panel) setPanel(null)
+        return
+      }
+      // ⌘K / Ctrl+K — командная палитра, работает и из полей ввода.
+      if (mod && event.key.toLowerCase() === 'k') {
+        event.preventDefault()
+        // Уже открыта — открываем заново с пустой строкой, а не дописываем к прежнему запросу.
+        setPalette(false)
+        setTimeout(() => setPalette(true), 0)
         return
       }
       if (mod && event.key.toLowerCase() === 'f') {
@@ -210,7 +226,9 @@ export function App() {
             <span className="px-2 text-xs font-semibold tracking-[0.2em] text-secondary">NOCTURNE</span>
           </div>
           <div className="sidebar-scroll -mx-1.5 flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-1.5">
-          {sectionsFor(serverless, offline).map((section) => (
+          {sectionsFor(serverless, offline)
+            .filter((section) => !settings.hiddenSections.includes(section.view.kind))
+            .map((section) => (
             <button
               key={section.view.kind}
               onClick={() => {
@@ -267,6 +285,14 @@ export function App() {
       <Player panel={panel} onPanel={setPanel} onExpand={() => setNowPlaying(true)} onMini={() => void openMiniPlayer()} />
       {nowPlaying && <NowPlaying onClose={() => setNowPlaying(false)} onMini={() => void openMiniPlayer()} />}
       {dragging && <DropOverlay />}
+      {palette && (
+        <CommandPalette
+          onClose={() => setPalette(false)}
+          onNowPlaying={() => setNowPlaying(true)}
+          onMini={() => void openMiniPlayer()}
+          onSettings={() => setSettingsOpen(true)}
+        />
+      )}
       <DragGhost />
       <DialogHost />
     </div>

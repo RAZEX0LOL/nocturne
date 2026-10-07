@@ -4,8 +4,8 @@ import { t } from '../i18n'
 
 const looks: Record<'info' | 'warning' | 'error', { icon: IconName; color: string; className: string }> = {
   info: { icon: 'info', color: 'text-accent-text', className: 'infobar-info' },
-  warning: { icon: 'warning', color: 'text-[#fce100]', className: 'infobar-warning' },
-  error: { icon: 'error', color: 'text-[#ff99a4]', className: 'infobar-error' },
+  warning: { icon: 'warning', color: 'text-[var(--warning-icon)]', className: 'infobar-warning' },
+  error: { icon: 'error', color: 'text-[var(--error-icon)]', className: 'infobar-error' },
 }
 
 /** Сообщение в строке — InfoBar из WinUI: значок важности, заголовок, текст, действие и крестик. */

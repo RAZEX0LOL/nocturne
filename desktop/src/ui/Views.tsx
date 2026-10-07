@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Album, Artist, Playlist, Song } from '../core/models'
-import { store, useStore } from '../state/store'
+import { store, useStore, type ShelfId } from '../state/store'
 import { Cover } from './Cover'
 import { SongList } from './SongList'
 import { Icon } from './Icon'
@@ -54,7 +54,7 @@ function PlayButtons({ songs, downloadable = false }: { songs: Song[]; downloada
 
 export function AlbumGrid({ albums, loading = false }: { albums: Album[]; loading?: boolean }) {
   return (
-    <div className="-mx-2 grid grid-cols-[repeat(auto-fill,minmax(176px,1fr))]">
+    <div className="-mx-2 grid grid-cols-[repeat(auto-fill,minmax(var(--card),1fr))]">
       {loading
         ? Array.from({ length: 12 }, (_, index) => <AlbumCardSkeleton key={index} />)
         : albums.map((album, index) => <AlbumCard key={`${album.id}-${index}`} album={album} />)}
@@ -80,7 +80,7 @@ export function OfflineBanner() {
 }
 
 export function HomeView() {
-  const { recent, starred, offline, serverless, local, downloadedSongs, shelves } = useStore()
+  const { recent, starred, offline, serverless, local, downloadedSongs, shelves, settings } = useStore()
   if (offline || serverless) {
     const onDisk = [...local, ...downloadedSongs]
     return (
@@ -91,40 +91,57 @@ export function HomeView() {
       </div>
     )
   }
+  // Полки — в порядке из настроек «Оформление»; скрытые там на главной не показываются.
+  const shelf = (id: ShelfId) => {
+    switch (id) {
+      case 'played':
+        return <Shelf key={id} title={t('Недавно слушал')} albums={shelves.played} loading={!shelves.loaded} />
+      case 'recent':
+        return (
+          <Shelf
+            key={id}
+            title={t('Недавно добавленные')}
+            albums={recent}
+            loading={!shelves.loaded}
+            action={
+              <button onClick={() => store.section({ kind: 'albums' })} className="btn btn-subtle">
+                {t('Все альбомы')}
+              </button>
+            }
+          />
+        )
+      case 'starred':
+        return starred.length > 0 ? (
+          <section key={id} className="space-y-2">
+            <Title action={<button onClick={() => store.section({ kind: 'favorites' })} className="btn btn-subtle">{t('Все')}</button>}>
+              <span className="section-title">{t('Любимые треки')}</span>
+            </Title>
+            <SongList songs={starred.slice(0, 5)} showAlbum />
+          </section>
+        ) : null
+      case 'frequent':
+        return <Shelf key={id} title={t('Часто слушаю')} albums={shelves.frequent} loading={!shelves.loaded} />
+      case 'random':
+        return (
+          <Shelf
+            key={id}
+            title={t('Случайные альбомы')}
+            albums={shelves.random}
+            loading={!shelves.loaded}
+            action={
+              <button onClick={() => void store.shuffleShelf()} className="btn btn-subtle">
+                <Icon name="shuffle" size={14} />
+                {t('Другие')}
+              </button>
+            }
+          />
+        )
+    }
+  }
   return (
     <div className="space-y-8">
       <h1 className="page-title">{greeting()}</h1>
-      <Shelf title={t('Недавно слушал')} albums={shelves.played} loading={!shelves.loaded} />
-      <Shelf
-        title={t('Недавно добавленные')}
-        albums={recent}
-        loading={!shelves.loaded}
-        action={
-          <button onClick={() => store.section({ kind: 'albums' })} className="btn btn-subtle">
-            {t('Все альбомы')}
-          </button>
-        }
-      />
-      {starred.length > 0 && (
-        <section className="space-y-2">
-          <Title action={<button onClick={() => store.section({ kind: 'favorites' })} className="btn btn-subtle">{t('Все')}</button>}>
-            <span className="section-title">{t('Любимые треки')}</span>
-          </Title>
-          <SongList songs={starred.slice(0, 5)} showAlbum />
-        </section>
-      )}
-      <Shelf title={t('Часто слушаю')} albums={shelves.frequent} loading={!shelves.loaded} />
-      <Shelf
-        title={t('Случайные альбомы')}
-        albums={shelves.random}
-        loading={!shelves.loaded}
-        action={
-          <button onClick={() => void store.shuffleShelf()} className="btn btn-subtle">
-            <Icon name="shuffle" size={14} />
-            {t('Другие')}
-          </button>
-        }
-      />
+      {settings.homeShelves.map(shelf)}
     </div>
   )
 }
@@ -223,7 +240,15 @@ export function AlbumView({ album }: { album: Album }) {
           </p>
           <div className="flex gap-2 pt-2">
             <PlayButtons songs={list} downloadable />
-            {list.length > 0 && <MoreButton entries={() => songMenu(list)} />}
+            {list.length > 0 && (
+              <MoreButton
+                entries={() => [
+                  ...songMenu(list),
+                  'separator',
+                  { text: t('Поделиться ссылкой на альбом'), action: () => void store.share(album.id, album.name) },
+                ]}
+              />
+            )}
           </div>
         </div>
       </div>

@@ -33,6 +33,7 @@ export function QueuePanel({ onClose }: { onClose: () => void }) {
           </section>
         )}
         <UpcomingList />
+        <HistoryList />
       </div>
     </aside>
   )
@@ -95,6 +96,32 @@ export function UpcomingList({ onDark = false }: { onDark?: boolean }) {
             <Icon name="close" size={10} />
           </button>
         </div>
+      ))}
+    </section>
+  )
+}
+
+/** «Ранее»: что уже сыграло в этой очереди — последним сверху; клик возвращает к треку. */
+export function HistoryList() {
+  const { queue } = useStore()
+  const position = queue?.position ?? 0
+  const played = (queue?.items ?? []).slice(0, position).map((entry, index) => ({ entry, index })).reverse().slice(0, 30)
+  if (!played.length) return null
+  return (
+    <section className="space-y-1">
+      <h3 className="px-1 text-xs font-semibold text-secondary">{t('Ранее')}</h3>
+      {played.map(({ entry, index }) => (
+        <button
+          key={entry.id}
+          onClick={() => void store.select(index)}
+          className="list-row flex w-full min-w-0 items-center gap-3 rounded-[var(--radius-control)] p-2 text-left opacity-70 hover:opacity-100"
+        >
+          <Cover id={entry.song.coverArt} size={32} rounded="rounded-[var(--radius-control)]" />
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-sm">{entry.song.title}</span>
+            <span className="block truncate text-xs text-secondary">{entry.song.artist}</span>
+          </span>
+        </button>
       ))}
     </section>
   )

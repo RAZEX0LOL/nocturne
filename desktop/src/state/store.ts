@@ -16,6 +16,7 @@ import {
 } from '../core/models'
 import { moveItems } from '../core/order'
 import { lrclibLyrics } from '../core/lrc'
+import { effectiveReplayGain } from '../core/replaygain'
 import { fromNsp, toNsp, type Nsp, type SmartForm } from '../core/smart'
 import { PlaybackQueue, type RepeatMode } from '../core/queue'
 import type { ReplayGainMode } from '../core/replaygain'
@@ -39,10 +40,38 @@ export interface CoverPalette {
   base: string
 }
 
-/** Откуда акцент: система (Windows, Mac), обложка играющего трека или фирменный фиолетовый. */
-export type AccentMode = 'system' | 'cover' | 'brand'
+/** Откуда акцент: система (Windows, Mac), обложка играющего трека, фирменный фиолетовый или свой. */
+export type AccentMode = 'system' | 'cover' | 'brand' | 'custom'
+
+export type { ThemeMode } from '../core/colors'
+import type { ThemeMode } from '../core/colors'
+
+export type ShelfId = 'played' | 'recent' | 'starred' | 'frequent' | 'random'
+
+export const SHELVES: ShelfId[] = ['played', 'recent', 'starred', 'frequent', 'random']
 
 export interface Settings {
+  /** Очередь кончилась — дальше играет похожая музыка (как радио по последнему треку). */
+  autoplaySimilar: boolean
+  /** Скорость воспроизведения, 0,5–2×. */
+  playbackRate: number
+  /** Свои пресеты эквалайзера: название → усиления полос. */
+  eqPresets: Record<string, number[]>
+  theme: ThemeMode
+  /** Фон полноэкранного плеера: живые пятна цветов обложки, только размытая обложка или однотонный. */
+  playerBackground: 'living' | 'blur' | 'solid'
+  visualizerStyle: 'bars' | 'wave'
+  /** Масштаб всего интерфейса: 0,9 — мельче, 1,25 — крупнее. */
+  uiScale: number
+  density: 'comfortable' | 'compact'
+  /** Ширина обложки в сетках альбомов, точки. */
+  cardSize: number
+  /** Полки главной в выбранном порядке; не попавшие в список скрыты. */
+  homeShelves: ShelfId[]
+  /** Разделы бокового меню, которые человек скрыл. */
+  hiddenSections: string[]
+  /** Свой цвет акцента (режим 'custom'). */
+  accentColor: string
   /** Искать текст в LRCLIB, если у Navidrome его нет: названия треков уходят стороннему сервису. */
   lrclib: boolean
   /** Закрытие окна сворачивает в трей (Windows, Linux), музыка играет дальше. */
@@ -165,12 +194,25 @@ export interface Lyrics {
 
 const SETTINGS_KEY = 'nocturne.settings'
 const QUEUE_KEY = 'nocturne.queue'
+const SLEEP_FADE_SECONDS = 30
 const QUEUE_SYNCED_KEY = 'nocturne.queueSyncedAt'
 const SERVERLESS_KEY = 'nocturne.serverless'
 const PENDING_SCROBBLES_KEY = 'nocturne.pendingScrobbles'
 const PAGE = 60
 
 const defaultSettings: Settings = {
+  autoplaySimilar: true,
+  playbackRate: 1,
+  eqPresets: {},
+  theme: 'dark',
+  playerBackground: 'living',
+  visualizerStyle: 'bars',
+  uiScale: 1,
+  density: 'comfortable',
+  cardSize: 176,
+  homeShelves: [...SHELVES],
+  hiddenSections: [],
+  accentColor: '#f472b6',
   lrclib: false,
   closeToTray: false,
   globalShortcuts: true,
@@ -1101,7 +1143,7 @@ class Store {
   }
 
   private async startCurrent(autoplay: boolean, from = 0) {
-    const { queue, settings } = this.state
+    const { queue } = this.state
     const song = queue?.current?.song
     if (!song) return
     const url = await this.sourceUrl(song)
@@ -1111,7 +1153,7 @@ class Store {
     }
     this.startedAt = Date.now()
     this.scrobbled = false
-    await this.engine.load(url, song, settings.replayGain, autoplay)
+    await this.engine.load(url, song, this.replayGainFor(queue!.position), autoplay)
     if (from > 0) this.engine.seek(from)
     this.patch({ position: from, duration: song.duration ?? 0 })
     void this.updateNowPlaying(song)
@@ -1153,7 +1195,7 @@ class Store {
     // Повтор одного трека и недоступные треки готовить не нужно: играть будет нечего или то же самое.
     if (!song || song.id === queue.current?.song.id || !this.isPlayable(song)) return
     const url = await this.sourceUrl(song)
-    if (url) this.engine.prepare(url, song, this.state.settings.replayGain)
+    if (url) this.engine.prepare(url, song, this.replayGainFor(next))
   }
 
   /** Явные «играть» и «пауза» — для системных кнопок: им нужен не переключатель, а команда. */
@@ -1182,7 +1224,9 @@ class Store {
     }
     // Пропускаем то, что стало недоступно (связь пропала, файл удалили), но не по кругу бесконечно.
     for (let attempt = 0; attempt < queue.items.length; attempt++) {
-      const next = queue.nextPosition(automatic)
+      let next = queue.nextPosition(automatic)
+      // Очередь кончилась сама собой — с бесконечным воспроизведением дальше играет похожее.
+      if (next === null && automatic && (await this.extendWithSimilar())) next = queue.nextPosition(automatic)
       if (next === null) {
         this.engine.pause()
         return
@@ -1193,6 +1237,23 @@ class Store {
     }
     this.touchQueue()
     await this.startCurrent(true)
+  }
+
+  /** Дописывает в очередь похожие на последний трек, которых в ней ещё не было. true — дописало. */
+  private async extendWithSimilar(): Promise<boolean> {
+    const { queue, client, settings } = this.state
+    const seed = queue?.current?.song
+    if (!settings.autoplaySimilar || !queue || !client || !this.online || !seed || isLocalId(seed.id) || isRadio(seed)) return false
+    try {
+      const played = new Set(queue.items.map((entry) => entry.song.id))
+      const fresh = (await client.similarSongs(seed.id, 40)).filter((song) => !played.has(song.id)).slice(0, 20)
+      if (!fresh.length) return false
+      queue.append(fresh)
+      this.showNotice(t('Дальше — похожая музыка'))
+      return true
+    } catch {
+      return false
+    }
   }
 
   async previous() {
@@ -1243,11 +1304,12 @@ class Store {
     if (!minutes || minutes <= 0) return
     const deadline = Date.now() + minutes * 60_000
     this.patch({ sleepAt: deadline })
+    // Последние полминуты музыка плавно затихает — тишина не будит резким обрывом.
+    const fade = Math.min(SLEEP_FADE_SECONDS, minutes * 60)
     this.sleepTimer = setTimeout(() => {
       this.sleepTimer = undefined
-      this.patch({ sleepAt: undefined })
-      this.engine.pause()
-    }, deadline - Date.now())
+      void this.engine.fadeOutAndPause(fade).then(() => this.patch({ sleepAt: undefined }))
+    }, deadline - Date.now() - fade * 1000)
   }
 
   // MARK: - Текст песни
@@ -1416,6 +1478,46 @@ class Store {
     this.engine.setEq(eq)
     this.engine.setFadeSeconds(fadeSeconds)
     this.engine.setVolume(volume)
+    this.engine.setRate(this.state.settings.playbackRate)
+  }
+
+  /** «Авто» выравнивания: по альбому, если альбом играет подряд, иначе по треку. */
+  private replayGainFor(index: number) {
+    const queue = this.state.queue
+    if (!queue) return this.state.settings.replayGain
+    return effectiveReplayGain(this.state.settings.replayGain, {
+      songs: queue.items.map((entry) => entry.song),
+      index,
+      shuffled: queue.shuffle,
+    })
+  }
+
+  // MARK: - Поделиться и пресеты эквалайзера
+
+  /** Ссылка Navidrome на трек, альбом или плейлист — в буфер обмена. Её откроют и без аккаунта. */
+  async share(id: string, title: string) {
+    const client = this.state.client
+    if (!client || !this.online) return
+    try {
+      const url = await client.createShare(id)
+      if (!url) throw new Error('no url')
+      await navigator.clipboard.writeText(url)
+      this.showNotice(t('Ссылка на «{title}» скопирована', { title }))
+    } catch {
+      this.patch({ error: t('Не удалось создать ссылку. Включи «Поделиться» в настройках Navidrome (EnableSharing).') })
+    }
+  }
+
+  saveEqPreset(name: string) {
+    const title = name.trim()
+    if (!title) return
+    this.update({ eqPresets: { ...this.state.settings.eqPresets, [title]: [...this.state.settings.eq.gains] } })
+    this.showNotice(t('Пресет «{name}» сохранён', { name: title }))
+  }
+
+  deleteEqPreset(name: string) {
+    const { [name]: _removed, ...rest } = this.state.settings.eqPresets
+    this.update({ eqPresets: rest })
   }
 
   showNotice(text: string) {

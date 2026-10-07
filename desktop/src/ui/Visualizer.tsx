@@ -14,7 +14,7 @@ const RELEASE = 0.07
  * верх занимают честную долю ширины, как в студийных анализаторах. Полосы и поднимаются, и
  * опадают плавно, а соседние чуть сглажены между собой — движение «дышит», а не дёргается.
  */
-export function Visualizer({ className = '' }: { className?: string }) {
+export function Visualizer({ className = '', style = 'bars' }: { className?: string; style?: 'bars' | 'wave' }) {
   const canvas = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
@@ -42,6 +42,7 @@ export function Visualizer({ className = '' }: { className?: string }) {
       const nyquist = sampleRate / 2
       const gap = 3
       const barWidth = (width - gap * (BARS - 1)) / BARS
+      const heights: number[] = []
       for (let bar = 0; bar < BARS; bar++) {
         let target = 0
         if (live) {
@@ -65,6 +66,8 @@ export function Visualizer({ className = '' }: { className?: string }) {
         // Соседние полосы чуть подтягивают друг друга: силуэт спектра без зубцов.
         const smooth = ((levels[bar - 1] ?? levels[bar]!) + levels[bar]! * 2 + (levels[bar + 1] ?? levels[bar]!)) / 4
         const barHeight = Math.max(2, smooth ** 1.3 * height)
+        heights.push(barHeight)
+        if (style === 'wave') continue
         const x = bar * (barWidth + gap)
         const gradient = context.createLinearGradient(0, height - barHeight, 0, height)
         gradient.addColorStop(0, 'rgba(255,255,255,0.85)')
@@ -74,10 +77,30 @@ export function Visualizer({ className = '' }: { className?: string }) {
         context.roundRect(x, height - barHeight, barWidth, barHeight, Math.min(barWidth / 2, 3))
         context.fill()
       }
+      // Волна: плавная кривая через вершины полос, залитая сверху вниз — как гладкий спектр.
+      if (style === 'wave' && heights.length) {
+        const step = width / (heights.length - 1)
+        const y = (index: number) => height - heights[index]!
+        context.beginPath()
+        context.moveTo(0, height)
+        context.lineTo(0, y(0))
+        for (let index = 1; index < heights.length; index++) {
+          const midX = (index - 0.5) * step
+          context.quadraticCurveTo((index - 1) * step, y(index - 1), midX, (y(index - 1) + y(index)) / 2)
+        }
+        context.lineTo(width, y(heights.length - 1))
+        context.lineTo(width, height)
+        context.closePath()
+        const fill = context.createLinearGradient(0, 0, 0, height)
+        fill.addColorStop(0, 'rgba(255,255,255,0.7)')
+        fill.addColorStop(1, 'rgba(255,255,255,0.08)')
+        context.fillStyle = fill
+        context.fill()
+      }
     }
     draw()
     return () => cancelAnimationFrame(frame)
-  }, [])
+  }, [style])
 
   return <canvas ref={canvas} className={className} aria-hidden />
 }

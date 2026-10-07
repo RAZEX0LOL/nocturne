@@ -17,6 +17,7 @@ await page.locator('nav button', { hasText: 'Альбомы' }).waitFor({ timeou
 
 async function setFade(seconds) {
   await page.locator('nav button', { hasText: 'Настройки' }).click(); await wait(300)
+  await page.locator('.settings-tab', { hasText: 'Звук' }).click(); await wait(200)
   const slider = page.locator('input[aria-label="Плавные переходы, сек"]')
   await slider.focus(); await page.keyboard.press('Home')
   for (let index = 0; index < seconds; index++) await page.keyboard.press('ArrowRight')

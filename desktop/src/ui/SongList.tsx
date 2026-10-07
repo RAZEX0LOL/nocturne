@@ -77,6 +77,7 @@ export function songMenu(songs: Song[], options: { onRemove?: () => void; remove
     online && single && !isLocalId(single.id) && { text: t('Микс по треку'), action: () => void store.playMix(single) },
     !!single?.albumId && { text: t('Перейти к альбому'), action: () => store.openAlbumOf(single) },
     !!single?.artistId && { text: t('Перейти к исполнителю'), action: () => store.openArtistOf(single) },
+    online && single && !isLocalId(single.id) && { text: t('Поделиться ссылкой'), action: () => void store.share(single.id, single.title) },
     'separator',
     online &&
       server.length > 0 && {

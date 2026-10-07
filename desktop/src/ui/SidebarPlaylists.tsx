@@ -15,6 +15,7 @@ export function playlistMenu(playlist: Playlist) {
     { text: t('Перемешать'), action: () => void store.playPlaylist(playlist, true) },
     'separator',
     smart && { text: t('Изменить правила…'), action: () => store.open({ kind: 'smart', id: playlist.id }) },
+    { text: t('Поделиться ссылкой'), action: () => void store.share(playlist.id, playlist.name) },
     {
       text: t('Переименовать…'),
       action: () =>

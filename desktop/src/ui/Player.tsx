@@ -73,6 +73,7 @@ export function Player({
       </div>
 
       <div className="flex items-center justify-end gap-1">
+        <SpeedButton />
         <SleepTimerButton />
         <button onClick={onMini} className="icon-btn" title={t('Мини-плеер')} aria-label={t('Мини-плеер')}>
           <Icon name="miniPlayer" />
@@ -101,6 +102,31 @@ export function Player({
         <Slider value={settings.volume} max={1} step={0.01} onChange={(volume) => store.update({ volume })} label={t('Громкость')} className="w-24" />
       </div>
     </footer>
+  )
+}
+
+/** Скорость воспроизведения — для аудиокниг и длинных миксов; не 1× — подсвечена. */
+function SpeedButton() {
+  const { settings } = useStore()
+  const rate = settings.playbackRate
+  const label = `${String(rate).replace('.', ',')}×`
+  return (
+    <button
+      onClick={() =>
+        void popupMenu(
+          [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2].map((value) => ({
+            text: `${String(value).replace('.', ',')}×${value === rate ? '  ✓' : ''}`,
+            action: () => store.update({ playbackRate: value }),
+          })),
+        )
+      }
+      className={`icon-btn toggle-btn w-auto min-w-9 px-1.5 text-xs font-semibold tabular-nums`}
+      aria-pressed={rate !== 1}
+      title={t('Скорость: {rate}', { rate: label })}
+      aria-label={t('Скорость: {rate}', { rate: label })}
+    >
+      {label}
+    </button>
   )
 }
 

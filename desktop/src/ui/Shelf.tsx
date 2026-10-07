@@ -109,7 +109,8 @@ export function Shelf({
   }
 
   if (!loading && !albums.length) return null
-  const width = 184
+  // Ширина карточки — из настроек «Оформление»: размер обложки плюс поля.
+  const width = store.snapshot().settings.cardSize + 8
 
   return (
     <section className="space-y-2">

@@ -41,6 +41,7 @@ class Deck {
 
   hold(songID: string, url: string) {
     this.songID = songID
+    // load() сбрасывает скорость к defaultPlaybackRate — она уже выставлена движком.
     this.element.src = url
     this.element.load()
   }
@@ -407,6 +408,56 @@ export class AudioEngine {
 
   get playing() {
     return !this.element.paused
+  }
+
+  private rate = 1
+
+  /**
+   * Скорость воспроизведения (аудиокниги, длинные миксы): 0,5–2×, высота тона сохраняется —
+   * голос не становится «мультяшным». Действует на оба элемента, чтобы переход не сбрасывал её.
+   */
+  setRate(rate: number) {
+    this.rate = Math.min(Math.max(rate, 0.5), 2)
+    for (const deck of this.decks) {
+      deck.element.preservesPitch = true
+      deck.element.defaultPlaybackRate = this.rate
+      deck.element.playbackRate = this.rate
+    }
+  }
+
+  /**
+   * Плавно убавляет звук до тишины за `seconds` и ставит паузу — таймер сна не обрывает музыку.
+   * После паузы громкость трека возвращается: следующее «играть» звучит как обычно.
+   */
+  fadeOutAndPause(seconds: number): Promise<void> {
+    const deck = this.deck
+    if (this.element.paused) return Promise.resolve()
+    if (this.active === AudioEngine.RADIO || !deck.level) {
+      // Радио идёт мимо Web Audio — затухаем громкостью самого элемента.
+      const element = this.element
+      const start = element.volume
+      const steps = Math.max(1, Math.round(seconds * 10))
+      return new Promise((resolve) => {
+        let step = 0
+        const timer = setInterval(() => {
+          step++
+          element.volume = start * Math.cos(((step / steps) * Math.PI) / 2)
+          if (step < steps) return
+          clearInterval(timer)
+          this.pause()
+          element.volume = start
+          resolve()
+        }, 100)
+      })
+    }
+    this.rampLevel(deck, crossfadeCurve(64, false, deck.level.gain.value), seconds)
+    return new Promise((resolve) =>
+      setTimeout(() => {
+        this.pause()
+        this.setLevel(deck, deck.trackVolume)
+        resolve()
+      }, seconds * 1000),
+    )
   }
 
   /** Системная громкость окна; выравнивание по ReplayGain и кроссфейд живут отдельно, в узлах элементов. */

@@ -1,9 +1,11 @@
+import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { EQ_BANDS, EQ_PRESETS } from '../audio/engine'
 import { store, useStore } from '../state/store'
 import { Icon, type IconName } from './Icon'
 import { Slider } from './Slider'
-import { accentModes } from '../theme'
+import { AppearanceSettings } from './AppearanceSettings'
+import { askText } from './Dialogs'
 import { isDesktop } from '../platform'
 import { isMac } from '../native'
 import { t } from '../i18n'
@@ -63,11 +65,29 @@ function Group({ title, children }: { title: string; children: ReactNode }) {
 /** Настройки — отдельная страница, как в приложениях Windows, а не всплывающее окно поверх. */
 export function SettingsView() {
   const { settings, serverless, client } = useStore()
+  const [tab, setTab] = useState<'appearance' | 'playback' | 'app'>('appearance')
 
   return (
     <div className="max-w-4xl space-y-1">
       <h1 className="page-title pb-2">{t('Настройки')}</h1>
+      <div className="settings-tabs" role="tablist">
+        {(
+          [
+            ['appearance', t('Оформление')],
+            ['playback', t('Звук и воспроизведение')],
+            ['app', t('Приложение')],
+          ] as const
+        ).map(([id, label]) => (
+          <button key={id} role="tab" aria-selected={tab === id} onClick={() => setTab(id)} className="settings-tab">
+            {label}
+          </button>
+        ))}
+      </div>
 
+      {tab === 'appearance' && <AppearanceSettings />}
+
+      {tab === 'playback' && (
+      <>
       <Group title={t('Воспроизведение')}>
         <SettingsCard icon="download" title={t('Качество потока')} description={t('Оригинал не сжимается, MP3 экономит трафик.')}>
           <select
@@ -91,6 +111,7 @@ export function SettingsView() {
             <option value="off">{t('Выключено')}</option>
             <option value="track">{t('По треку')}</option>
             <option value="album">{t('По альбому')}</option>
+            <option value="auto">{t('Авто: альбом подряд — по альбому')}</option>
           </select>
         </SettingsCard>
 
@@ -112,6 +133,13 @@ export function SettingsView() {
             className="w-40"
           />
         </SettingsCard>
+        <SettingsCard
+          icon="radio"
+          title={t('Бесконечное воспроизведение')}
+          description={t('Очередь закончилась — дальше играет похожая музыка, как радио по последнему треку.')}
+        >
+          <Toggle checked={settings.autoplaySimilar} onChange={(autoplaySimilar) => store.update({ autoplaySimilar })} label={t('Бесконечное воспроизведение')} />
+        </SettingsCard>
       </Group>
 
       <Group title={t('Эквалайзер')}>
@@ -130,6 +158,29 @@ export function SettingsView() {
                   {{ flat: t('Ровно'), bass: t('Бас'), treble: t('Верх'), vocal: t('Вокал'), loudness: t('Громко') }[preset] ?? preset}
                 </button>
               ))}
+              {/* Свои пресеты — под свои наушники и колонки; правый клик или крестик убирает. */}
+              {Object.entries(settings.eqPresets).map(([name, gains]) => (
+                <span key={name} className="group relative inline-flex" data-eq-preset={name}>
+                  <button onClick={() => store.update({ eq: { enabled: true, gains: [...gains] } })} className="btn pr-8">
+                    {name}
+                  </button>
+                  <button
+                    onClick={() => store.deleteEqPreset(name)}
+                    className="icon-btn absolute right-0.5 top-1/2 h-6 w-6 -translate-y-1/2 opacity-60 hover:opacity-100"
+                    title={t('Удалить пресет')}
+                    aria-label={t('Удалить пресет «{name}»', { name })}
+                  >
+                    <Icon name="close" size={9} />
+                  </button>
+                </span>
+              ))}
+              <button
+                onClick={() => void askText(t('Сохранить пресет'), { label: t('Название'), confirm: t('Сохранить') }).then((name) => name && store.saveEqPreset(name))}
+                className="btn btn-subtle"
+              >
+                <Icon name="add" size={12} />
+                {t('Сохранить как пресет…')}
+              </button>
             </div>
             <div className="flex max-w-xl items-end justify-between gap-2">
               {EQ_BANDS.map((band, index) => (
@@ -160,7 +211,7 @@ export function SettingsView() {
         </div>
       </Group>
 
-      <Group title={t('Текст песни и визуализация')}>
+      <Group title={t('Текст песни')}>
         <SettingsCard
           icon="lyrics"
           title={t('Искать тексты в LRCLIB')}
@@ -168,11 +219,13 @@ export function SettingsView() {
         >
           <Toggle checked={settings.lrclib} onChange={(lrclib) => store.update({ lrclib })} label={t('Искать тексты в LRCLIB')} />
         </SettingsCard>
-        <SettingsCard icon="volume" title={t('Визуализатор')} description={t('Спектр звука в полноэкранном плеере.')}>
-          <Toggle checked={settings.visualizer} onChange={(visualizer) => store.update({ visualizer })} label={t('Визуализатор')} />
-        </SettingsCard>
       </Group>
 
+      </>
+      )}
+
+      {tab === 'app' && (
+      <>
       {isDesktop() && (
         <Group title={t('Система')}>
           {!isMac && (
@@ -217,19 +270,6 @@ export function SettingsView() {
       )}
 
       <Group title={t('Приложение')}>
-        <SettingsCard icon="settings" title={t('Цвет акцента')} description={t('Кнопки, ползунки и выделение.')}>
-          <select
-            value={settings.accent === 'system' && !accentModes.includes('system') ? 'brand' : settings.accent}
-            onChange={(event) => store.update({ accent: event.target.value as typeof settings.accent })}
-            className="select"
-          >
-            {accentModes.map((mode) => (
-              <option key={mode} value={mode}>
-                {{ system: t('Как в системе'), cover: t('Из обложки'), brand: t('Nocturne') }[mode]}
-              </option>
-            ))}
-          </select>
-        </SettingsCard>
         <SettingsCard icon="info" title={t('Язык')}>
           <select
             value={settings.language}
@@ -258,6 +298,8 @@ export function SettingsView() {
           </SettingsCard>
         )}
       </Group>
+      </>
+      )}
     </div>
   )
 }

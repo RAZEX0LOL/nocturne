@@ -14,6 +14,8 @@ import { setSystemAccent } from './theme'
 interface Accent {
   fill: string
   text: string
+  fillLight?: string
+  textLight?: string
 }
 
 interface NativeStyle {
@@ -30,7 +32,7 @@ async function invoke<T>(command: string, args: Record<string, unknown> = {}): P
 }
 
 function applyAccent(accent: Accent) {
-  setSystemAccent(accent.fill, accent.text)
+  setSystemAccent(accent)
 }
 
 export async function startShell() {
