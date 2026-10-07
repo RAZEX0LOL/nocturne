@@ -158,7 +158,13 @@ pub fn run() {
     }));
     // Окно открывается там же и того же размера, где его закрыли — как любое приложение системы.
     #[cfg(desktop)]
-    let builder = builder.plugin(tauri_plugin_window_state::Builder::new().build());
+    // Полноэкранный режим не запоминается: его включает полноэкранный плеер, и после перезапуска
+    // окно на весь экран без плеера выглядело бы поломкой.
+    let builder = builder.plugin(
+        tauri_plugin_window_state::Builder::new()
+            .with_state_flags(tauri_plugin_window_state::StateFlags::all() & !tauri_plugin_window_state::StateFlags::FULLSCREEN)
+            .build(),
+    );
     let builder = builder
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())

@@ -16,14 +16,18 @@ export function time(seconds: number) {
 export function Transport({ large = false }: { large?: boolean }) {
   const { queue, playing, buffering } = useStore()
   if (!queue) return null
-  const side = large ? 'icon-btn h-12 w-12 text-white/70 hover:text-white' : 'icon-btn'
+  // Включённый режим заметен сразу: подложка и точка под значком, на полном экране — белые.
+  const side = (active: boolean) =>
+    large
+      ? `toggle-btn relative grid h-12 w-12 place-items-center rounded-full transition-colors ${active ? 'is-on bg-white/20 text-white' : 'text-white/60 hover:text-white'}`
+      : 'icon-btn toggle-btn'
   const skip = large ? 'icon-btn h-14 w-14 text-white' : 'icon-btn text-primary'
   const iconSize = large ? 22 : 16
   return (
     <div className={`flex items-center ${large ? 'gap-4' : 'gap-1'}`}>
       <button
         onClick={() => store.setShuffle(!queue.shuffle)}
-        className={side}
+        className={side(queue.shuffle)}
         aria-pressed={queue.shuffle}
         title={queue.shuffle ? t('Перемешивание: вкл.') : t('Перемешивание: откл.')}
         aria-label={t('Перемешивать')}
@@ -48,7 +52,7 @@ export function Transport({ large = false }: { large?: boolean }) {
       </button>
       <button
         onClick={() => store.cycleRepeat()}
-        className={side}
+        className={side(queue.repeatMode !== 'off')}
         aria-pressed={queue.repeatMode !== 'off'}
         title={queue.repeatMode === 'one' ? t('Повтор: один трек') : queue.repeatMode === 'all' ? t('Повтор: все') : t('Повтор: откл.')}
         aria-label={t('Режим повтора')}

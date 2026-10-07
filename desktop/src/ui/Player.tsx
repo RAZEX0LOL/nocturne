@@ -79,7 +79,7 @@ export function Player({
         </button>
         <button
           onClick={() => onPanel(panel === 'lyrics' ? null : 'lyrics')}
-          className="icon-btn"
+          className="icon-btn toggle-btn"
           aria-pressed={panel === 'lyrics'}
           aria-label={t('Текст песни')}
           title={t('Текст песни')}
@@ -88,7 +88,7 @@ export function Player({
         </button>
         <button
           onClick={() => onPanel(panel === 'queue' ? null : 'queue')}
-          className="icon-btn"
+          className="icon-btn toggle-btn"
           aria-pressed={panel === 'queue'}
           aria-label={t('Очередь')}
           title={t('Очередь')}

@@ -391,6 +391,26 @@ a {
   .icon-btn[aria-pressed="true"] {
     color: var(--accent-text);
   }
+  /* Переключатели плеера (перемешивание, повтор, панели): включённый — с подложкой цвета
+     акцента и точкой под значком, чтобы «включено» не путалось с «выключено» ни при каком акценте. */
+  .icon-btn.toggle-btn,
+  .toggle-btn {
+    position: relative;
+  }
+  .icon-btn.toggle-btn[aria-pressed="true"] {
+    background: color-mix(in srgb, var(--accent) 18%, transparent);
+  }
+  .toggle-btn[aria-pressed="true"]::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 3px;
+    width: 4px;
+    height: 4px;
+    margin-left: -2px;
+    border-radius: 50%;
+    background: currentColor;
+  }
   .icon-btn:disabled {
     opacity: 0.4;
   }

@@ -231,6 +231,7 @@ const english: Record<string, string> = {
   'Кнопки, ползунки и выделение.': 'Buttons, sliders and selection.',
   'Из обложки': 'From the cover',
   'Вперёд': 'Forward',
+  'Для этого трека нет текста': 'No lyrics for this song',
 }
 
 let language: Language = 'auto'

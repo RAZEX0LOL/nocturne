@@ -160,13 +160,20 @@ export async function openMiniPlayer() {
 async function followMini() {
   const { emitTo, listen } = await import('@tauri-apps/api/event')
   let key = ''
+  const miniCover: { song?: string; url?: string } = {}
   const send = async (force = false) => {
     const state = store.snapshot()
     const song = state.queue?.current?.song
     const next = `${song?.id}|${state.playing}|${Math.floor(state.position)}|${state.palette?.coverArt}`
     if (next === key && !force) return
     key = next
-    const cover = song ? await coverUrl(song.coverArt, state.offline ? undefined : state.client, 300).catch(() => undefined) : undefined
+    // Адрес обложки подписывается заново при каждом запросе — берём его один раз на трек,
+    // иначе картинка в мини-плеере перезагружалась бы каждую секунду.
+    if (song?.id !== miniCover.song) {
+      miniCover.song = song?.id
+      miniCover.url = song ? await coverUrl(song.coverArt, state.offline ? undefined : state.client, 300).catch(() => undefined) : undefined
+    }
+    const cover = miniCover.url
     await emitTo(MINI, 'player-state', {
       title: song?.title,
       artist: song?.artist,

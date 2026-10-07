@@ -52,15 +52,19 @@ function LivingBackground({ cover }: { cover?: string }) {
  * из цветов обложки. Открывается по клику на обложку в нижней панели, закрывается Esc.
  */
 export function NowPlaying({ onClose, onMini }: { onClose: () => void; onMini: () => void }) {
-  const { queue, settings, lyrics } = useStore()
+  const { queue, settings } = useStore()
   const song = queue?.current?.song
   const cover = useBigCover(song?.coverArt)
   const [side, setSide] = useState<Side>('lyrics')
   const [fullscreen, setFullscreen] = useState(false)
 
-  // Без текста у трека сразу показываем очередь — пустая колонка выглядит как поломка.
-  const hasLyrics = lyrics?.songID === song?.id && lyrics?.state === 'ready' && lyrics.lines.length > 0
-  const shown: Side = side === 'lyrics' && lyrics?.songID === song?.id && lyrics?.state === 'ready' && !hasLyrics ? 'queue' : side
+  const shown = side
+
+  // Текст грузится сразу при открытии и смене трека, даже если открыта очередь: переключение
+  // на вкладку «Текст» должно показать его без ожидания.
+  useEffect(() => {
+    void store.loadLyrics()
+  }, [song?.id])
 
   const toggleFullscreen = async () => {
     if (!isDesktop()) return

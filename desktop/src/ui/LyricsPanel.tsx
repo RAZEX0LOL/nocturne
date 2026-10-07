@@ -41,7 +41,15 @@ export function Lyrics({ large = false }: { large?: boolean }) {
         </button>
       </div>
     )
-  if (!lines.length) return <p className={hint}>{t('Navidrome не нашёл текст для этого трека.')}</p>
+  if (!lines.length)
+    return large ? (
+      <div className="flex h-full flex-col items-center justify-center gap-3 py-[20vh] text-center text-white/60">
+        <Icon name="lyrics" size={36} />
+        <p className="text-lg">{t('Для этого трека нет текста')}</p>
+      </div>
+    ) : (
+      <p className={hint}>{t('Navidrome не нашёл текст для этого трека.')}</p>
+    )
 
   const lineClass = (index: number) => {
     if (large) {
