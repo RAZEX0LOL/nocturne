@@ -4,6 +4,18 @@ mod glyphs;
 mod library;
 mod palette;
 
+#[cfg(target_os = "macos")]
+mod sf_symbols;
+
+/// Значки SF Symbols есть только на Mac; в остальных системах значки берутся из своих шрифтов.
+#[cfg(not(target_os = "macos"))]
+mod sf_symbols {
+    #[tauri::command]
+    pub fn system_symbols(_names: Vec<String>) -> std::collections::HashMap<String, String> {
+        Default::default()
+    }
+}
+
 #[cfg(windows)]
 mod windows_shell;
 
@@ -167,6 +179,7 @@ pub fn run() {
             delete_credentials,
             debug_log,
             cover_palette,
+            sf_symbols::system_symbols,
             library::local_library,
             library::import_items,
             library::remove_local,

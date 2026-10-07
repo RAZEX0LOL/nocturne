@@ -14,7 +14,7 @@ const root = createRoot(document.getElementById('root')!)
  */
 if (new URLSearchParams(location.search).has('mini')) {
   document.documentElement.classList.add('mini')
-  void import('./ui/MiniPlayer').then(({ MiniPlayer }) =>
+  void Promise.all([import('./ui/MiniPlayer'), import('./ui/Icon').then((icon) => icon.loadSystemSymbols())]).then(([{ MiniPlayer }]) =>
     root.render(
       <StrictMode>
         <MiniPlayer />
@@ -22,7 +22,8 @@ if (new URLSearchParams(location.search).has('mini')) {
     ),
   )
 } else {
-  void Promise.all([import('./App'), import('./shell'), import('./theme')]).then(([{ App }, { startShell }, { startTheme }]) => {
+  // Значки Mac (SF Symbols) приходят из AppKit — ждём их до первого кадра, это доли секунды.
+  void Promise.all([import('./App'), import('./shell'), import('./theme'), import('./ui/Icon').then((icon) => icon.loadSystemSymbols())]).then(([{ App }, { startShell }, { startTheme }]) => {
     root.render(
       <StrictMode>
         <App />

@@ -41,7 +41,7 @@ import {
   X,
   type LucideIcon,
 } from 'lucide-react'
-import { isWindows } from '../native'
+import { isMac, isWindows } from '../native'
 
 /**
  * Значки интерфейса. На Windows — системный шрифт значков (Segoe Fluent Icons на Windows 11,
@@ -95,6 +95,70 @@ const icons = {
 
 export type IconName = keyof typeof icons
 
+/** Те же значки в SF Symbols — как в «Музыке», Finder и «Системных настройках» Mac. */
+const symbols: Record<IconName, string> = {
+  home: 'house',
+  search: 'magnifyingglass',
+  computer: 'desktopcomputer',
+  download: 'arrow.down.circle',
+  album: 'square.stack',
+  artist: 'music.mic',
+  playlist: 'music.note.list',
+  heart: 'heart',
+  heartFilled: 'heart.fill',
+  settings: 'gearshape',
+  refresh: 'arrow.clockwise',
+  back: 'chevron.left',
+  play: 'play.fill',
+  pause: 'pause.fill',
+  previous: 'backward.fill',
+  next: 'forward.fill',
+  shuffle: 'shuffle',
+  repeat: 'repeat',
+  repeatOne: 'repeat.1',
+  volume: 'speaker.wave.2.fill',
+  mute: 'speaker.slash.fill',
+  lyrics: 'quote.bubble',
+  queue: 'list.bullet',
+  sleep: 'moon.zzz',
+  add: 'plus',
+  delete: 'trash',
+  close: 'xmark',
+  warning: 'exclamationmark.triangle.fill',
+  error: 'xmark.octagon.fill',
+  info: 'info.circle',
+  folder: 'folder',
+  folderOpen: 'folder',
+  note: 'music.note',
+  more: 'ellipsis',
+  check: 'checkmark',
+  chevronDown: 'chevron.down',
+  chevronLeft: 'chevron.left',
+  chevronRight: 'chevron.right',
+  expand: 'arrow.up.left.and.arrow.down.right',
+  collapse: 'arrow.down.right.and.arrow.up.left',
+  miniPlayer: 'pip',
+}
+
+let symbolImages: Partial<Record<IconName, string>> = {}
+
+/**
+ * Значки Mac рисует AppKit (Rust, sf_symbols.rs) — их загружают один раз до первого кадра, чтобы
+ * интерфейс не мигал заменой. Не вышло (браузер, старая macOS) — остаются векторы Lucide.
+ */
+export async function loadSystemSymbols() {
+  if (!isMac || !('__TAURI_INTERNALS__' in window)) return
+  try {
+    const { invoke } = await import('@tauri-apps/api/core')
+    const images = await invoke<Record<string, string>>('system_symbols', { names: [...new Set(Object.values(symbols))] })
+    symbolImages = Object.fromEntries(
+      (Object.keys(symbols) as IconName[]).flatMap((name) => (images[symbols[name]] ? [[name, images[symbols[name]]]] : [])),
+    )
+  } catch {
+    symbolImages = {}
+  }
+}
+
 export function Icon({ name, size = 16, className = '' }: { name: IconName; size?: number; className?: string }) {
   const [glyph, Vector] = icons[name]
   if (isWindows) {
@@ -102,6 +166,18 @@ export function Icon({ name, size = 16, className = '' }: { name: IconName; size
       <span aria-hidden className={`fluent-icon ${className}`} style={{ fontSize: size, width: size, height: size }}>
         {glyph}
       </span>
+    )
+  }
+  const symbol = symbolImages[name]
+  if (symbol) {
+    // Холст символа чуть больше самого значка (32 pt на 22 pt): масштаб под нужный размер.
+    const box = Math.round(size * 1.45)
+    return (
+      <span
+        aria-hidden
+        className={`sf-symbol ${className}`}
+        style={{ width: box, height: box, margin: (size - box) / 2, maskImage: `url(${symbol})`, WebkitMaskImage: `url(${symbol})` }}
+      />
     )
   }
   const filled = name === 'heartFilled' || name === 'play' || name === 'pause'
