@@ -268,6 +268,24 @@ export class AudioEngine {
     else this.element.volume = Math.min(Math.max(value * this.volume, 0), 1)
   }
 
+  /**
+   * Спектр на выходе эквалайзера для визуализатора: громкость по частотам, 0–255.
+   * Радио идёт мимо Web Audio, и для него спектра нет — тогда false.
+   */
+  readSpectrum(into: Uint8Array<ArrayBuffer>): boolean {
+    if (!this.analyser || this.active === AudioEngine.RADIO || this.element.paused) return false
+    this.analyser.getByteFrequencyData(into)
+    return true
+  }
+
+  get spectrumSize() {
+    return this.analyser?.frequencyBinCount ?? 0
+  }
+
+  get sampleRate() {
+    return this.context?.sampleRate ?? 44100
+  }
+
   /** Уровень сигнала на выходе цепочки — только для отладочного журнала. */
   private logLevel() {
     const analyser = this.analyser

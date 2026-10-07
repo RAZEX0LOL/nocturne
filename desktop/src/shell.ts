@@ -22,7 +22,7 @@ interface NativeStyle {
   accent?: Accent
 }
 
-type MediaAction = 'play' | 'pause' | 'toggle' | 'next' | 'previous' | 'seek'
+type MediaAction = 'play' | 'pause' | 'toggle' | 'next' | 'previous' | 'seek' | 'volumeUp' | 'volumeDown'
 
 async function invoke<T>(command: string, args: Record<string, unknown> = {}): Promise<T> {
   const { invoke: call } = await import('@tauri-apps/api/core')
@@ -50,9 +50,13 @@ export async function startShell() {
       case 'next': return void store.advance()
       case 'previous': return void store.previous()
       case 'seek': return payload.position !== undefined && store.seek(payload.position)
+      case 'volumeUp': return store.update({ volume: Math.min(1, store.snapshot().settings.volume + 0.05) })
+      case 'volumeDown': return store.update({ volume: Math.max(0, store.snapshot().settings.volume - 0.05) })
     }
   })
   void followMini()
+  followSystemSettings()
+  if (!isMac) followTray()
   if (!isWindows) return
 
   try {
@@ -124,6 +128,50 @@ function followPlayer() {
     }).catch(() => {})
   }
 
+  store.subscribe(sync)
+  sync()
+}
+
+// MARK: - Трей и глобальные сочетания
+
+/** Настройки, которые исполняет Rust: сворачивание в трей и глобальные сочетания клавиш. */
+function followSystemSettings() {
+  let applied = ''
+  const sync = () => {
+    const { closeToTray, globalShortcuts } = store.snapshot().settings
+    const key = `${closeToTray}|${globalShortcuts}`
+    if (key === applied) return
+    applied = key
+    void invoke('set_close_to_tray', { enabled: closeToTray }).catch(() => {})
+    void invoke('set_global_shortcuts', { enabled: globalShortcuts }).catch(() => {})
+  }
+  store.subscribe(sync)
+  sync()
+}
+
+/** Меню трея — на языке интерфейса, с «Пауза» или «Играть» по состоянию; трек — в подсказке. */
+function followTray() {
+  let shown = ''
+  const sync = () => {
+    const state = store.snapshot()
+    const song = state.queue?.current?.song
+    const title = song ? `${song.title} — ${song.artist ?? t('Неизвестный исполнитель')}` : undefined
+    const key = `${state.settings.language}|${state.playing}|${title}`
+    if (key === shown) return
+    shown = key
+    void invoke('tray_update', {
+      labels: {
+        play: t('Воспроизвести'),
+        pause: t('Пауза'),
+        previous: t('Предыдущий трек'),
+        next: t('Следующий трек'),
+        show: t('Показать Nocturne'),
+        quit: t('Выйти из Nocturne'),
+      },
+      playing: state.playing,
+      title,
+    }).catch(() => {})
+  }
   store.subscribe(sync)
   sync()
 }

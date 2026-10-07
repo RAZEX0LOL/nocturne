@@ -89,3 +89,39 @@ describe('оценки и сведения', () => {
     expect(await client().radioStations()).toEqual([])
   })
 })
+
+describe('очередь на сервере', () => {
+  test('сохранение: id повторяются, позиция в миллисекундах', async () => {
+    answer()
+    await client().savePlayQueue(['s1', 's2', 's3'], 's2', 83.456)
+    expect(endpoint(last())).toBe('savePlayQueue.view')
+    expect(last().searchParams.getAll('id')).toEqual(['s1', 's2', 's3'])
+    expect(last().searchParams.get('current')).toBe('s2')
+    expect(last().searchParams.get('position')).toBe('83456')
+  })
+
+  test('чтение: секунды, время изменения и кто менял', async () => {
+    answer({
+      playQueue: {
+        entry: [{ id: 's1', title: 'Один' }, { id: 's2', title: 'Два' }],
+        current: 's2',
+        position: 61500,
+        changed: '2026-10-07T20:15:00Z',
+        changedBy: 'Nocturne',
+      },
+    })
+    const queue = await client().playQueue()
+    expect(queue?.songs).toHaveLength(2)
+    expect(queue?.currentId).toBe('s2')
+    expect(queue?.position).toBe(61.5)
+    expect(queue?.changed).toBe(Date.parse('2026-10-07T20:15:00Z'))
+    expect(queue?.changedBy).toBe('Nocturne')
+  })
+
+  test('пустая очередь — нечего предлагать', async () => {
+    answer({ playQueue: {} })
+    expect(await client().playQueue()).toBeUndefined()
+    answer()
+    expect(await client().playQueue()).toBeUndefined()
+  })
+})

@@ -79,6 +79,18 @@ export class Credentials {
   }
 }
 
+/** Очередь, сохранённая на сервере каким-то из устройств. */
+export interface RemoteQueue {
+  songs: Song[]
+  currentId?: string
+  /** Секунды от начала текущего трека. */
+  position: number
+  /** Когда сохранена, мс с 1970 года. */
+  changed: number
+  /** Каким приложением: у каждого клиента своё имя в параметре `c`. */
+  changedBy: string
+}
+
 export class NavidromeClient {
   /** Паузы перед повторами; в тестах их обнуляют, чтобы не ждать по-настоящему. */
   constructor(readonly credentials: Credentials, private readonly retryDelaysSeconds = [0.5, 2]) {}
@@ -299,6 +311,33 @@ export class NavidromeClient {
     const response = await this.request('getInternetRadioStations')
     return response.internetRadioStations?.internetRadioStation ?? []
   }
+
+  // MARK: - Очередь на сервере
+
+  /**
+   * Очередь на сервере — общая для всех устройств: начал слушать на телефоне, продолжил здесь.
+   * Позиция в миллисекундах, как требует протокол.
+   */
+  async savePlayQueue(songIds: string[], currentId: string | undefined, positionSeconds: number) {
+    const parameters: Record<string, string> = { position: String(Math.max(0, Math.round(positionSeconds * 1000))) }
+    if (currentId) parameters.current = currentId
+    await this.request('savePlayQueue', parameters, songIds.map((id) => ['id', id]))
+  }
+
+  async playQueue(): Promise<RemoteQueue | undefined> {
+    const response = await this.request('getPlayQueue')
+    const queue = response.playQueue
+    if (!queue?.entry?.length) return undefined
+    return {
+      songs: queue.entry,
+      currentId: queue.current !== undefined ? String(queue.current) : undefined,
+      position: (Number(queue.position) || 0) / 1000,
+      changed: queue.changed ? Date.parse(queue.changed) : 0,
+      changedBy: queue.changedBy ?? '',
+    }
+  }
+
+  static readonly clientName = CLIENT_NAME
 
   stream(id: string, quality: StreamQuality = 'mp3High') {
     return this.url('stream', { id, ...streamParameters[quality] })

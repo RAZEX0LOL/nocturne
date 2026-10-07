@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react'
 import { AudioEngine, EQ_PRESETS, type EqSettings } from '../audio/engine'
 import { setLanguage, t, type Language } from '../i18n'
-import { Credentials, NavidromeClient, type StreamQuality } from '../core/client'
+import { Credentials, NavidromeClient, type RemoteQueue, type StreamQuality } from '../core/client'
 import {
   MusicError,
   type Album,
@@ -12,8 +12,10 @@ import {
   type Playlist,
   type RadioStation,
   type Song,
+  type StructuredLyrics,
 } from '../core/models'
 import { moveItems } from '../core/order'
+import { lrclibLyrics } from '../core/lrc'
 import { PlaybackQueue, type RepeatMode } from '../core/queue'
 import type { ReplayGainMode } from '../core/replaygain'
 import { keepScrobble, orderedScrobbles, remainingScrobbles, type ScrobblePlay } from '../core/scrobbles'
@@ -40,6 +42,14 @@ export interface CoverPalette {
 export type AccentMode = 'system' | 'cover' | 'brand'
 
 export interface Settings {
+  /** Искать текст в LRCLIB, если у Navidrome его нет: названия треков уходят стороннему сервису. */
+  lrclib: boolean
+  /** Закрытие окна сворачивает в трей (Windows, Linux), музыка играет дальше. */
+  closeToTray: boolean
+  /** Сочетания клавиш, которые работают и когда окно не в фокусе. */
+  globalShortcuts: boolean
+  /** Полосы спектра под обложкой в полноэкранном плеере. */
+  visualizer: boolean
   accent: AccentMode
   quality: StreamQuality
   replayGain: ReplayGainMode
@@ -101,6 +111,8 @@ export interface State {
   /** Страница исполнителя: популярные треки и сведения Last.fm. */
   artistExtras: Record<string, { top: Song[]; info: ArtistInfo }>
   albumNotes: Record<string, string>
+  /** Очередь с другого устройства, которую можно продолжить здесь. */
+  remoteQueue?: RemoteQueue
   starred: Song[]
   starredIds: Set<string>
   /** Треки альбомов и плейлистов по их id; альбомы артиста — по id артиста. */
@@ -145,11 +157,16 @@ export interface Lyrics {
 
 const SETTINGS_KEY = 'nocturne.settings'
 const QUEUE_KEY = 'nocturne.queue'
+const QUEUE_SYNCED_KEY = 'nocturne.queueSyncedAt'
 const SERVERLESS_KEY = 'nocturne.serverless'
 const PENDING_SCROBBLES_KEY = 'nocturne.pendingScrobbles'
 const PAGE = 60
 
 const defaultSettings: Settings = {
+  lrclib: false,
+  closeToTray: false,
+  globalShortcuts: true,
+  visualizer: true,
   accent: 'system',
   quality: 'mp3High',
   replayGain: 'off',
@@ -235,16 +252,23 @@ class Store {
       if (second !== this.lastSavedSecond) {
         this.lastSavedSecond = second
         this.saveQueue()
+        // На сервер — реже: раз в полминуты хватает, чтобы продолжить на другом устройстве.
+        if (second % 6 === 0) this.scheduleQueueSync(0)
       }
       updatePositionState(position, duration)
     }
     this.engine.onStateChange = (playing, buffering) => {
       this.patch({ playing, buffering })
+      // Поставили на паузу — самое время сохранить место: дальше, скорее всего, другое устройство.
+      if (!playing && !buffering) this.scheduleQueueSync(500)
       if ('mediaSession' in navigator) navigator.mediaSession.playbackState = playing ? 'playing' : 'paused'
     }
     this.engine.onError = (message) => this.patch({ error: message })
     this.applySettings()
     this.installMediaKeys()
+    // Вернулись к окну — может, за это время слушали на телефоне.
+    if (typeof document !== 'undefined')
+      document.addEventListener('visibilitychange', () => document.visibilityState === 'visible' && void this.checkRemoteQueue())
   }
 
   subscribe = (listener: () => void) => {
@@ -264,6 +288,80 @@ class Store {
   private touchQueue() {
     this.patch({ queueVersion: this.state.queueVersion + 1 })
     this.saveQueue()
+    this.scheduleQueueSync()
+  }
+
+  // MARK: - Очередь на сервере
+
+  private queueSyncTimer?: ReturnType<typeof setTimeout>
+  /** Когда это устройство последний раз сохранило очередь на сервер (или отказалось от чужой). */
+  private queueSyncedAt = Number(localStorage.getItem(QUEUE_SYNCED_KEY) ?? 0)
+  private remoteCheckedAt = 0
+
+  private scheduleQueueSync(delay = 4000) {
+    if (!this.state.client || !this.online || this.state.serverless) return
+    clearTimeout(this.queueSyncTimer)
+    this.queueSyncTimer = setTimeout(() => void this.pushQueue(), delay)
+  }
+
+  private markQueueSynced(at: number) {
+    this.queueSyncedAt = at
+    localStorage.setItem(QUEUE_SYNCED_KEY, String(at))
+  }
+
+  /** На сервер уходят только треки с сервера: свои файлы и радио другим устройствам не сыграть. */
+  private async pushQueue() {
+    const { queue, client } = this.state
+    if (!queue || !client || !this.online) return
+    const songs = queue.items.map((entry) => entry.song).filter((song) => !isLocalId(song.id) && !isRadio(song))
+    if (!songs.length) return
+    const current = queue.current?.song
+    const currentId = current && songs.some((song) => song.id === current.id) ? current.id : undefined
+    try {
+      await client.savePlayQueue(songs.map((song) => song.id), currentId, currentId ? this.engine.position : 0)
+      this.markQueueSynced(Date.now())
+    } catch {
+      // Не дошло — дойдёт со следующим изменением.
+    }
+  }
+
+  /**
+   * Очередь, которую сохранило другое устройство позже нас, предлагается продолжить — не
+   * подменяется молча: человек мог как раз слушать здесь что-то своё.
+   */
+  async checkRemoteQueue() {
+    const client = this.state.client
+    if (!client || !this.online || Date.now() - this.remoteCheckedAt < 15_000) return
+    this.remoteCheckedAt = Date.now()
+    try {
+      const remote = await client.playQueue()
+      if (!remote || remote.changedBy === NavidromeClient.clientName || remote.changed <= this.queueSyncedAt + 2000) return
+      const local = this.state.queue?.current?.song
+      const sameSpot = local?.id === remote.currentId && Math.abs(this.engine.position - remote.position) < 10
+      if (sameSpot) return
+      this.patch({ remoteQueue: remote })
+    } catch {
+      // Сервер без поддержки getPlayQueue или нет связи — предлагать нечего.
+    }
+  }
+
+  async acceptRemoteQueue() {
+    const remote = this.state.remoteQueue
+    if (!remote) return
+    this.patch({ remoteQueue: undefined })
+    this.markQueueSynced(remote.changed)
+    const playable = remote.songs.filter((song) => this.isPlayable(song))
+    if (!playable.length) return
+    const index = Math.max(playable.findIndex((song) => song.id === remote.currentId), 0)
+    this.patch({ queue: new PlaybackQueue(playable, index, false) })
+    this.touchQueue()
+    await this.startCurrent(true, playable[index]?.id === remote.currentId ? remote.position : 0)
+  }
+
+  dismissRemoteQueue() {
+    const remote = this.state.remoteQueue
+    if (remote) this.markQueueSynced(remote.changed)
+    this.patch({ remoteQueue: undefined })
   }
 
   // MARK: - Подключение
@@ -290,6 +388,7 @@ class Store {
     this.patch({ client, status: 'ready' })
     await this.reconnect()
     await this.restoreQueue()
+    void this.checkRemoteQueue()
   }
 
   /**
@@ -589,6 +688,15 @@ class Store {
       await Promise.all(targets.map((song) => client.setRating(song.id, rating)))
     } catch {
       this.patch({ ratings: previous, error: t('Не удалось поставить оценку.') })
+    }
+  }
+
+  /** Спектр для визуализатора; звуковой движок наружу не отдаётся. */
+  get spectrum() {
+    return {
+      size: this.engine.spectrumSize,
+      sampleRate: this.engine.sampleRate,
+      read: (into: Uint8Array<ArrayBuffer>) => this.engine.readSpectrum(into),
     }
   }
 
@@ -1085,7 +1193,14 @@ class Store {
     }
     this.patch({ lyrics: { songID: song.id, state: 'loading', synced: false, lines: [] } })
     try {
-      const found = await client.lyrics(song)
+      // Сервер не ответил — это ошибка с кнопкой «Попробовать снова», если искать больше негде.
+      let found: StructuredLyrics | undefined
+      try {
+        found = await client.lyrics(song)
+      } catch (error) {
+        if (!this.state.settings.lrclib) throw error
+      }
+      if (!found && this.state.settings.lrclib) found = await lrclibLyrics(song).catch(() => undefined)
       if (this.state.queue?.current?.song.id !== song.id) return
       this.patch({
         lyrics: { songID: song.id, state: 'ready', synced: found?.synced ?? false, lines: found?.line ?? [] },

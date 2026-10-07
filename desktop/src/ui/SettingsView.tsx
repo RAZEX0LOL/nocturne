@@ -4,6 +4,8 @@ import { store, useStore } from '../state/store'
 import { Icon, type IconName } from './Icon'
 import { Slider } from './Slider'
 import { accentModes } from '../theme'
+import { isDesktop } from '../platform'
+import { isMac } from '../native'
 import { t } from '../i18n'
 
 /** Строка настроек — как SettingsCard в «Параметрах»: значок, название, пояснение, управление справа. */
@@ -31,6 +33,22 @@ function SettingsCard({
       {children}
     </div>
   )
+}
+
+/** Переключатель с подписью состояния слева — как в «Параметрах» Windows и «Настройках» Mac. */
+function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (value: boolean) => void; label: string }) {
+  return (
+    <>
+      <span className="text-sm text-secondary">{checked ? t('Вкл.') : t('Откл.')}</span>
+      <input type="checkbox" className="toggle" checked={checked} onChange={(event) => onChange(event.target.checked)} aria-label={label} />
+    </>
+  )
+}
+
+/** Подсказка с сочетаниями в обозначениях своей системы: ⌘⌥ на Mac, Ctrl+Alt+ на остальных. */
+function shortcutHint() {
+  const mod = isMac ? '⌘⌥' : 'Ctrl+Alt+'
+  return t('Работают в любой программе: {mod}Пробел — пауза, {mod}→ и ← — трек, {mod}↑ и ↓ — громкость.', { mod })
 }
 
 function Group({ title, children }: { title: string; children: ReactNode }) {
@@ -95,14 +113,7 @@ export function SettingsView() {
       <Group title={t('Эквалайзер')}>
         <div className="card">
           <SettingsCard plain icon="settings" title={t('Эквалайзер')} description={t('Семь полос, как в приложении на iPhone.')}>
-            <span className="text-sm text-secondary">{settings.eq.enabled ? t('Вкл.') : t('Откл.')}</span>
-            <input
-              type="checkbox"
-              className="toggle"
-              checked={settings.eq.enabled}
-              onChange={(event) => store.update({ eq: { ...settings.eq, enabled: event.target.checked } })}
-              aria-label={t('Эквалайзер')}
-            />
+            <Toggle checked={settings.eq.enabled} onChange={(enabled) => store.update({ eq: { ...settings.eq, enabled } })} label={t('Эквалайзер')} />
           </SettingsCard>
           <div className="space-y-4 border-t border-stroke px-4 pb-4 pt-3 pl-12">
             <div className="flex flex-wrap gap-2">
@@ -144,6 +155,36 @@ export function SettingsView() {
           </div>
         </div>
       </Group>
+
+      <Group title={t('Текст песни и визуализация')}>
+        <SettingsCard
+          icon="lyrics"
+          title={t('Искать тексты в LRCLIB')}
+          description={t('Если у Navidrome текста нет, он берётся из открытой базы lrclib.net. Туда уходят название, исполнитель и альбом трека.')}
+        >
+          <Toggle checked={settings.lrclib} onChange={(lrclib) => store.update({ lrclib })} label={t('Искать тексты в LRCLIB')} />
+        </SettingsCard>
+        <SettingsCard icon="volume" title={t('Визуализатор')} description={t('Спектр звука в полноэкранном плеере.')}>
+          <Toggle checked={settings.visualizer} onChange={(visualizer) => store.update({ visualizer })} label={t('Визуализатор')} />
+        </SettingsCard>
+      </Group>
+
+      {isDesktop() && (
+        <Group title={t('Система')}>
+          {!isMac && (
+            <SettingsCard
+              icon="collapse"
+              title={t('Сворачивать в трей при закрытии')}
+              description={t('Музыка играет дальше, а окно возвращается кликом по значку в трее.')}
+            >
+              <Toggle checked={settings.closeToTray} onChange={(closeToTray) => store.update({ closeToTray })} label={t('Сворачивать в трей при закрытии')} />
+            </SettingsCard>
+          )}
+          <SettingsCard icon="settings" title={t('Глобальные сочетания клавиш')} description={shortcutHint()}>
+            <Toggle checked={settings.globalShortcuts} onChange={(globalShortcuts) => store.update({ globalShortcuts })} label={t('Глобальные сочетания клавиш')} />
+          </SettingsCard>
+        </Group>
+      )}
 
       <Group title={t('Приложение')}>
         <SettingsCard icon="settings" title={t('Цвет акцента')} description={t('Кнопки, ползунки и выделение.')}>

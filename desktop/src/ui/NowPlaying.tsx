@@ -6,6 +6,7 @@ import { Icon } from './Icon'
 import { Lyrics } from './LyricsPanel'
 import { UpcomingList } from './QueuePanel'
 import { Slider } from './Slider'
+import { Visualizer } from './Visualizer'
 import { SeekBar, Transport } from './Transport'
 import { t } from '../i18n'
 
@@ -100,6 +101,7 @@ export function NowPlaying({ onClose, onMini }: { onClose: () => void; onMini: (
   return (
     <div className="now-playing fixed inset-0 z-30 flex flex-col text-white" role="dialog" aria-label={t('Сейчас играет')}>
       <LivingBackground cover={cover} />
+      {settings.visualizer && <Visualizer className="pointer-events-none absolute inset-x-0 bottom-0 h-40 w-full opacity-40" />}
 
       <header data-tauri-drag-region className="relative flex items-center gap-2 px-5 pb-2 pt-4">
         <span className="titlebar-space w-16" data-tauri-drag-region />

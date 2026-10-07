@@ -259,6 +259,7 @@ export function App() {
         <div className="flyout pointer-events-none fixed left-1/2 top-4 z-30 -translate-x-1/2 px-4 py-2.5 text-sm">{notice}</div>
       )}
       <UpdateBanner />
+      <RemoteQueueBanner />
 
       <Player panel={panel} onPanel={setPanel} onExpand={() => setNowPlaying(true)} onMini={() => void openMiniPlayer()} />
       {nowPlaying && <NowPlaying onClose={() => setNowPlaying(false)} onMini={() => void openMiniPlayer()} />}
@@ -278,6 +279,30 @@ function DropOverlay() {
         <div className="section-title">{t('Отпусти, чтобы добавить')}</div>
         <div className="text-sm text-secondary">{t('Файлы и папки скопируются в папку музыки на компьютере.')}</div>
       </div>
+    </div>
+  )
+}
+
+/** Очередь с другого устройства: «Продолжить» подхватывает трек и место, где остановились там. */
+function RemoteQueueBanner() {
+  const { remoteQueue } = useStore()
+  if (!remoteQueue) return null
+  const song = remoteQueue.songs.find((one) => one.id === remoteQueue.currentId) ?? remoteQueue.songs[0]
+  const at = remoteQueue.position
+  const time = `${Math.floor(at / 60)}:${String(Math.floor(at % 60)).padStart(2, '0')}`
+  return (
+    <div className="px-3 pb-2">
+      <InfoBar
+        severity="info"
+        title={t('Продолжить с другого устройства?')}
+        message={song ? t('«{title}» — {artist}, с {time}', { title: song.title, artist: song.artist ?? t('Неизвестный исполнитель'), time }) : undefined}
+        onClose={() => store.dismissRemoteQueue()}
+        action={
+          <button onClick={() => void store.acceptRemoteQueue()} className="btn btn-accent">
+            {t('Продолжить')}
+          </button>
+        }
+      />
     </div>
   )
 }

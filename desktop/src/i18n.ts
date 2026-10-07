@@ -289,6 +289,24 @@ const english: Record<string, string> = {
   'Удалить «{name}»?': 'Delete “{name}”?',
   'Удалить плейлист…': 'Delete playlist…',
   'Читать дальше': 'Read more',
+  'Продолжить с другого устройства?': 'Continue from another device?',
+  '«{title}» — {artist}, с {time}': '“{title}” by {artist}, from {time}',
+  'Продолжить': 'Continue',
+  // Интеграции: трей, сочетания, LRCLIB, визуализатор
+  'Показать Nocturne': 'Show Nocturne',
+  'Выйти из Nocturne': 'Quit Nocturne',
+  'Текст песни и визуализация': 'Lyrics and visuals',
+  'Искать тексты в LRCLIB': 'Find lyrics on LRCLIB',
+  'Если у Navidrome текста нет, он берётся из открытой базы lrclib.net. Туда уходят название, исполнитель и альбом трека.':
+    'If Navidrome has no lyrics, they come from the open lrclib.net database. The song title, artist and album are sent there.',
+  'Визуализатор': 'Visualizer',
+  'Спектр звука в полноэкранном плеере.': 'An audio spectrum in the full-screen player.',
+  'Система': 'System',
+  'Сворачивать в трей при закрытии': 'Minimize to tray on close',
+  'Музыка играет дальше, а окно возвращается кликом по значку в трее.': 'Music keeps playing; click the tray icon to bring the window back.',
+  'Глобальные сочетания клавиш': 'Global keyboard shortcuts',
+  'Работают в любой программе: {mod}Пробел — пауза, {mod}→ и ← — трек, {mod}↑ и ↓ — громкость.':
+    'Work in any app: {mod}Space — pause, {mod}→ and ← — song, {mod}↑ and ↓ — volume.',
 }
 
 let language: Language = 'auto'

@@ -29,6 +29,7 @@ AUDIO = {s["id"]: wav(330 + 110 * i) for i, s in enumerate(SONGS)}
 SONG_BY_ID = {s["id"]: s for s in SONGS}
 PLAYLISTS = {}
 RATINGS = {}
+PLAY_QUEUE = {}
 STARRED = {"t0"}
 ALBUM = {"id": "al-1", "name": "Mock Album", "artist": "Mock Artist", "artistId": "ar-1", "coverArt": "al-1", "songCount": 3, "year": 2026}
 ARTIST = {"id": "ar-1", "name": "Mock Artist", "albumCount": 1, "coverArt": "al-1"}
@@ -111,6 +112,13 @@ class Handler(BaseHTTPRequestHandler):
         if endpoint == "getLyricsBySongId":
             return self.ok(lyricsList={"structuredLyrics": [{"lang": "rus", "synced": True, "line": [{"start": i * 5000, "value": f"Строка {i + 1}"} for i in range(8)]}]})
         if endpoint == "getAlbum": return self.ok(album={**ALBUM, "song": SONGS})
+        if endpoint == "savePlayQueue":
+            PLAY_QUEUE.update(ids=parse_qs(url.query).get("id", []), current=q.get("current"), position=int(q.get("position", 0)),
+                              changed=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), changedBy=q.get("c", "")); return self.ok()
+        if endpoint == "getPlayQueue":
+            if not PLAY_QUEUE.get("ids"): return self.ok()
+            return self.ok(playQueue={"entry": [SONG_BY_ID[i] for i in PLAY_QUEUE["ids"] if i in SONG_BY_ID], "current": PLAY_QUEUE["current"],
+                                      "position": PLAY_QUEUE["position"], "changed": PLAY_QUEUE["changed"], "changedBy": PLAY_QUEUE["changedBy"], "username": "test"})
         if endpoint == "getSimilarSongs2": return self.ok(similarSongs2={"song": [x for x in SONGS if x["id"] != q.get("id")]})
         if endpoint == "getArtistInfo2":
             return self.ok(artistInfo2={"biography": "Mock Artist — вымышленный исполнитель для проверок. <a href=\"https://last.fm\">Read more on Last.fm</a>", "similarArtist": [{"id": "ar-2", "name": "Похожий исполнитель", "albumCount": 0}]})

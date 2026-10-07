@@ -3,6 +3,8 @@
 mod glyphs;
 mod library;
 mod palette;
+#[cfg(desktop)]
+mod tray;
 
 #[cfg(target_os = "macos")]
 mod sf_symbols;
@@ -165,6 +167,9 @@ pub fn run() {
             .with_state_flags(tauri_plugin_window_state::StateFlags::all() & !tauri_plugin_window_state::StateFlags::FULLSCREEN)
             .build(),
     );
+    // Глобальные сочетания: регистрирует их окно (set_global_shortcuts) по настройке.
+    #[cfg(desktop)]
+    let builder = builder.plugin(tauri_plugin_global_shortcut::Builder::new().with_handler(tray::on_shortcut).build());
     let builder = builder
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
@@ -177,7 +182,21 @@ pub fn run() {
             if let Some(window) = app.get_webview_window("main") {
                 windows_shell::setup(app.handle(), &window);
             }
+            #[cfg(desktop)]
+            tray::setup(app.handle());
             Ok(())
+        })
+        // Закрыть окно плеера — не значит остановить музыку: на Mac окно прячется всегда (как у
+        // «Музыки»), на Windows и Linux — если включено «Сворачивать в трей».
+        .on_window_event(|window, event| {
+            #[cfg(desktop)]
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                let keep = cfg!(target_os = "macos") || tray::CLOSE_TO_TRAY.load(std::sync::atomic::Ordering::Relaxed);
+                if window.label() == "main" && keep {
+                    api.prevent_close();
+                    let _ = window.hide();
+                }
+            }
         })
         .invoke_handler(tauri::generate_handler![
             save_credentials,
@@ -195,8 +214,21 @@ pub fn run() {
             windows_shell::media_metadata,
             windows_shell::media_state,
             windows_shell::taskbar_labels,
-            windows_shell::native_style
+            windows_shell::native_style,
+            #[cfg(desktop)]
+            tray::set_global_shortcuts,
+            #[cfg(desktop)]
+            tray::set_close_to_tray,
+            #[cfg(desktop)]
+            tray::tray_update
         ])
-        .run(tauri::generate_context!())
-        .expect("не удалось запустить приложение");
+        .build(tauri::generate_context!())
+        .expect("не удалось запустить приложение")
+        .run(|_app, _event| {
+            // Клик по значку в Dock, когда окно спрятано, возвращает его.
+            #[cfg(target_os = "macos")]
+            if let tauri::RunEvent::Reopen { has_visible_windows: false, .. } = _event {
+                tray::show_main(_app);
+            }
+        });
 }
