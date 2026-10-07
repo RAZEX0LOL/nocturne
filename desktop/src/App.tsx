@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
-import { EQ_BANDS, EQ_PRESETS } from './audio/engine'
 import { store, useStore, type View } from './state/store'
 import { Connect } from './ui/Connect'
+import { Icon, type IconName } from './ui/Icon'
+import { InfoBar } from './ui/InfoBar'
 import { Player, type Panel } from './ui/Player'
 import { LyricsPanel } from './ui/LyricsPanel'
 import { QueuePanel } from './ui/QueuePanel'
+import { SettingsView } from './ui/SettingsView'
 import {
   DownloadsView,
   LocalView,
@@ -24,18 +26,18 @@ interface Section {
   view: View
   /** Русское название как ключ: перевод берётся при показе, иначе смена языка не доходит до меню. */
   label: string
-  icon: string
+  icon: IconName
 }
 
-const HOME: Section = { view: { kind: 'home' }, label: 'Главная', icon: '⌂' }
-const SEARCH: Section = { view: { kind: 'search' }, label: 'Поиск', icon: '⌕' }
-const LOCAL: Section = { view: { kind: 'local' }, label: 'На компьютере', icon: '▣' }
-const DOWNLOADS: Section = { view: { kind: 'downloads' }, label: 'Загрузки', icon: '⤓' }
+const HOME: Section = { view: { kind: 'home' }, label: 'Главная', icon: 'home' }
+const SEARCH: Section = { view: { kind: 'search' }, label: 'Поиск', icon: 'search' }
+const LOCAL: Section = { view: { kind: 'local' }, label: 'На компьютере', icon: 'computer' }
+const DOWNLOADS: Section = { view: { kind: 'downloads' }, label: 'Загрузки', icon: 'download' }
 const SERVER: Section[] = [
-  { view: { kind: 'albums' }, label: 'Альбомы', icon: '◫' },
-  { view: { kind: 'artists' }, label: 'Артисты', icon: '♫' },
-  { view: { kind: 'playlists' }, label: 'Плейлисты', icon: '≡' },
-  { view: { kind: 'favorites' }, label: 'Избранное', icon: '♥' },
+  { view: { kind: 'albums' }, label: 'Альбомы', icon: 'album' },
+  { view: { kind: 'artists' }, label: 'Артисты', icon: 'artist' },
+  { view: { kind: 'playlists' }, label: 'Плейлисты', icon: 'playlist' },
+  { view: { kind: 'favorites' }, label: 'Избранное', icon: 'heart' },
 ]
 
 /** Без сервера — только своя музыка; без связи — то, что на диске; иначе всё. */
@@ -76,8 +78,13 @@ function Content({ view }: { view: View }) {
   }
 }
 
+function isTyping(target: EventTarget | null) {
+  const element = target as HTMLElement | null
+  return element?.tagName === 'INPUT' || element?.tagName === 'SELECT' || element?.tagName === 'TEXTAREA'
+}
+
 export function App() {
-  const { status, error, notice, view, history, serverless, offline } = useStore()
+  const { status, error, notice, view, history, serverless, offline, dragging } = useStore()
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [panel, setPanel] = useState<Panel>(null)
   const main = useRef<HTMLElement>(null)
@@ -91,26 +98,68 @@ export function App() {
   // Новая страница открывается сверху, а не с прокруткой предыдущей.
   useEffect(() => {
     main.current?.scrollTo({ top: 0 })
-  }, [view])
+  }, [view, settingsOpen])
+
+  const goBack = () => {
+    if (settingsOpen) setSettingsOpen(false)
+    else store.back()
+  }
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement | null
-      if (target?.tagName === 'INPUT' || target?.tagName === 'SELECT') return
-      // Пробел — пауза, Cmd/Ctrl+F — поиск, Alt+← — назад, как в браузере.
+      const mod = event.metaKey || event.ctrlKey
+      // Escape закрывает настройки и боковую панель — и из поля ввода тоже.
+      if (event.key === 'Escape') {
+        if (settingsOpen) setSettingsOpen(false)
+        else if (panel) setPanel(null)
+        return
+      }
+      if (mod && event.key.toLowerCase() === 'f') {
+        event.preventDefault()
+        setSettingsOpen(false)
+        store.section({ kind: 'search' })
+        return
+      }
+      if (isTyping(event.target)) return
+      const volume = store.snapshot().settings.volume
+      // Пробел — пауза; Ctrl+←/→ — соседний трек, Ctrl+↑/↓ — громкость;
+      // Alt+← и Backspace — назад, как в проводнике.
       if (event.code === 'Space') {
         event.preventDefault()
         store.toggle()
-      } else if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'f') {
+      } else if (mod && event.key === 'ArrowRight') {
         event.preventDefault()
-        store.section({ kind: 'search' })
-      } else if (event.altKey && event.key === 'ArrowLeft') {
-        store.back()
+        void store.advance()
+      } else if (mod && event.key === 'ArrowLeft') {
+        event.preventDefault()
+        void store.previous()
+      } else if (mod && event.key === 'ArrowUp') {
+        event.preventDefault()
+        store.update({ volume: Math.min(1, volume + 0.05) })
+      } else if (mod && event.key === 'ArrowDown') {
+        event.preventDefault()
+        store.update({ volume: Math.max(0, volume - 0.05) })
+      } else if ((event.altKey && event.key === 'ArrowLeft') || event.key === 'Backspace') {
+        event.preventDefault()
+        goBack()
+      } else if (mod && event.key === ',') {
+        event.preventDefault()
+        setSettingsOpen(true)
       }
     }
+    // Боковая кнопка мыши «назад» — привычка каждого, у кого мышь с боковыми кнопками.
+    const onMouse = (event: MouseEvent) => {
+      if (event.button !== 3) return
+      event.preventDefault()
+      goBack()
+    }
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [])
+    window.addEventListener('mouseup', onMouse)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('mouseup', onMouse)
+    }
+  })
 
   if (status === 'connecting') {
     return <div className="grid h-full place-items-center text-secondary">{t('Загружаю…')}</div>
@@ -125,47 +174,49 @@ export function App() {
       </div>
     )
 
-  const active = sectionOf[view.kind]
+  const active = settingsOpen ? undefined : sectionOf[view.kind]
+  const canGoBack = settingsOpen || history.length > 0
 
   return (
     <div className="flex h-full flex-col">
       <div className="flex min-h-0 flex-1">
-        <nav className="flex w-52 shrink-0 flex-col gap-1 border-r border-surface-strong p-3">
-          <div className="px-3 pb-4 pt-1 text-sm font-semibold tracking-widest text-secondary">NOCTURNE</div>
+        <nav className="flex w-60 shrink-0 flex-col gap-0.5 px-1.5 pb-2 pt-1">
+          <div className="flex h-12 items-center gap-1 px-1">
+            <button onClick={goBack} disabled={!canGoBack} className="icon-btn" title={t('Назад')} aria-label={t('Назад')}>
+              <Icon name="back" />
+            </button>
+            <span className="px-2 text-xs font-semibold tracking-[0.2em] text-secondary">NOCTURNE</span>
+          </div>
           {sectionsFor(serverless, offline).map((section) => (
             <button
               key={section.view.kind}
-              onClick={() => store.section(section.view)}
-              className={`flex items-center gap-3 rounded-lg px-3 py-2 text-left text-sm ${
-                active === section.view.kind ? 'bg-surface-strong text-primary' : 'text-secondary hover:text-primary'
-              }`}
+              onClick={() => {
+                setSettingsOpen(false)
+                store.section(section.view)
+              }}
+              className="nav-item"
+              aria-current={active === section.view.kind ? 'page' : undefined}
             >
-              <span className="w-4 text-center">{section.icon}</span>
+              <Icon name={section.icon} />
               {t(section.label)}
             </button>
           ))}
           <div className="flex-1" />
           {!serverless && (
-            <button
-              onClick={() => void (offline ? store.reconnect() : store.refresh())}
-              className="rounded-lg px-3 py-2 text-left text-sm text-secondary hover:text-primary"
-            >
-              ↻ {offline ? t('Проверить связь') : t('Обновить')}
+            <button onClick={() => void (offline ? store.reconnect() : store.refresh())} className="nav-item">
+              <Icon name="refresh" />
+              {offline ? t('Проверить связь') : t('Обновить')}
             </button>
           )}
-          <button onClick={() => setSettingsOpen(true)} className="rounded-lg px-3 py-2 text-left text-sm text-secondary hover:text-primary">
-            {t('⚙ Настройки')}
+          <button onClick={() => setSettingsOpen(true)} className="nav-item" aria-current={settingsOpen ? 'page' : undefined}>
+            <Icon name="settings" />
+            {t('Настройки')}
           </button>
         </nav>
 
-        <main ref={main} className="min-w-0 flex-1 overflow-y-auto">
-          <div className="space-y-4 p-8">
-            {history.length > 0 && (
-              <button onClick={() => store.back()} className="text-sm text-secondary hover:text-primary">
-                {t('← Назад')}
-              </button>
-            )}
-            <Content view={view} />
+        <main ref={main} className="content-layer min-w-0 flex-1 overflow-y-auto">
+          <div className="mx-auto max-w-[1400px] space-y-4 px-9 pb-8 pt-7">
+            {settingsOpen ? <SettingsView /> : <Content view={view} />}
           </div>
         </main>
 
@@ -174,16 +225,30 @@ export function App() {
       </div>
 
       {error && (
-        <div className="mx-6 mb-2 flex items-center justify-between rounded-lg bg-red-500/15 px-4 py-2 text-sm text-red-300">
-          <span>{error}</span>
-          <button onClick={() => store.dismissError()} aria-label={t('Закрыть')}>×</button>
+        <div className="px-3 pb-2">
+          <InfoBar severity="error" title={t('Ошибка')} message={error} onClose={() => store.dismissError()} />
         </div>
       )}
-      {notice && <div className="pointer-events-none fixed left-1/2 top-4 -translate-x-1/2 rounded-lg bg-surface-strong px-4 py-2 text-sm shadow-lg">{notice}</div>}
+      {notice && (
+        <div className="flyout pointer-events-none fixed left-1/2 top-4 z-30 -translate-x-1/2 px-4 py-2.5 text-sm">{notice}</div>
+      )}
       <UpdateBanner />
 
       <Player panel={panel} onPanel={setPanel} />
-      {settingsOpen && <Settings onClose={() => setSettingsOpen(false)} />}
+      {dragging && <DropOverlay />}
+    </div>
+  )
+}
+
+/** Подсказка поверх окна, пока над ним держат файлы из проводника. */
+function DropOverlay() {
+  return (
+    <div className="pointer-events-none fixed inset-0 z-40 grid place-items-center bg-black/40 p-8">
+      <div className="flyout flex flex-col items-center gap-3 px-10 py-8 text-center">
+        <Icon name="add" size={32} className="text-accent-text" />
+        <div className="section-title">{t('Отпусти, чтобы добавить')}</div>
+        <div className="text-sm text-secondary">{t('Файлы и папки скопируются в папку музыки на компьютере.')}</div>
+      </div>
     </div>
   )
 }
@@ -193,149 +258,18 @@ function UpdateBanner() {
   const { update } = useStore()
   if (!update) return null
   return (
-    <div className="mx-6 mb-2 flex items-center justify-between gap-4 rounded-lg bg-surface-strong px-4 py-2 text-sm">
-      <span>{t('Вышла версия {version}', { version: update.version })}</span>
-      <span className="flex gap-3">
-        <button onClick={() => void store.installUpdate()} className="text-accent">
-          {t('Установить')}
-        </button>
-        <button onClick={() => store.dismissUpdate()} className="text-secondary hover:text-primary">
-          {t('Позже')}
-        </button>
-      </span>
-    </div>
-  )
-}
-
-function Settings({ onClose }: { onClose: () => void }) {
-  const { settings, serverless, client } = useStore()
-
-  return (
-    <div className="fixed inset-0 grid place-items-center bg-black/60 p-6" onClick={onClose}>
-      <div className="w-full max-w-lg space-y-6 rounded-2xl bg-surface p-6" onClick={(event) => event.stopPropagation()}>
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">{t('Настройки')}</h2>
-          <button onClick={onClose} className="text-secondary hover:text-primary">
-            {t('Готово')}
+    <div className="px-3 pb-2">
+      <InfoBar
+        severity="info"
+        title={t('Доступно обновление')}
+        message={t('Вышла версия {version}', { version: update.version })}
+        onClose={() => store.dismissUpdate()}
+        action={
+          <button onClick={() => void store.installUpdate()} className="btn btn-accent">
+            {t('Установить')}
           </button>
-        </div>
-
-        <label className="flex items-center justify-between gap-4 text-sm">
-          {t('Язык')}
-          <select
-            value={settings.language}
-            onChange={(event) => store.update({ language: event.target.value as typeof settings.language })}
-            className="rounded-lg bg-surface-strong px-3 py-2"
-          >
-            <option value="auto">{t('Как в системе')}</option>
-            <option value="ru">{t('Русский')}</option>
-            <option value="en">{t('Английский')}</option>
-          </select>
-        </label>
-
-        <label className="flex items-center justify-between gap-4 text-sm">
-          {t('Качество потока')}
-          <select
-            value={settings.quality}
-            onChange={(event) => store.update({ quality: event.target.value as typeof settings.quality })}
-            className="rounded-lg bg-surface-strong px-3 py-2"
-          >
-            <option value="original">{t('Оригинал (без сжатия)')}</option>
-            <option value="mp3High">{t('Высокое · MP3 320')}</option>
-            <option value="mp3Medium">{t('Среднее · MP3 192')}</option>
-            <option value="mp3Low">{t('Экономное · MP3 128')}</option>
-          </select>
-        </label>
-
-        <label className="flex items-center justify-between gap-4 text-sm">
-          {t('Выравнивание громкости')}
-          <select
-            value={settings.replayGain}
-            onChange={(event) => store.update({ replayGain: event.target.value as typeof settings.replayGain })}
-            className="rounded-lg bg-surface-strong px-3 py-2"
-          >
-            <option value="off">{t('Выключено')}</option>
-            <option value="track">{t('По треку')}</option>
-            <option value="album">{t('По альбому')}</option>
-          </select>
-        </label>
-
-        <label className="flex items-center justify-between gap-4 text-sm">
-          {t('Плавные переходы, сек')}
-          <input
-            type="number"
-            min={0}
-            max={12}
-            step={1}
-            value={settings.fadeSeconds}
-            onChange={(event) => store.update({ fadeSeconds: Number(event.target.value) })}
-            className="w-20 rounded-lg bg-surface-strong px-3 py-2"
-          />
-        </label>
-
-        <section className="space-y-3">
-          <label className="flex items-center gap-3 text-sm">
-            <input
-              type="checkbox"
-              checked={settings.eq.enabled}
-              onChange={(event) => store.update({ eq: { ...settings.eq, enabled: event.target.checked } })}
-            />
-            {t('Эквалайзер')}
-          </label>
-
-          <div className="flex gap-2">
-            {Object.keys(EQ_PRESETS).map((preset) => (
-              <button
-                key={preset}
-                onClick={() => store.update({ eq: { enabled: true, gains: [...EQ_PRESETS[preset]!] } })}
-                className="rounded-lg bg-surface-strong px-3 py-1.5 text-xs"
-              >
-                {{ flat: t('Ровно'), bass: t('Бас'), treble: t('Верх'), vocal: t('Вокал'), loudness: t('Громко') }[preset] ?? preset}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex items-end justify-between gap-2 pt-2">
-            {EQ_BANDS.map((band, index) => (
-              <div key={band} className="flex flex-col items-center gap-2">
-                <input
-                  type="range"
-                  min={-12}
-                  max={12}
-                  step={0.5}
-                  value={settings.eq.gains[index] ?? 0}
-                  disabled={!settings.eq.enabled}
-                  onChange={(event) => {
-                    const gains = [...settings.eq.gains]
-                    gains[index] = Number(event.target.value)
-                    store.update({ eq: { ...settings.eq, gains } })
-                  }}
-                  className="h-24 accent-accent"
-                  style={{ writingMode: 'vertical-lr', direction: 'rtl' }}
-                  aria-label={t('{n} Гц', { n: band })}
-                />
-                <span className="text-[10px] text-secondary">{band >= 1000 ? t('{n}к', { n: band / 1000 }) : band}</span>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="space-y-2 border-t border-surface-strong pt-4 text-sm">
-          <h3 className="font-medium">{t('Сервер')}</h3>
-          {serverless || !client ? (
-            <button onClick={() => { onClose(); store.showConnect() }} className="text-accent">
-              {t('Подключить Navidrome')}
-            </button>
-          ) : (
-            <>
-              <p className="text-secondary">{client.credentials.account}</p>
-              <button onClick={() => { onClose(); void store.disconnect() }} className="text-red-400">
-                {t('Отключить сервер')}
-              </button>
-            </>
-          )}
-        </section>
-      </div>
+        }
+      />
     </div>
   )
 }

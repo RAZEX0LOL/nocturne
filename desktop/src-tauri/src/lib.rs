@@ -1,7 +1,49 @@
+// Значки рисуются только для панели задач Windows; на других системах модуль живёт ради тестов.
+#[cfg_attr(not(windows), allow(dead_code))]
+mod glyphs;
 mod library;
+
+#[cfg(windows)]
+mod windows_shell;
+
+/// На Mac и Linux системный плеер приходит из WebView (Media Session), а кнопок в превью
+/// и акцента Windows нет: команды есть, но ничего не делают — окну не нужно знать, где оно.
+#[cfg(not(windows))]
+mod windows_shell {
+    use serde::{Deserialize, Serialize};
+    use tauri::{AppHandle, WebviewWindow};
+
+    pub fn setup(_app: &AppHandle, _window: &WebviewWindow) {}
+
+    #[derive(Deserialize)]
+    pub struct NowPlaying {}
+
+    #[derive(Serialize)]
+    pub struct NativeStyle {
+        platform: &'static str,
+        mica: bool,
+    }
+
+    #[tauri::command]
+    pub async fn media_metadata(_song: NowPlaying) -> Result<(), String> {
+        Ok(())
+    }
+
+    #[tauri::command]
+    pub fn media_state(_playing: bool, _active: bool, _position: f64, _duration: f64) {}
+
+    #[tauri::command]
+    pub fn taskbar_labels(_previous: String, _play: String, _pause: String, _next: String) {}
+
+    #[tauri::command]
+    pub fn native_style() -> NativeStyle {
+        NativeStyle { platform: if cfg!(target_os = "macos") { "macos" } else { "linux" }, mica: false }
+    }
+}
 
 use keyring::Entry;
 use serde::{Deserialize, Serialize};
+use tauri::Manager;
 
 /// Учётные данные сервера. Пароль живёт в системном хранилище (Keychain, Credential Manager,
 /// Secret Service), а не в файле настроек и не в localStorage окна.
@@ -72,7 +114,21 @@ fn debug_log(line: String) {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let builder = tauri::Builder::default()
+    let builder = tauri::Builder::default();
+    // Второй запуск (ярлык в «Пуске», файл «Открыть с помощью») не открывает второе окно с
+    // ещё одним плеером, а разворачивает уже открытое. Плагин должен стоять первым.
+    #[cfg(desktop)]
+    let builder = builder.plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+        if let Some(window) = app.get_webview_window("main") {
+            let _ = window.unminimize();
+            let _ = window.show();
+            let _ = window.set_focus();
+        }
+    }));
+    // Окно открывается там же и того же размера, где его закрыли — как любое приложение системы.
+    #[cfg(desktop)]
+    let builder = builder.plugin(tauri_plugin_window_state::Builder::new().build());
+    let builder = builder
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_process::init());
@@ -80,6 +136,12 @@ pub fn run() {
     #[cfg(desktop)]
     let builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
     builder
+        .setup(|app| {
+            if let Some(window) = app.get_webview_window("main") {
+                windows_shell::setup(app.handle(), &window);
+            }
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             save_credentials,
             load_credentials,
@@ -90,7 +152,11 @@ pub fn run() {
             library::remove_local,
             library::download_track,
             library::downloads,
-            library::remove_download
+            library::remove_download,
+            windows_shell::media_metadata,
+            windows_shell::media_state,
+            windows_shell::taskbar_labels,
+            windows_shell::native_style
         ])
         .run(tauri::generate_context!())
         .expect("не удалось запустить приложение");

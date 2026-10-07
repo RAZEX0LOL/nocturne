@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { store, useStore } from '../state/store'
+import { Icon } from './Icon'
 import { t } from '../i18n'
 
 /**
@@ -28,11 +29,11 @@ export function LyricsPanel({ onClose }: { onClose: () => void }) {
   }, [active])
 
   return (
-    <aside className="flex w-80 shrink-0 flex-col border-l border-surface-strong bg-surface/60">
+    <aside className="content-layer flex w-80 shrink-0 flex-col border-l border-stroke">
       <div className="flex items-center justify-between px-4 py-3">
-        <h2 className="truncate font-semibold">{song?.title ?? t('Текст песни')}</h2>
-        <button onClick={onClose} className="shrink-0 text-sm text-secondary hover:text-primary">
-          {t('Скрыть')}
+        <h2 className="truncate text-base font-semibold">{song?.title ?? t('Текст песни')}</h2>
+        <button onClick={onClose} className="icon-btn shrink-0" title={t('Скрыть')} aria-label={t('Скрыть')}>
+          <Icon name="close" size={12} />
         </button>
       </div>
       <div ref={container} className="flex-1 overflow-y-auto px-4 pb-6">
@@ -43,7 +44,7 @@ export function LyricsPanel({ onClose }: { onClose: () => void }) {
         ) : lyrics.state === 'failed' ? (
           <div className="space-y-2">
             <p className="text-sm text-secondary">{t('Не удалось загрузить текст.')}</p>
-            <button onClick={() => void store.loadLyrics()} className="text-sm text-accent">
+            <button onClick={() => void store.loadLyrics()} className="btn">
               {t('Попробовать снова')}
             </button>
           </div>
@@ -57,7 +58,7 @@ export function LyricsPanel({ onClose }: { onClose: () => void }) {
                 data-line={index}
                 onClick={() => synced && line.start !== undefined && store.seek(line.start / 1000)}
                 className={`${synced ? 'cursor-pointer text-base font-medium' : 'text-sm'} ${
-                  !synced || index === active ? 'text-primary' : 'text-secondary/60'
+                  !synced || index === active ? 'text-primary' : 'text-secondary/50'
                 }`}
               >
                 {line.value || ' '}

@@ -72,6 +72,8 @@ export interface State {
   coverFiles: Record<string, string>
   downloading: Record<string, true>
   importing: boolean
+  /** Над окном держат файлы из проводника. */
+  dragging: boolean
   queue?: PlaybackQueue
   /** Меняется на каждую правку очереди: сама очередь мутабельна, и React иначе не заметит изменений. */
   queueVersion: number
@@ -149,6 +151,7 @@ class Store {
     coverFiles: {},
     downloading: {},
     importing: false,
+    dragging: false,
     queueVersion: 0,
     playing: false,
     buffering: false,
@@ -496,7 +499,15 @@ class Store {
   }
 
   async importMusic(kind: 'files' | 'folder') {
-    const paths = await platform.pick(kind)
+    await this.importPaths(await platform.pick(kind))
+  }
+
+  setDragging(dragging: boolean) {
+    if (this.state.dragging !== dragging) this.patch({ dragging })
+  }
+
+  /** Файлы и папки — из диалога или перетащенные из проводника; не-аудио Rust пропустит сам. */
+  async importPaths(paths: string[]) {
     if (!paths.length) return
     this.patch({ importing: true })
     try {
@@ -517,6 +528,7 @@ class Store {
   async removeLocal(song: Song) {
     const path = this.localPaths.get(song.id)
     if (!path) return
+    this.engine.forget(song.id)
     try {
       await platform.removeLocal(path)
       await this.loadOnDisk()
@@ -557,6 +569,7 @@ class Store {
   }
 
   async removeDownload(song: Song) {
+    this.engine.forget(song.id)
     try {
       await platform.removeDownload(song.id)
       const { [song.id]: _removed, ...rest } = this.state.downloads
@@ -664,6 +677,15 @@ class Store {
     if (!song || song.id === queue.current?.song.id || !this.isPlayable(song)) return
     const url = await this.sourceUrl(song)
     if (url) this.engine.prepare(url, song.id)
+  }
+
+  /** Явные «играть» и «пауза» — для системных кнопок: им нужен не переключатель, а команда. */
+  resume() {
+    if (this.state.queue?.current) void this.engine.play()
+  }
+
+  pause() {
+    this.engine.pause()
   }
 
   toggle() {

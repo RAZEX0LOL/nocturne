@@ -340,13 +340,23 @@ fn collect_downloads(folder: &Path) -> Result<Vec<Download>, String> {
 
 #[tauri::command]
 pub fn remove_download(app: AppHandle, id: String) -> Result<(), String> {
-    let folder = downloads_folder(&app)?;
-    let stem = file_stem_for(&id);
-    for entry in fs::read_dir(&folder).map_err(|e| error("загрузки", e))?.flatten() {
-        let path = entry.path();
-        if path.file_stem().is_some_and(|s| s.to_string_lossy() == stem) {
-            let _ = fs::remove_file(path);
-        }
+    remove_files_of(&downloads_folder(&app)?, &file_stem_for(&id))
+}
+
+/// Удаляет трек, его метаданные и обложку. На Windows файл, который сейчас открыт (играет или
+/// заранее загружен как следующий), удалить нельзя — об этом надо сказать, а не делать вид, что
+/// получилось: иначе загрузка «вернётся» после перезапуска. Аудио удаляется первым, чтобы при
+/// отказе метаданные остались на месте и загрузка не превратилась в огрызок.
+fn remove_files_of(folder: &Path, stem: &str) -> Result<(), String> {
+    let mut files: Vec<PathBuf> = fs::read_dir(folder)
+        .map_err(|e| error("загрузки", e))?
+        .flatten()
+        .map(|entry| entry.path())
+        .filter(|path| path.file_stem().is_some_and(|s| s.to_string_lossy() == stem))
+        .collect();
+    files.sort_by_key(|path| path.extension().is_some_and(|e| e == "json" || e == "cover"));
+    for path in files {
+        fs::remove_file(&path).map_err(|e| error("удаление", e))?;
     }
     Ok(())
 }
@@ -393,6 +403,20 @@ mod tests {
         assert!(found[1].path.ends_with("t2.mp3"));
         assert_eq!(found[1].cover, None);
         assert!(!folder.join("t3.part").exists(), "оборванная загрузка должна быть убрана");
+        let _ = fs::remove_dir_all(&folder);
+    }
+
+    #[test]
+    fn removing_a_download_takes_the_audio_first() {
+        let folder = std::env::temp_dir().join(format!("nocturne-remove-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&folder);
+        fs::create_dir_all(&folder).unwrap();
+        for name in ["t1.json", "t1.mp3", "t1.cover", "t10.mp3"] {
+            fs::write(folder.join(name), b"x").unwrap();
+        }
+        remove_files_of(&folder, "t1").unwrap();
+        let left: Vec<_> = fs::read_dir(&folder).unwrap().flatten().map(|e| e.file_name()).collect();
+        assert_eq!(left, vec![std::ffi::OsString::from("t10.mp3")], "чужая загрузка с похожим именем должна остаться");
         let _ = fs::remove_dir_all(&folder);
     }
 

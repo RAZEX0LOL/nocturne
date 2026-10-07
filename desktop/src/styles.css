@@ -1,14 +1,75 @@
 @import "tailwindcss";
 
-/* Те же цвета, что в приложении на iPhone: тёмная база и фиолетовый акцент. */
-@theme {
-  --color-base: #0b0b10;
-  --color-surface: #16161f;
-  --color-surface-strong: #1f1f2b;
-  --color-accent: #a78bfa;
-  --color-accent-strong: #8b5cf6;
-  --color-primary: #f4f4f8;
-  --color-secondary: #9a9aad;
+/*
+ * Цвета — переменные, а не константы: на Windows их подменяет оформление Fluent (Mica, системный
+ * акцент), на Mac и Linux остаются цвета приложения на iPhone — тёмная база и фиолетовый акцент.
+ */
+@theme inline {
+  --color-base: var(--base);
+  --color-layer: var(--layer);
+  --color-surface: var(--surface);
+  --color-surface-strong: var(--surface-strong);
+  --color-stroke: var(--stroke);
+  --color-accent: var(--accent);
+  --color-accent-text: var(--accent-text);
+  --color-on-accent: var(--on-accent);
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+}
+
+:root {
+  color-scheme: dark;
+  --base: #0b0b10;
+  --layer: #0b0b10;
+  --surface: #16161f;
+  --surface-strong: #1f1f2b;
+  --stroke: #1f1f2b;
+  --accent: #a78bfa;
+  --accent-text: #a78bfa;
+  --on-accent: #0b0b10;
+  --primary: #f4f4f8;
+  --secondary: #9a9aad;
+  --control: #1f1f2b;
+  --control-hover: #2a2a38;
+  --control-pressed: #191922;
+  --control-stroke: transparent;
+  --overlay: #16161f;
+  --radius-control: 0.75rem;
+  --radius-card: 0.75rem;
+  --radius-overlay: 1rem;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+}
+
+/*
+ * Windows 11: токены Fluent 2 из тёмной темы WinUI. Слои полупрозрачные: под окном Mica, и
+ * обои рабочего стола еле заметно просвечивают, как у «Параметров» и «Медиаплеера».
+ */
+:root[data-platform="windows"] {
+  --base: #202020;
+  --layer: #272727;
+  --surface: rgb(255 255 255 / 0.0512);
+  --surface-strong: rgb(255 255 255 / 0.0837);
+  --stroke: rgb(255 255 255 / 0.0698);
+  --accent: #60cdff;
+  --accent-text: #99ebff;
+  --on-accent: #000000;
+  --primary: #ffffff;
+  --secondary: rgb(255 255 255 / 0.786);
+  --control: rgb(255 255 255 / 0.0605);
+  --control-hover: rgb(255 255 255 / 0.0837);
+  --control-pressed: rgb(255 255 255 / 0.0326);
+  --control-stroke: rgb(255 255 255 / 0.093);
+  --overlay: #2c2c2c;
+  --radius-control: 4px;
+  --radius-card: 8px;
+  --radius-overlay: 8px;
+  --font: "Segoe UI Variable Text", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+}
+
+/* Mica рисует сама система: окну остаётся не закрывать её непрозрачным фоном. */
+:root[data-platform="windows"].mica {
+  --base: transparent;
+  --layer: rgb(58 58 58 / 0.3);
 }
 
 html,
@@ -19,26 +80,424 @@ body,
 
 body {
   margin: 0;
-  background: var(--color-base);
-  color: var(--color-primary);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  background: var(--base);
+  color: var(--primary);
+  font-family: var(--font);
+  font-size: 14px;
   /* Выделять текст мышью в плеере незачем — это мешает перетаскиванию. */
   user-select: none;
+  -webkit-font-smoothing: antialiased;
 }
 
-input {
+input,
+textarea {
   user-select: text;
 }
 
-/* Полоса прокрутки в тон интерфейсу, иначе на Windows она белая и режет глаз. */
+/* Картинку или ссылку из окна приложения не утащить мышью — это повадка браузера. */
+img,
+a {
+  -webkit-user-drag: none;
+}
+
+/* Рамка фокуса — только для клавиатуры, как в системе: белая обводка вокруг элемента. */
+:focus {
+  outline: none;
+}
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+  border-radius: var(--radius-control);
+}
+
+/* Значки Windows — системный шрифт значков. */
+.fluent-icon {
+  font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets";
+  font-style: normal;
+  font-weight: normal;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  speak: never;
+}
+
+/* Полоса прокрутки в тон интерфейсу: тонкая, а под мышью — шире, как в Windows 11. */
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-surface-strong);
+  background: rgb(255 255 255 / 0.25);
+  border: 4px solid transparent;
+  background-clip: content-box;
   border-radius: 6px;
 }
-::-webkit-scrollbar-track {
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(255 255 255 / 0.55);
+  border-width: 3px;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
   background: transparent;
+}
+
+@layer components {
+  /* Типографика: на Windows — шкала Fluent (Title 28, Subtitle 20, Body 14, Caption 12). */
+  .page-title {
+    font-size: 1.75rem;
+    line-height: 2.25rem;
+    font-weight: 600;
+  }
+  .section-title {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+    font-weight: 600;
+  }
+
+  /* Область содержимого: на Windows — слой со скруглённым углом поверх Mica, как у NavigationView. */
+  .content-layer {
+    background: var(--layer);
+  }
+  :root[data-platform="windows"] .content-layer {
+    border-top: 1px solid var(--stroke);
+    border-left: 1px solid var(--stroke);
+    border-top-left-radius: 8px;
+  }
+
+  /* Обычная кнопка. */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 32px;
+    padding: 0.4rem 1rem;
+    border-radius: var(--radius-control);
+    background: var(--control);
+    border: 1px solid var(--control-stroke);
+    color: var(--primary);
+    font-size: 14px;
+    line-height: 20px;
+    transition: background-color 83ms linear;
+  }
+  .btn:hover:enabled {
+    background: var(--control-hover);
+  }
+  .btn:active:enabled {
+    background: var(--control-pressed);
+    color: var(--secondary);
+  }
+  .btn:disabled {
+    opacity: 0.45;
+  }
+
+  /* Главная кнопка — залита цветом акцента. */
+  .btn-accent {
+    background: var(--accent);
+    color: var(--on-accent);
+    border-color: transparent;
+    font-weight: 500;
+  }
+  .btn-accent:hover:enabled {
+    background: color-mix(in srgb, var(--accent) 90%, transparent);
+  }
+  .btn-accent:active:enabled {
+    background: color-mix(in srgb, var(--accent) 80%, transparent);
+    color: color-mix(in srgb, var(--on-accent) 60%, transparent);
+  }
+
+  /* Кнопка без фона: значки в плеере, пункты меню, ссылки-действия. */
+  .btn-subtle {
+    background: transparent;
+    border-color: transparent;
+  }
+  .btn-subtle:hover:enabled {
+    background: var(--control-hover);
+  }
+  .btn-subtle:active:enabled {
+    background: var(--control-pressed);
+  }
+
+  .icon-btn {
+    display: inline-grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-control);
+    color: var(--secondary);
+    transition: background-color 83ms linear, color 83ms linear;
+  }
+  .icon-btn:hover:enabled {
+    background: var(--control-hover);
+    color: var(--primary);
+  }
+  .icon-btn:active:enabled {
+    background: var(--control-pressed);
+  }
+  .icon-btn[aria-pressed="true"] {
+    color: var(--accent-text);
+  }
+  .icon-btn:disabled {
+    opacity: 0.4;
+  }
+
+  /* Пункт бокового меню: на Windows — с полоской акцента у выбранного, как в NavigationView. */
+  .nav-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 36px;
+    padding: 0 0.75rem;
+    border-radius: var(--radius-control);
+    color: var(--secondary);
+    text-align: left;
+    font-size: 14px;
+    transition: background-color 83ms linear;
+  }
+  .nav-item:hover {
+    background: var(--control-hover);
+    color: var(--primary);
+  }
+  .nav-item[aria-current="page"] {
+    background: var(--control-hover);
+    color: var(--primary);
+  }
+  :root[data-platform="windows"] .nav-item {
+    color: var(--primary);
+  }
+  :root[data-platform="windows"] .nav-item:hover {
+    background: var(--control);
+  }
+  :root[data-platform="windows"] .nav-item[aria-current="page"] {
+    background: var(--control);
+  }
+  :root[data-platform="windows"] .nav-item[aria-current="page"]::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 3px;
+    height: 16px;
+    margin-top: -8px;
+    border-radius: 2px;
+    background: var(--accent);
+  }
+
+  /* Карточка: список треков, строки настроек, плитки. */
+  .card {
+    background: var(--surface);
+    border-radius: var(--radius-card);
+  }
+  :root[data-platform="windows"] .card {
+    border: 1px solid rgb(0 0 0 / 0.1);
+  }
+
+  .list-row {
+    transition: background-color 83ms linear;
+  }
+  .list-row:hover {
+    background: var(--surface-strong);
+  }
+
+  /* Поле ввода. На Windows — TextBox: подчёркивание снизу, при фокусе оно цвета акцента. */
+  .field {
+    width: 100%;
+    min-height: 32px;
+    padding: 0.4rem 0.75rem;
+    border-radius: var(--radius-control);
+    background: var(--control);
+    color: var(--primary);
+    border: 1px solid var(--control-stroke);
+    outline: none;
+  }
+  .field::placeholder {
+    color: var(--secondary);
+  }
+  .field:hover {
+    background: var(--control-hover);
+  }
+  .field:focus {
+    box-shadow: 0 0 0 2px var(--accent);
+  }
+  :root[data-platform="windows"] .field {
+    border-bottom-color: rgb(255 255 255 / 0.5442);
+  }
+  :root[data-platform="windows"] .field:focus {
+    box-shadow: inset 0 -2px 0 var(--accent);
+    border-bottom-color: transparent;
+    background: rgb(30 30 30 / 0.7);
+  }
+
+  /* Выпадающий список: системный, но закрытый вид — как ComboBox. */
+  .select {
+    appearance: none;
+    min-height: 32px;
+    padding: 0.35rem 2rem 0.35rem 0.75rem;
+    border-radius: var(--radius-control);
+    background-color: var(--control);
+    border: 1px solid var(--control-stroke);
+    color: var(--primary);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5' fill='none' stroke='white' stroke-opacity='.8' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.7rem center;
+  }
+  .select:hover {
+    background-color: var(--control-hover);
+  }
+  .select option {
+    background: var(--overlay);
+    color: var(--primary);
+  }
+
+  /* Ползунок. Заполненная часть — цвета акцента; на Windows бегунок — кружок с точкой акцента. */
+  .slider {
+    appearance: none;
+    height: 20px;
+    background: transparent;
+    cursor: default;
+    --fill: 0%;
+  }
+  .slider::-webkit-slider-runnable-track {
+    height: 4px;
+    border-radius: 2px;
+    background: linear-gradient(to right, var(--accent) var(--fill), rgb(255 255 255 / 0.25) var(--fill));
+  }
+  .slider::-webkit-slider-thumb {
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    margin-top: -4px;
+    border-radius: 50%;
+    background: var(--primary);
+    opacity: 0;
+    transition: opacity 83ms linear;
+  }
+  .slider:hover::-webkit-slider-thumb,
+  .slider:focus-visible::-webkit-slider-thumb {
+    opacity: 1;
+  }
+  .slider:disabled {
+    opacity: 0.4;
+  }
+  :root[data-platform="windows"] .slider::-webkit-slider-runnable-track {
+    background: linear-gradient(to right, var(--accent) var(--fill), rgb(255 255 255 / 0.5442) var(--fill));
+  }
+  :root[data-platform="windows"] .slider::-webkit-slider-thumb {
+    width: 20px;
+    height: 20px;
+    margin-top: -8px;
+    opacity: 1;
+    background: radial-gradient(circle, var(--accent) 0 5.5px, #454545 6px);
+    box-shadow: 0 0 0 1px rgb(255 255 255 / 0.093);
+    transition: background 83ms linear;
+  }
+  :root[data-platform="windows"] .slider:hover::-webkit-slider-thumb {
+    background: radial-gradient(circle, var(--accent) 0 6.5px, #454545 7px);
+  }
+  :root[data-platform="windows"] .slider:active::-webkit-slider-thumb {
+    background: radial-gradient(circle, var(--accent) 0 4.5px, #454545 5px);
+  }
+
+  /* Вертикальный ползунок (эквалайзер): дорожка и заливка идут снизу вверх. */
+  .slider-vertical {
+    width: 20px;
+    height: 112px;
+  }
+  .slider.slider-vertical::-webkit-slider-runnable-track {
+    width: 4px;
+    height: 100%;
+    margin: 0 auto;
+    background: linear-gradient(to top, var(--accent) var(--fill), rgb(255 255 255 / 0.25) var(--fill));
+  }
+  .slider.slider-vertical::-webkit-slider-thumb {
+    margin-top: 0;
+    margin-left: -4px;
+  }
+  :root[data-platform="windows"] .slider.slider-vertical::-webkit-slider-runnable-track {
+    background: linear-gradient(to top, var(--accent) var(--fill), rgb(255 255 255 / 0.5442) var(--fill));
+  }
+  :root[data-platform="windows"] .slider.slider-vertical::-webkit-slider-thumb {
+    margin-left: -8px;
+  }
+
+  /* Переключатель вместо флажка — как в «Параметрах». */
+  .toggle {
+    appearance: none;
+    position: relative;
+    flex-shrink: 0;
+    width: 40px;
+    height: 20px;
+    border-radius: 10px;
+    border: 1px solid rgb(255 255 255 / 0.6);
+    background: rgb(0 0 0 / 0.1);
+    transition: background-color 83ms linear;
+  }
+  .toggle::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgb(255 255 255 / 0.8);
+    transition: left 167ms cubic-bezier(0, 0, 0, 1), width 83ms linear;
+  }
+  .toggle:hover::after {
+    width: 14px;
+  }
+  .toggle:checked {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  .toggle:checked::after {
+    left: 23px;
+    background: var(--on-accent);
+  }
+  .toggle:checked:hover::after {
+    left: 21px;
+  }
+
+  /* Строка настроек — SettingsCard из «Параметров» Windows: значок, подпись, управление справа. */
+  .settings-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-height: 64px;
+    padding: 0.75rem 1rem;
+  }
+
+  /* Уведомление в строке — InfoBar. */
+  .infobar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 48px;
+    padding: 0.5rem 0.75rem 0.5rem 1rem;
+    border-radius: var(--radius-card);
+    border: 1px solid rgb(0 0 0 / 0.1);
+    background: var(--surface);
+    font-size: 14px;
+  }
+  .infobar-info {
+    background: rgb(39 39 39 / 0.9);
+  }
+  .infobar-warning {
+    background: #433519;
+  }
+  .infobar-error {
+    background: #442726;
+  }
+
+  /* Всплывающее (подсказка о действии, меню) — плотный слой с тенью. */
+  .flyout {
+    background: var(--overlay);
+    border: 1px solid rgb(0 0 0 / 0.2);
+    border-radius: var(--radius-overlay);
+    box-shadow: 0 8px 16px rgb(0 0 0 / 0.26);
+  }
 }

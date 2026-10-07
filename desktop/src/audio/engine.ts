@@ -173,6 +173,18 @@ export class AudioEngine {
     else this.setGain(this.trackVolume)
   }
 
+  /**
+   * Отпускает файл трека, если он загружен в один из элементов: на Windows открытый файл
+   * не удалить. Если это играющий трек, звук останавливается — его файл сейчас исчезнет.
+   */
+  forget(songID: string) {
+    for (const deck of this.decks) {
+      if (deck.songID !== songID) continue
+      if (deck === this.deck) this.pausedOnPurpose = true
+      deck.release()
+    }
+  }
+
   /** Готовит следующий трек заранее; повторный вызов с тем же треком ничего не делает. */
   prepare(url: string, songID: string) {
     if (this.spare.songID === songID || this.deck.songID === songID) return

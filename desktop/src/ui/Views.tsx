@@ -3,12 +3,15 @@ import type { Album, Artist, Playlist, Song } from '../core/models'
 import { store, useStore } from '../state/store'
 import { Cover } from './Cover'
 import { SongList } from './SongList'
+import { Icon } from './Icon'
+import { InfoBar } from './InfoBar'
+import { isMac, isWindows } from '../native'
 import { t } from '../i18n'
 
 function Title({ children, action }: { children: React.ReactNode; action?: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between">
-      <h1 className="text-2xl font-semibold">{children}</h1>
+      <h1 className="page-title">{children}</h1>
       {action}
     </div>
   )
@@ -20,24 +23,24 @@ function PlayButtons({ songs, downloadable = false }: { songs: Song[]; downloada
   const missing = songs.filter((song) => !downloads[song.id])
   const busy = songs.some((song) => downloading[song.id])
   return (
-    <div className="flex gap-3">
-      <button onClick={() => void store.play(songs, 0)} className="rounded-xl bg-accent px-5 py-2 font-medium text-base">
-        {t('▶ Слушать')}
+    <div className="flex gap-2">
+      <button onClick={() => void store.play(songs, 0)} className="btn btn-accent">
+        <Icon name="play" size={14} />
+        {t('Слушать')}
       </button>
-      <button
-        onClick={() => void store.play(songs, Math.floor(Math.random() * songs.length), true)}
-        className="rounded-xl bg-surface-strong px-5 py-2"
-      >
-        {t('⇄ Перемешать')}
+      <button onClick={() => void store.play(songs, Math.floor(Math.random() * songs.length), true)} className="btn">
+        <Icon name="shuffle" size={14} />
+        {t('Перемешать')}
       </button>
       {downloadable && client && !offline && (
         <button
           onClick={() => void store.download(songs)}
           disabled={busy || !missing.length}
-          className="rounded-xl bg-surface-strong px-5 py-2 disabled:opacity-50"
+          className="btn"
           title={t('Скачать для прослушивания без сети')}
         >
-          {busy ? t('Скачиваю…') : missing.length ? t('↓ Скачать') : t('✓ Скачано')}
+          <Icon name={missing.length ? 'download' : 'check'} size={14} />
+          {busy ? t('Скачиваю…') : missing.length ? t('Скачать') : t('Скачано')}
         </button>
       )}
     </div>
@@ -46,10 +49,14 @@ function PlayButtons({ songs, downloadable = false }: { songs: Song[]; downloada
 
 export function AlbumGrid({ albums }: { albums: Album[] }) {
   return (
-    <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-5">
+    <div className="grid grid-cols-[repeat(auto-fill,minmax(168px,1fr))] gap-2">
       {albums.map((album) => (
-        <button key={album.id} onClick={() => store.open({ kind: 'album', album })} className="min-w-0 space-y-2 text-left">
-          <Cover id={album.coverArt} size={180} />
+        <button
+          key={album.id}
+          onClick={() => store.open({ kind: 'album', album })}
+          className="list-row min-w-0 space-y-2 rounded-[var(--radius-card)] p-2 text-left"
+        >
+          <Cover id={album.coverArt} size={180} fluid />
           <div className="truncate text-sm font-medium">{album.name}</div>
           <div className="truncate text-xs text-secondary">{album.artist ?? t('Неизвестный исполнитель')}</div>
         </button>
@@ -62,16 +69,16 @@ export function OfflineBanner() {
   const { offline } = useStore()
   if (!offline) return null
   return (
-    <div className="flex items-center gap-3 rounded-xl bg-surface p-4">
-      <span className="text-orange-400">⚠</span>
-      <div className="flex-1">
-        <div className="text-sm font-medium">{t('Нет связи с сервером')}</div>
-        <div className="text-xs text-secondary">{t('Играет то, что есть на компьютере и в загрузках.')}</div>
-      </div>
-      <button onClick={() => void store.reconnect()} className="rounded-lg bg-surface-strong px-3 py-1.5 text-sm">
-        {t('Повторить')}
-      </button>
-    </div>
+    <InfoBar
+      severity="warning"
+      title={t('Нет связи с сервером')}
+      message={t('Играет то, что есть на компьютере и в загрузках.')}
+      action={
+        <button onClick={() => void store.reconnect()} className="btn">
+          {t('Повторить')}
+        </button>
+      }
+    />
   )
 }
 
@@ -91,14 +98,14 @@ export function HomeView() {
     <div className="space-y-8">
       {starred.length > 0 && (
         <section className="space-y-3">
-          <Title action={<button onClick={() => store.section({ kind: 'favorites' })} className="text-sm text-secondary hover:text-primary">{t('Все →')}</button>}>
+          <Title action={<button onClick={() => store.section({ kind: 'favorites' })} className="btn btn-subtle">{t('Все')}</button>}>
             {t('Любимые треки')}
           </Title>
           <SongList songs={starred.slice(0, 5)} showAlbum />
         </section>
       )}
       <section className="space-y-4">
-        <Title action={<button onClick={() => store.section({ kind: 'albums' })} className="text-sm text-secondary hover:text-primary">{t('Все альбомы →')}</button>}>
+        <Title action={<button onClick={() => store.section({ kind: 'albums' })} className="btn btn-subtle">{t('Все альбомы')}</button>}>
           {t('Недавно добавленные')}
         </Title>
         <AlbumGrid albums={recent} />
@@ -136,11 +143,12 @@ export function AlbumView({ album }: { album: Album }) {
     <div className="space-y-6">
       <div className="flex gap-6">
         <Cover id={album.coverArt} size={200} />
-        <div className="flex flex-col justify-end gap-2">
-          <h1 className="text-3xl font-semibold">{album.name}</h1>
+        <div className="flex min-w-0 flex-col justify-end gap-2">
+          <p className="text-xs uppercase tracking-wider text-secondary">{t('Альбом')}</p>
+          <h1 className="page-title">{album.name}</h1>
           <button
             onClick={() => album.artistId && store.open({ kind: 'artist', artist: { id: album.artistId, name: album.artist ?? '' } })}
-            className="self-start text-accent enabled:hover:underline"
+            className="self-start text-accent-text enabled:hover:underline"
             disabled={!album.artistId}
           >
             {album.artist ?? t('Неизвестный исполнитель')}
@@ -171,7 +179,7 @@ export function ArtistsView() {
             value={filter}
             onChange={(event) => setFilter(event.target.value)}
             placeholder={t('Найти артиста')}
-            className="rounded-lg bg-surface px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-accent"
+            className="field w-64"
           />
         }
       >
@@ -192,7 +200,7 @@ function ArtistRow({ artist }: { artist: Artist }) {
   return (
     <button
       onClick={() => store.open({ kind: 'artist', artist })}
-      className="flex w-full items-center gap-3 rounded-xl bg-surface p-2 text-left hover:bg-surface-strong"
+      className="card list-row flex w-full items-center gap-3 p-2 text-left"
     >
       <Cover id={artist.coverArt} size={44} rounded="rounded-full" />
       <span className="min-w-0">
@@ -225,9 +233,9 @@ export function PlaylistsView() {
           <li key={playlist.id}>
             <button
               onClick={() => store.open({ kind: 'playlist', playlist })}
-              className="flex w-full items-center gap-3 rounded-xl bg-surface p-2 text-left hover:bg-surface-strong"
+              className="card list-row flex w-full items-center gap-3 p-2 text-left"
             >
-              <Cover id={playlist.coverArt} size={56} rounded="rounded-lg" />
+              <Cover id={playlist.coverArt} size={56} rounded="rounded-[var(--radius-control)]" />
               <span className="min-w-0">
                 <span className="block truncate text-sm font-medium">{playlist.name}</span>
                 <span className="block text-xs text-secondary">{t('Треков: {n}', { n: playlist.songCount ?? 0 })}</span>
@@ -247,8 +255,9 @@ export function PlaylistView({ playlist }: { playlist: Playlist }) {
     <div className="space-y-6">
       <div className="flex gap-6">
         <Cover id={playlist.coverArt} size={180} />
-        <div className="flex flex-col justify-end gap-2">
-          <h1 className="text-3xl font-semibold">{playlist.name}</h1>
+        <div className="flex min-w-0 flex-col justify-end gap-2">
+          <p className="text-xs uppercase tracking-wider text-secondary">{t('Плейлист')}</p>
+          <h1 className="page-title">{playlist.name}</h1>
           <p className="text-sm text-secondary">{t('{n} треков', { n: list.length || playlist.songCount || 0 })}</p>
           <div className="pt-2">
             <PlayButtons songs={list} downloadable />
@@ -283,19 +292,23 @@ export function SearchView() {
 
   return (
     <div className="space-y-6">
-      <input
-        autoFocus
-        value={query}
-        onChange={(event) => setQuery(event.target.value)}
-        placeholder={t('Треки, альбомы, артисты')}
-        className="w-full rounded-xl bg-surface px-4 py-3 text-lg outline-none focus:ring-2 focus:ring-accent"
-      />
+      <h1 className="page-title">{t('Поиск')}</h1>
+      <div className="relative max-w-2xl">
+        <input
+          autoFocus
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder={t('Треки, альбомы, артисты')}
+          className="field pr-10"
+        />
+        <Icon name="search" size={14} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-secondary" />
+      </div>
       {search && !search.songs.length && !search.albums.length && !search.artists.length && (
         <p className="text-sm text-secondary">{t('По запросу «{query}» ничего не нашлось.', { query: search.query })}</p>
       )}
       {search?.artists.length ? (
         <section className="space-y-3">
-          <h2 className="text-lg font-semibold">{t('Артисты')}</h2>
+          <h2 className="section-title">{t('Артисты')}</h2>
           <ul className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-2">
             {search.artists.map((artist) => (
               <li key={artist.id}>
@@ -307,13 +320,13 @@ export function SearchView() {
       ) : null}
       {search?.albums.length ? (
         <section className="space-y-3">
-          <h2 className="text-lg font-semibold">{t('Альбомы')}</h2>
+          <h2 className="section-title">{t('Альбомы')}</h2>
           <AlbumGrid albums={search.albums} />
         </section>
       ) : null}
       {search?.songs.length ? (
         <section className="space-y-3">
-          <h2 className="text-lg font-semibold">{t('Треки')}</h2>
+          <h2 className="section-title">{t('Треки')}</h2>
           <SongList songs={search.songs} showAlbum />
         </section>
       ) : null}
@@ -324,11 +337,11 @@ export function SearchView() {
 function LocalEmpty() {
   const { musicFolder } = useStore()
   return (
-    <div className="rounded-xl bg-surface p-6 text-sm text-secondary">
+    <div className="card p-6 text-sm text-secondary">
       <p className="font-medium text-primary">{t('На компьютере пока нет музыки')}</p>
       <p className="mt-2">
-        {t('Добавь файлы или папку кнопками выше или положи их в папку')}{' '}
-        {musicFolder ? <span className="text-primary">{musicFolder}</span> : t('Музыка → Nocturne')} {t('— приложение найдёт их само.')}
+        {t('Добавь файлы или папку кнопками выше, перетащи их в окно или положи в папку')}{' '}
+        {musicFolder ? <span className="text-primary">{musicFolder}</span> : t(isWindows ? 'Музыка\\Nocturne' : 'Музыка → Nocturne')} {t('— приложение найдёт их само.')}
         {t('Поддерживаются MP3, M4A, AAC, ALAC, FLAC, WAV, AIFF, OGG.')}
       </p>
     </div>
@@ -337,22 +350,26 @@ function LocalEmpty() {
 
 export function LocalView() {
   const { local, importing } = useStore()
-  const button = 'rounded-xl bg-surface-strong px-4 py-2 text-sm disabled:opacity-50'
+  const button = 'btn'
   return (
     <div className="space-y-6">
       <Title action={<PlayButtons songs={local} />}>{t('На компьютере')}</Title>
       <div className="flex flex-wrap gap-2">
         <button onClick={() => void store.importMusic('files')} disabled={importing} className={button}>
-          {t('＋ Файлы')}
+          <Icon name="add" size={14} />
+          {t('Добавить файлы')}
         </button>
         <button onClick={() => void store.importMusic('folder')} disabled={importing} className={button}>
-          {t('＋ Папка целиком')}
+          <Icon name="folder" size={14} />
+          {t('Добавить папку')}
         </button>
         <button onClick={() => store.openMusicFolder()} className={button}>
-          {t('Открыть папку')}
+          <Icon name="folderOpen" size={14} />
+          {isWindows ? t('Открыть в проводнике') : isMac ? t('Показать в Finder') : t('Открыть папку')}
         </button>
         <button onClick={() => void store.loadOnDisk()} className={button}>
-          {t('↻ Пересканировать')}
+          <Icon name="refresh" size={14} />
+          {t('Пересканировать')}
         </button>
       </div>
       {importing && <p className="text-sm text-secondary">{t('Добавляю музыку…')}</p>}

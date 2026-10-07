@@ -16,13 +16,13 @@ export function Connect() {
     setBusy(false)
   }
 
-  const field = 'w-full rounded-xl bg-surface px-4 py-3 text-primary outline-none placeholder:text-secondary focus:ring-2 focus:ring-accent'
+  const field = 'field'
 
   return (
     <div className="flex h-full items-center justify-center p-8">
-      <form onSubmit={submit} className="w-full max-w-md space-y-5">
+      <form onSubmit={submit} className="card flyout w-full max-w-md space-y-5 p-8">
         <div className="space-y-2">
-          <h1 className="text-3xl font-semibold leading-tight">
+          <h1 className="page-title">
             {t('Твоя музыка.')}
             <br />
             {t('Твоё пространство.')}
@@ -51,12 +51,12 @@ export function Connect() {
         <button
           type="submit"
           disabled={busy || !server || !username || !password}
-          className="w-full rounded-xl bg-accent px-4 py-3 font-medium text-base disabled:opacity-40"
+          className="btn btn-accent w-full"
         >
-          {busy ? t('Подключаюсь…') : t('Подключиться →')}
+          {busy ? t('Подключаюсь…') : t('Подключиться')}
         </button>
         <p className="text-center text-xs text-secondary">{t('Пароль хранится в системном хранилище этого компьютера.')}</p>
-        <button type="button" onClick={() => void store.useOnDevice()} className="w-full text-center text-sm text-accent hover:underline">
+        <button type="button" onClick={() => void store.useOnDevice()} className="btn btn-subtle w-full text-accent-text">
           {t('Слушать музыку с компьютера — без сервера')}
         </button>
       </form>

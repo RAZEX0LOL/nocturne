@@ -17,11 +17,13 @@ import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
-# Как называется архив обновления на каждой системе — по нему и определяется платформа.
+# Как называется файл обновления на каждой системе — по нему и определяется платформа.
+# Tauri 2 подписывает сами установщики: архивы .nsis.zip и .AppImage.tar.gz были только в Tauri 1
+# (createUpdaterArtifacts: "v1Compatible"), и с ними запись для Windows и Linux не находилась.
 ARCHIVES = {
     "darwin": lambda name: name.endswith(".app.tar.gz"),
-    "linux": lambda name: name.endswith(".AppImage.tar.gz"),
-    "windows": lambda name: name.endswith(".nsis.zip"),
+    "linux": lambda name: name.endswith(".AppImage"),
+    "windows": lambda name: name.endswith("-setup.exe"),
 }
 
 

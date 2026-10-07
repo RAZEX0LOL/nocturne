@@ -29,6 +29,28 @@ keyring = { version = "3", features = ["apple-native", "windows-native", "sync-s
 # Обновлялка есть только там, где приложение ставят файлом: на телефонах обновления приносит магазин.
 [target."cfg(any(target_os = \"macos\", windows, target_os = \"linux\"))".dependencies]
 tauri-plugin-updater = "2"
+tauri-plugin-single-instance = "2"
+tauri-plugin-window-state = "2"
+
+# Windows: системные медиаэлементы (SMTC), кнопки в превью на панели задач, цвет акцента,
+# настройки WebView2. Версии — те же, что тянет сам Tauri, чтобы типы совпадали.
+[target."cfg(windows)".dependencies]
+webview2-com = "0.39"
+windows-version = "0.1"
+windows = { version = "0.62", features = [
+  "Foundation",
+  "Media",
+  "Storage",
+  "Storage_Streams",
+  "UI",
+  "UI_ViewManagement",
+  "Win32_Foundation",
+  "Win32_Graphics_Gdi",
+  "Win32_System_Com",
+  "Win32_System_WinRT",
+  "Win32_UI_Shell",
+  "Win32_UI_WindowsAndMessaging",
+] }
 
 [profile.release]
 codegen-units = 1

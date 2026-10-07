@@ -1,12 +1,13 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Права главного окна: открыть ссылку в браузере, показать папку музыки, системный выбор файлов, проверка и установка обновлений.",
+  "description": "Права главного окна: открыть ссылку в браузере, показать папку музыки, системный выбор файлов, проверка и установка обновлений, трек в заголовке окна.",
   "windows": [
     "main"
   ],
   "permissions": [
     "core:default",
+    "core:window:allow-set-title",
     {
       "identifier": "opener:allow-open-path",
       "allow": [
