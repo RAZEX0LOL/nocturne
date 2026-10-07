@@ -202,6 +202,8 @@ export class AudioEngine {
     // Анализатор ничего не меняет в звуке: по нему отладочный журнал видит, что сигнал реально идёт,
     // а не тишина от источника, который Web Audio счёл чужим, — и по нему рисуется визуализатор.
     const analyser = context.createAnalyser()
+    // Сильнее сглаживание между кадрами анализа (по умолчанию 0,8): визуализатор не дрожит.
+    analyser.smoothingTimeConstant = 0.86
     this.analyser = analyser
     const chain: AudioNode[] = [...this.filters, analyser]
     chain.forEach((node, index) => chain[index + 1] && node.connect(chain[index + 1]!))

@@ -71,6 +71,8 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
     var sleepAtTrackEnd by mutableStateOf(false); private set
     /** Обложки, скачанные рядом с треками: показываются и без сети. */
     var coverFiles by mutableStateOf<Map<String, String>>(emptyMap()); private set
+    /** Очередь, которую другое устройство сохранило позже нас: предлагается продолжить, а не подменяется молча. */
+    var remoteQueue by mutableStateOf<RemoteQueue?>(null); private set
 
     val settings = Settings(application)
     val musicFolder: String get() = localLibrary.folderPath
@@ -80,6 +82,12 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
     private val downloads = DownloadStore(application)
     private val scrobbles = PendingScrobbles(application)
     private val snapshots = QueueSnapshots(application)
+    private val syncPrefs = application.getSharedPreferences("sync", android.content.Context.MODE_PRIVATE)
+    private var syncJob: Job? = null
+    /** С запуска: первая плановая отправка — не раньше чем через полминуты, после проверки чужой очереди. */
+    private var lastServerSync = System.currentTimeMillis()
+    private var lastRemoteCheck = 0L
+    private var wasPlaying = false
     /** Очередь возвращаем один раз за запуск — и только когда плеер и диск уже готовы. */
     private var restored = false
     private var queue: PlaybackQueue? = null
@@ -124,6 +132,9 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
                     lastSavedSecond = second
                     saveQueue()
                 }
+                // Поставили на паузу — сохраняем место на сервере сразу: дальше, скорее всего, другое устройство.
+                if (wasPlaying && !playback.playing) syncToServer(soon = true)
+                wasPlaying = playback.playing
                 delay(500)
             }
         }
@@ -172,6 +183,8 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
                 withContext(Dispatchers.IO) { vault.save(credentials) }
                 resetSession(); client = candidate; demo = false; offline = false; onDeviceOnly = false
                 refresh(); onSuccess()
+                // Только что вошли — может, на этом сервере уже играло что-то на компьютере.
+                checkRemoteQueue()
             } catch (error: Exception) { report(error) }
             finally { connecting = false }
         }
@@ -215,6 +228,7 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
             offline = false
             refresh()
             flushScrobbles()
+            checkRemoteQueue()
         } catch (_: Exception) {
             offline = true
         }
@@ -330,7 +344,11 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
         lyrics = null
         val api = client ?: return
         if (isLocalId(song.id) || !online) { lyrics = Lyrics(false, emptyList()); return }
-        viewModelScope.launch { lyrics = runCatching { api.lyrics(song) }.getOrDefault(Lyrics(false, emptyList())) }
+        viewModelScope.launch {
+            val found = runCatching { api.lyrics(song) }.getOrNull()?.takeIf { it.lines.isNotEmpty() }
+            // У Navidrome текста нет — спрашиваем LRCLIB, если человек это разрешил.
+            lyrics = found ?: (if (settings.lrclib) LrclibClient().lyrics(song) else null) ?: Lyrics(false, emptyList())
+        }
     }
 
     fun addToPlaylist(playlist: Playlist, songs: List<Song>) {
@@ -492,7 +510,9 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
         player.prepare()
         if (play || player.isPlaying) player.play()
         updatePlayback()
-        saveQueue()
+        // Восстановленную при запуске очередь (play = false) сразу на сервер не шлём: там может
+        // лежать более свежая с другого устройства, и её сначала надо предложить.
+        saveQueue(soon = play)
     }
 
     private fun mediaItem(song: Song, api: NavidromeClient?): MediaItem {
@@ -592,9 +612,10 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
     private val queueOwner: String?
         get() = client?.credentials?.account ?: if (onDeviceOnly) "on-device" else null
 
-    private fun saveQueue() {
+    private fun saveQueue(soon: Boolean = false) {
         val prepared = queue ?: return
         val owner = queueOwner ?: return
+        syncToServer(soon)
         snapshots.save(
             QueueSnapshots.Snapshot(
                 account = owner,
@@ -607,6 +628,64 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
                 scrobbled = scrobbled,
             )
         )
+    }
+
+    // MARK: - Очередь на сервере
+
+    /** Когда это устройство последний раз сохранило очередь на сервер (или отказалось от чужой). */
+    private var queueSyncedAt: Long
+        get() = syncPrefs.getLong("queueSyncedAt", 0)
+        set(value) { syncPrefs.edit().putLong("queueSyncedAt", value).apply() }
+
+    /**
+     * Сохраняет очередь на сервер: сразу после смены трека, правки очереди или паузы, а во время
+     * игры — раз в полминуты. Только треки с сервера: свои файлы другим устройствам не сыграть.
+     */
+    private fun syncToServer(soon: Boolean) {
+        val api = client ?: return
+        val prepared = queue ?: return
+        if (offline || demo || (!soon && System.currentTimeMillis() - lastServerSync < 30_000)) return
+        val songs = prepared.items.map { it.song }.filterNot { isLocalId(it.id) }
+        if (songs.isEmpty()) return
+        val current = prepared.current?.song?.id?.takeIf { id -> songs.any { it.id == id } }
+        val position = if (current == null) 0L else playback.position
+        lastServerSync = System.currentTimeMillis()
+        syncJob?.cancel()
+        syncJob = viewModelScope.launch {
+            if (soon) delay(1500)
+            runCatching { api.savePlayQueue(songs.map { it.id }, current, position) }.onSuccess { queueSyncedAt = System.currentTimeMillis() }
+        }
+    }
+
+    /** Спрашивает сервер, не сохранило ли другое устройство очередь позже нас. */
+    fun checkRemoteQueue() {
+        val api = client ?: return
+        if (offline || demo || System.currentTimeMillis() - lastRemoteCheck < 15_000) return
+        lastRemoteCheck = System.currentTimeMillis()
+        viewModelScope.launch {
+            val remote = runCatching { api.playQueue() }.getOrNull() ?: return@launch
+            if (remote.changedBy == NavidromeClient.CLIENT_NAME || remote.changedAt <= queueSyncedAt + 2000) return@launch
+            // Уже на том же месте — предлагать нечего.
+            if (playback.current?.id == remote.currentId && kotlin.math.abs(playback.position - remote.positionMillis) < 10_000) return@launch
+            remoteQueue = remote
+        }
+    }
+
+    fun acceptRemoteQueue() {
+        val remote = remoteQueue ?: return
+        remoteQueue = null
+        queueSyncedAt = remote.changedAt
+        val songs = remote.songs.filter(::isPlayable)
+        if (songs.isEmpty()) return
+        val index = songs.indexOfFirst { it.id == remote.currentId }.coerceAtLeast(0)
+        val prepared = PlaybackQueue(songs, index, false)
+        queue = prepared
+        pushQueue(prepared, play = true, startAtMillis = if (songs[index].id == remote.currentId) remote.positionMillis else 0)
+    }
+
+    fun dismissRemoteQueue() {
+        remoteQueue?.let { queueSyncedAt = it.changedAt }
+        remoteQueue = null
     }
 
     /** Очередь возвращается на паузе, с того же места: включать звук самовольно при запуске нельзя. */
@@ -642,7 +721,7 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
             player.pause()
             notice = tr("Таймер сна: музыка остановлена")
         }
-        saveQueue()
+        saveQueue(soon = true)
     }
 
     private fun updatePlayback() {

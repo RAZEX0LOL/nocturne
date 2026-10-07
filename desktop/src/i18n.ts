@@ -289,7 +289,9 @@ const english: Record<string, string> = {
   'Удалить «{name}»?': 'Delete “{name}”?',
   'Удалить плейлист…': 'Delete playlist…',
   'Читать дальше': 'Read more',
-  'Продолжить с другого устройства?': 'Continue from another device?',
+  'Играло на телефоне': 'From your phone',
+  'Играло на другом компьютере': 'From another computer',
+  'Играло на другом устройстве': 'From another device',
   '«{title}» — {artist}, с {time}': '“{title}” by {artist}, from {time}',
   'Продолжить': 'Continue',
   // Интеграции: трей, сочетания, LRCLIB, визуализатор

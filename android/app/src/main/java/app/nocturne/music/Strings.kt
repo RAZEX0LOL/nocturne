@@ -187,6 +187,14 @@ private val english = mapOf(
         "Could not reach the server. Check the network and the Navidrome address.",
     "Ошибка Navidrome ({code})." to "Navidrome error ({code}).",
     "Сервер вернул HTTP {status}." to "The server returned HTTP {status}.",
+    // Синхронизация очереди и LRCLIB
+    "Играло на компьютере" to "From your computer",
+    "Играло на другом устройстве" to "From another device",
+    "«{title}», с {time}" to "“{title}”, from {time}",
+    "Продолжить" to "Continue",
+    "Закрыть" to "Close",
+    "Искать тексты в LRCLIB" to "Find lyrics on LRCLIB",
+    "Если у Navidrome текста нет, он берётся из открытой базы lrclib.net. Туда уходят название, исполнитель и альбом трека." to "If Navidrome has no lyrics, they come from the open lrclib.net database. The song title, artist and album are sent there.",
 )
 
 /** Русская система оставляет исходный текст; любая другая получает английский. */

@@ -68,7 +68,7 @@ class NavidromeClient(
             addQueryParameter("t", hash)
             addQueryParameter("s", salt)
             addQueryParameter("v", "1.16.1")
-            addQueryParameter("c", "NocturneAndroid")
+            addQueryParameter("c", CLIENT_NAME)
             addQueryParameter("f", "json")
             parameters.toSortedMap().forEach { (key, value) -> addQueryParameter(key, value) }
             repeated.forEach { (key, value) -> addQueryParameter(key, value) }
@@ -166,6 +166,18 @@ class NavidromeClient(
         request("updatePlaylist", mapOf("playlistId" to playlistId), songIds.map { "songIdToAdd" to it })
     }
 
+    /** Очередь на сервере — общая для всех устройств. Позиция — в миллисекундах, как требует протокол. */
+    suspend fun savePlayQueue(songIds: List<String>, currentId: String?, positionMillis: Long) {
+        val parameters = buildMap {
+            put("position", "${positionMillis.coerceAtLeast(0)}")
+            currentId?.let { put("current", it) }
+        }
+        request("savePlayQueue", parameters, songIds.map { "id" to it })
+    }
+
+    /** Последняя сохранённая очередь; null — если её нет. */
+    suspend fun playQueue(): RemoteQueue? = parsePlayQueue(request("getPlayQueue"))
+
     suspend fun favorite(id: String, starred: Boolean, isAlbum: Boolean = false) {
         request(if (starred) "star" else "unstar", mapOf((if (isAlbum) "albumId" else "id") to id))
     }
@@ -174,6 +186,23 @@ class NavidromeClient(
         url("stream", mapOf("id" to id) + quality.parameters)
 
     companion object {
+        /** Имя этого приложения для сервера; другие устройства видят его в RemoteQueue.changedBy. */
+        const val CLIENT_NAME = "NocturneAndroid"
+
+        fun parsePlayQueue(response: JsonObject): RemoteQueue? {
+            val queue = response["playQueue"] as? JsonObject ?: return null
+            val songs = queue.objects("entry").map(::song)
+            if (songs.isEmpty()) return null
+            val changed = queue.optional("changed")?.let { runCatching { java.time.Instant.parse(it).toEpochMilli() }.getOrNull() } ?: 0L
+            return RemoteQueue(
+                songs = songs,
+                currentId = queue.optional("current"),
+                positionMillis = (queue["position"] as? JsonPrimitive)?.longOrNull ?: 0L,
+                changedAt = changed,
+                changedBy = queue.text("changedBy"),
+            )
+        }
+
         fun decode(text: String): JsonObject {
             try {
                 val response = Json.parseToJsonElement(text).jsonObject["subsonic-response"]?.jsonObject

@@ -22,6 +22,16 @@ data class Artist(val id: String, val name: String, val albumCount: Int = 0, val
 data class Playlist(val id: String, val name: String, val songCount: Int = 0, val coverArt: String? = null)
 data class SearchResult(val albums: List<Album> = emptyList(), val songs: List<Song> = emptyList(), val artists: List<Artist> = emptyList())
 
+/**
+ * Очередь, сохранённая на сервере каким-то из устройств: начал на компьютере — продолжил на телефоне.
+ * changedBy — имя клиента (параметр `c`): NocturneAndroid, Nocturne (iPhone), NocturneDesktop.
+ */
+data class RemoteQueue(
+    val songs: List<Song>, val currentId: String?, val positionMillis: Long,
+    /** Когда сохранена, мс с 1970 года. */
+    val changedAt: Long, val changedBy: String,
+)
+
 /** Строка текста песни; start в миллисекундах, если текст синхронный. */
 data class LyricLine(val start: Int?, val value: String)
 

@@ -294,7 +294,13 @@ function RemoteQueueBanner() {
     <div className="px-3 pb-2">
       <InfoBar
         severity="info"
-        title={t('Продолжить с другого устройства?')}
+        title={
+          remoteQueue.changedBy === 'Nocturne' || remoteQueue.changedBy === 'NocturneAndroid'
+            ? t('Играло на телефоне')
+            : remoteQueue.changedBy === 'NocturneDesktop'
+              ? t('Играло на другом компьютере')
+              : t('Играло на другом устройстве')
+        }
         message={song ? t('«{title}» — {artist}, с {time}', { title: song.title, artist: song.artist ?? t('Неизвестный исполнитель'), time }) : undefined}
         onClose={() => store.dismissRemoteQueue()}
         action={

@@ -20,6 +20,8 @@ final class PlayerStore {
     /// Pause at this moment, or when the current track ends (`sleepAtTrackEnd`).
     private(set) var sleepDeadline: Date?
     private(set) var sleepAtTrackEnd = false
+    /// A newer queue saved by another device (a computer, another phone): offered, never swapped in silently.
+    private(set) var remoteQueue: PlayQueue?
     let network = NetworkMonitor.shared
 
     var current: Song? { queue.current?.song }
@@ -58,6 +60,15 @@ final class PlayerStore {
     @ObservationIgnored private var directStreams: [String: URL] = [:]
     @ObservationIgnored private var sleepTask: Task<Void, Never>?
     @ObservationIgnored private var noticeTask: Task<Void, Never>?
+    @ObservationIgnored private var serverSyncTask: Task<Void, Never>?
+    @ObservationIgnored private var lastServerSync = Date.distantPast
+    @ObservationIgnored private var lastRemoteCheck = Date.distantPast
+    @ObservationIgnored private var remoteClient: NavidromeClient?
+    /// When this device last saved the queue on the server (or declined another device's one).
+    @ObservationIgnored private var queueSyncedAt: Date {
+        get { Date(timeIntervalSince1970: UserDefaults.standard.double(forKey: "queue.syncedAt")) }
+        set { UserDefaults.standard.set(newValue.timeIntervalSince1970, forKey: "queue.syncedAt") }
+    }
     /// Queue entry already submitted as a play, so a track is scrobbled at most once per play.
     @ObservationIgnored private var scrobbledEntry: PlaybackQueue.Entry.ID?
 
@@ -289,11 +300,63 @@ final class PlayerStore {
     func save(force: Bool = false) {
         guard !queue.isEmpty, force || Date().timeIntervalSince(lastSaved) > 10 else { return }
         lastSaved = Date()
+        syncToServer(soon: force)
         let account = client?.credentials.account ?? Self.onDeviceAccount
         let snapshot = QueueSnapshot(account: account, queue: queue, elapsed: elapsed)
         guard let data = try? JSONEncoder().encode(snapshot) else { return }
         try? FileManager.default.createDirectory(at: Self.snapshotURL.deletingLastPathComponent(), withIntermediateDirectories: true)
         try? data.write(to: Self.snapshotURL, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+    }
+
+    // MARK: - Queue on the server
+
+    /// Saves the queue on the server: shortly after a pause, seek or queue change, otherwise every 30 s while
+    /// playing. Only server songs go there — files on this phone and radio mean nothing to other devices.
+    private func syncToServer(soon: Bool) {
+        guard let client, network.isOnline, soon || Date().timeIntervalSince(lastServerSync) > 30 else { return }
+        let songs = queue.items.map(\.song).filter { !$0.id.hasPrefix(LocalLibrary.idPrefix) && directStreams[$0.id] == nil }
+        guard !songs.isEmpty else { return }
+        let current = current.flatMap { song in songs.contains { $0.id == song.id } ? song.id : nil }
+        let position = current == nil ? 0 : elapsed
+        lastServerSync = Date()
+        serverSyncTask?.cancel()
+        serverSyncTask = Task { [weak self] in
+            if soon { try? await Task.sleep(for: .seconds(1.5)) }
+            guard !Task.isCancelled else { return }
+            do {
+                try await client.savePlayQueue(songIDs: songs.map(\.id), current: current, position: position)
+                self?.queueSyncedAt = Date()
+            } catch { Log.player.notice("Queue not saved on the server: \(error.localizedDescription, privacy: .public)") }
+        }
+    }
+
+    /// Asks the server whether another device saved a newer queue; if so, `remoteQueue` offers it.
+    /// The client comes from the library: on a fresh start the player has none until something plays.
+    func checkRemoteQueue(client: NavidromeClient?) async {
+        guard let client, Date().timeIntervalSince(lastRemoteCheck) > 15 else { return }
+        lastRemoteCheck = Date()
+        guard let remote = try? await client.playQueue(), remote.changedBy != NavidromeClient.clientName,
+              let changed = remote.changedAt, changed > queueSyncedAt.addingTimeInterval(2) else { return }
+        // Already at the same spot — nothing to offer.
+        if current?.id == remote.current, abs(elapsed - remote.positionSeconds) < 10 { return }
+        remoteClient = client
+        remoteQueue = remote
+    }
+
+    func acceptRemoteQueue() {
+        guard let remote = remoteQueue, let client = client ?? remoteClient else { return }
+        remoteQueue = nil
+        if let changed = remote.changedAt { queueSyncedAt = changed }
+        let songs = (remote.entry ?? []).filter(isPlayable)
+        guard !songs.isEmpty else { return }
+        let index = songs.firstIndex { $0.id == remote.current } ?? 0
+        play(songs, at: index, shuffle: false, client: client)
+        if songs[index].id == remote.current { seek(remote.positionSeconds) }
+    }
+
+    func dismissRemoteQueue() {
+        if let changed = remoteQueue?.changedAt { queueSyncedAt = changed }
+        remoteQueue = nil
     }
 
     // MARK: - Items

@@ -57,7 +57,11 @@ struct RootView: View {
                             .transition(.move(edge: .top))
                     }
                 }
+                .safeAreaInset(edge: .top, spacing: 0) {
+                    if let remote = player.remoteQueue { RemoteQueueBanner(remote: remote) }
+                }
                 .animation(.default, value: player.network.isOnline)
+                .animation(.default, value: player.remoteQueue?.changed)
             } else { ConnectionView(isInitial: true) }
         }
         .task(id: library.client?.credentials.account) {
@@ -66,6 +70,7 @@ struct RootView: View {
             // Files on the phone first, then offline copies of server tracks.
             player.localFile = { [downloads] id in LocalLibrary.shared.url(for: id) ?? downloads.localURL(for: id) }
             if let client = library.client { player.restore(client: client) } else if library.onDeviceOnly { player.restoreOnDevice() }
+            await player.checkRemoteQueue(client: library.client)
         }
         .task { await ArtworkCache.shared.trim() }
         .task { await LocalLibrary.shared.scan() }
@@ -86,6 +91,8 @@ struct RootView: View {
         }
         .onChange(of: scenePhase) { _, phase in
             guard phase == .active else { player.save(force: true); return }
+            // Maybe the music went on on a computer meanwhile.
+            Task { await player.checkRemoteQueue(client: library.client) }
             // Files may have been added in Finder/Files meanwhile; the server may be back.
             Task { await LocalLibrary.shared.scan() }
             if library.isOffline { Task { await library.refresh() } }
@@ -215,5 +222,42 @@ struct ConnectionView: View {
             Text(title).font(.caption).foregroundStyle(Theme.secondary)
             content().padding(16).background(Theme.surface, in: RoundedRectangle(cornerRadius: 14))
         }
+    }
+}
+
+/// "Continue from another device": the song and the second where it stopped there.
+private struct RemoteQueueBanner: View {
+    let remote: PlayQueue
+    @Environment(PlayerStore.self) private var player
+
+    private var song: Song? { remote.entry?.first { $0.id == remote.current } ?? remote.entry?.first }
+    private var fromComputer: Bool { remote.changedBy == "NocturneDesktop" }
+    private var time: String {
+        let seconds = Int(remote.positionSeconds)
+        return String(format: "%d:%02d", seconds / 60, seconds % 60)
+    }
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: fromComputer ? "desktopcomputer" : "iphone")
+                .font(.title3).foregroundStyle(Theme.accent)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(fromComputer ? String(localized: "Играло на компьютере") : String(localized: "Играло на другом устройстве"))
+                    .font(.subheadline.weight(.semibold)).lineLimit(1).minimumScaleFactor(0.85)
+                if let song {
+                    Text(String(localized: "«\(song.title)», с \(time)"))
+                        .font(.footnote).foregroundStyle(Theme.secondary).lineLimit(1)
+                }
+            }
+            Spacer(minLength: 0)
+            Button(String(localized: "Продолжить")) { player.acceptRemoteQueue() }
+                .buttonStyle(.borderedProminent).controlSize(.small).tint(Theme.accent).foregroundStyle(Theme.onAccent)
+            Button { player.dismissRemoteQueue() } label: { Image(systemName: "xmark") }
+                .buttonStyle(.plain).foregroundStyle(Theme.secondary)
+                .accessibilityLabel(String(localized: "Закрыть"))
+        }
+        .padding(.horizontal, 16).padding(.vertical, 10)
+        .background(.thinMaterial)
+        .transition(.move(edge: .top).combined(with: .opacity))
     }
 }

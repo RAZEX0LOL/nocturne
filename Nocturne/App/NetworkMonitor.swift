@@ -43,6 +43,8 @@ enum PlaybackSettings {
     static let defaultWifi = StreamQuality.defaultWifi
     static let defaultCellular = StreamQuality.defaultCellular
     static let replayGainKey = "playback.replayGain"
+    /// Search lyrics on LRCLIB when Navidrome has none (off by default: titles go to a third party).
+    static let lrclibKey = "lyrics.lrclib"
 
     static func quality(expensive: Bool) -> StreamQuality {
         let saved = { (key: String) in UserDefaults.standard.string(forKey: key).flatMap(StreamQuality.init) }

@@ -11,6 +11,7 @@ struct SettingsView: View {
     @State private var confirmRemoveDownloads = false
     @AppStorage(PlaybackSettings.replayGainKey) private var replayGain = ReplayGainMode.off
     @AppStorage(AudioEffects.fadeKey) private var fade = 0.0
+    @AppStorage(PlaybackSettings.lrclibKey) private var lrclib = false
     @AppStorage(DownloadStore.wifiOnlyKey) private var wifiOnly = false
     @AppStorage(DownloadStore.autoFavoritesKey) private var autoFavorites = false
     @AppStorage(DownloadStore.limitKey) private var limitGB = 0.0
@@ -90,6 +91,11 @@ struct SettingsView: View {
                     }
                 } header: { Text(String(localized: "Звук")) } footer: {
                     Text(String(localized: "ReplayGain выравнивает громкость по тегам файлов: «по треку» для перемешанных очередей, «по альбому» сохраняет задуманную разницу между треками. Применяется со следующего трека."))
+                }
+                Section {
+                    Toggle(String(localized: "Искать тексты в LRCLIB"), isOn: $lrclib)
+                } header: { Text(String(localized: "Текст песни")) } footer: {
+                    Text(String(localized: "Если у Navidrome текста нет, он берётся из открытой базы lrclib.net. Туда уходят название, исполнитель и альбом трека."))
                 }
                 Section {
                     NavigationLink { StatsView() } label: { Label(String(localized: "Статистика прослушиваний"), systemImage: "chart.bar") }

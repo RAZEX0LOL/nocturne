@@ -151,6 +151,7 @@ internal val LocalCoverFiles = staticCompositionLocalOf<Map<String, String>> { e
             confirmButton = { TextButton(onClick = { vm.error = null }) { Text(tr("Понятно")) } },
         )
     }
+    vm.remoteQueue?.let { remote -> RemoteQueueBanner(vm, remote) }
     vm.notice?.let { message ->
         LaunchedEffect(message) { delay(2500); vm.notice = null }
         Box(Modifier.fillMaxSize().padding(top = 90.dp), contentAlignment = Alignment.TopCenter) {
@@ -188,6 +189,26 @@ internal val LocalCoverFiles = staticCompositionLocalOf<Map<String, String>> { e
         }
         if (vm.client == null) TextButton(onClick = { vm.useDemo(); done() }, enabled = !vm.connecting, modifier = Modifier.fillMaxWidth()) { Text(tr("Посмотреть демоверсию")) }
         Text("NOCTURNE", letterSpacing = 5.sp, color = Muted, style = MaterialTheme.typography.labelSmall, modifier = Modifier.align(Alignment.CenterHorizontally).padding(16.dp))
+    }
+}
+
+/** «Играло на компьютере»: трек и место, где остановились на другом устройстве. */
+@Composable private fun RemoteQueueBanner(vm: MusicViewModel, remote: app.nocturne.core.RemoteQueue) {
+    val song = remote.songs.firstOrNull { it.id == remote.currentId } ?: remote.songs.first()
+    val seconds = remote.positionMillis / 1000
+    val fromComputer = remote.changedBy == "NocturneDesktop"
+    Box(Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 12.dp, vertical = 8.dp), contentAlignment = Alignment.TopCenter) {
+        Surface(color = Surface, shape = RoundedCornerShape(16.dp), tonalElevation = 6.dp, shadowElevation = 6.dp) {
+            Row(Modifier.padding(start = 16.dp, end = 4.dp, top = 10.dp, bottom = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(if (fromComputer) Icons.Rounded.Computer else Icons.Rounded.PhoneIphone, null, tint = MaterialTheme.colorScheme.primary)
+                Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
+                    Text(if (fromComputer) tr("Играло на компьютере") else tr("Играло на другом устройстве"), style = MaterialTheme.typography.titleSmall, maxLines = 1)
+                    Text(tr("«{title}», с {time}", "title" to song.title, "time" to "%d:%02d".format(seconds / 60, seconds % 60)), color = Muted, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                }
+                Button(onClick = vm::acceptRemoteQueue, shape = RoundedCornerShape(12.dp), contentPadding = PaddingValues(horizontal = 14.dp)) { Text(tr("Продолжить")) }
+                IconButton(onClick = vm::dismissRemoteQueue) { Icon(Icons.Rounded.Close, tr("Закрыть"), tint = Muted) }
+            }
+        }
     }
 }
 
@@ -619,6 +640,15 @@ private fun androidx.compose.foundation.lazy.LazyListScope.downloadsSection(vm: 
                     valueRange = -12f..12f, steps = 47, enabled = settings.equalizerEnabled, modifier = Modifier.weight(1f),
                 )
             }
+        }
+
+        SectionTitle(tr("Текст песни"))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(tr("Искать тексты в LRCLIB"))
+                Text(tr("Если у Navidrome текста нет, он берётся из открытой базы lrclib.net. Туда уходят название, исполнитель и альбом трека."), color = Muted, style = MaterialTheme.typography.bodySmall)
+            }
+            Switch(checked = settings.lrclib, onCheckedChange = { settings.useLrclib(it) })
         }
 
         SectionTitle(tr("Загрузки"))

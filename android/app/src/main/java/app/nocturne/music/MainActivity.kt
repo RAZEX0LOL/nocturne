@@ -12,8 +12,18 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.SystemBarStyle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.activity.viewModels
 
 class MainActivity : ComponentActivity() {
+    /** Тот же экземпляр, что получает интерфейс через viewModel(): он живёт вместе с экраном. */
+    private val vm: MusicViewModel by viewModels()
+
+    /** Вернулись в приложение — может, за это время слушали на компьютере. */
+    override fun onResume() {
+        super.onResume()
+        vm.checkRemoteQueue()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requestNotificationsIfNeeded()

@@ -67,7 +67,7 @@ struct NavidromeClient: Sendable {
         components.queryItems = [
             URLQueryItem(name: "u", value: credentials.username), URLQueryItem(name: "t", value: token),
             URLQueryItem(name: "s", value: salt), URLQueryItem(name: "v", value: "1.16.1"),
-            URLQueryItem(name: "c", value: "Nocturne"), URLQueryItem(name: "f", value: "json")
+            URLQueryItem(name: "c", value: Self.clientName), URLQueryItem(name: "f", value: "json")
         ] + parameters.sorted(by: { $0.key < $1.key }).map { URLQueryItem(name: $0.key, value: $0.value) } + repeated
         components.percentEncodedQuery = components.percentEncodedQuery?.replacingOccurrences(of: "+", with: "%2B")
         guard let url = components.url else { throw MusicError.invalidServer }
@@ -153,6 +153,22 @@ struct NavidromeClient: Sendable {
     func similarSongs(to songID: String) async throws -> [Song] {
         try await request("getSimilarSongs2", parameters: ["id": songID, "count": "50"]).similarSongs2?.song ?? []
     }
+    /// Client name sent as `c`; other devices see it in `PlayQueue.changedBy`.
+    static let clientName = "Nocturne"
+
+    /// Saves the queue on the server so another device can continue it. Position is in milliseconds.
+    func savePlayQueue(songIDs: [String], current: String?, position: Double) async throws {
+        var parameters = ["position": String(Int64(max(0, position) * 1000))]
+        if let current { parameters["current"] = current }
+        _ = try await request("savePlayQueue", parameters: parameters, repeated: songIDs.map { URLQueryItem(name: "id", value: $0) })
+    }
+
+    /// The queue another device (or this one) last saved; nil when there is none.
+    func playQueue() async throws -> PlayQueue? {
+        guard let queue = try await request("getPlayQueue").playQueue, !(queue.entry ?? []).isEmpty else { return nil }
+        return queue
+    }
+
     func radioStations() async throws -> [RadioStation] {
         try await request("getInternetRadioStations").internetRadioStations?.internetRadioStation ?? []
     }
@@ -175,5 +191,69 @@ struct NavidromeClient: Sendable {
     func search(_ query: String) async throws -> SearchResult {
         try await request("search3", parameters: ["query": query, "songCount": "50", "albumCount": "30", "artistCount": "20"]).searchResult3
             ?? SearchResult()
+    }
+}
+
+// MARK: - LRC и LRCLIB
+
+
+/// LRC lyrics: "[mm:ss.xx] line"; one line may carry several timestamps (a repeated chorus).
+/// Lines without a timestamp (metadata such as "[ar: …]") are skipped.
+enum Lrc {
+    static func parse(_ text: String) -> [LyricLine] {
+        var lines: [LyricLine] = []
+        let stamp = /\[(\d{1,3}):(\d{1,2})(?:[.:](\d{1,3}))?\]/
+        for raw in text.split(separator: "\n", omittingEmptySubsequences: false) {
+            let line = String(raw).trimmingCharacters(in: CharacterSet(charactersIn: "\r"))
+            let matches = line.matches(of: stamp)
+            guard let last = matches.last else { continue }
+            let value = String(line[last.range.upperBound...]).trimmingCharacters(in: .whitespaces)
+            for match in matches {
+                let minutes = Int(match.output.1) ?? 0
+                let seconds = Int(match.output.2) ?? 0
+                let fraction = match.output.3.map { Int(String($0).padding(toLength: 3, withPad: "0", startingAt: 0)) ?? 0 } ?? 0
+                lines.append(LyricLine(start: (minutes * 60 + seconds) * 1000 + fraction, value: value))
+            }
+        }
+        return lines.sorted { ($0.start ?? 0) < ($1.start ?? 0) }
+    }
+}
+
+/// Lyrics from LRCLIB (lrclib.net), an open database of synced lyrics. Asked only when Navidrome has
+/// none and the user turned it on: song titles go to a third-party service.
+struct LrclibClient: Sendable {
+    let session: URLSession
+
+    init(session: URLSession = .shared) { self.session = session }
+
+    static func url(for song: Song) -> URL? {
+        guard let artist = song.artist, !artist.isEmpty, !song.title.isEmpty else { return nil }
+        var components = URLComponents(string: "https://lrclib.net/api/get")
+        var items = [URLQueryItem(name: "track_name", value: song.title), URLQueryItem(name: "artist_name", value: artist)]
+        if let album = song.album { items.append(URLQueryItem(name: "album_name", value: album)) }
+        if let duration = song.duration { items.append(URLQueryItem(name: "duration", value: String(Int(duration.rounded())))) }
+        components?.queryItems = items
+        return components?.url
+    }
+
+    private struct Answer: Decodable { var syncedLyrics: String?; var plainLyrics: String? }
+
+    static func decode(_ data: Data) -> StructuredLyrics? {
+        guard let answer = try? JSONDecoder().decode(Answer.self, from: data) else { return nil }
+        if let synced = answer.syncedLyrics {
+            let lines = Lrc.parse(synced)
+            if !lines.isEmpty { return StructuredLyrics(synced: true, line: lines) }
+        }
+        if let plain = answer.plainLyrics, !plain.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return StructuredLyrics(synced: false, line: plain.split(separator: "\n", omittingEmptySubsequences: false).map { LyricLine(value: String($0)) })
+        }
+        return nil
+    }
+
+    func lyrics(for song: Song) async -> StructuredLyrics? {
+        guard let url = Self.url(for: song),
+              let (data, response) = try? await session.data(from: url),
+              (response as? HTTPURLResponse)?.statusCode == 200 else { return nil }
+        return Self.decode(data)
     }
 }

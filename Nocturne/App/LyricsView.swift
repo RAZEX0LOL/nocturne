@@ -74,9 +74,14 @@ struct LyricsView: View {
     private func load() async {
         state = .loading
         guard let song = player.current, let client = library.client else { state = .empty; return }
+        let lrclib = UserDefaults.standard.bool(forKey: PlaybackSettings.lrclibKey)
         do {
             lyrics = try await client.lyrics(for: song)
-            state = lyrics == nil ? .empty : .loaded
-        } catch { state = .failed }
+        } catch {
+            // The server failed: with LRCLIB off there is nowhere else to look — show "try again".
+            guard lrclib else { state = .failed; return }
+        }
+        if lyrics == nil, lrclib { lyrics = await LrclibClient().lyrics(for: song) }
+        state = lyrics == nil ? .empty : .loaded
     }
 }

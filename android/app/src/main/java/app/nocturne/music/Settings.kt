@@ -46,6 +46,9 @@ class Settings(context: Context) {
         private set
     var downloadFavorites by mutableStateOf(store.getBoolean("downloads.favorites", false))
         private set
+    /** Искать текст в LRCLIB, если у Navidrome его нет: названия треков уходят стороннему сервису. */
+    var lrclib by mutableStateOf(store.getBoolean("lyrics.lrclib", false))
+        private set
 
     fun chooseWifiQuality(value: StreamQuality) { wifiQuality = value; store.edit().putString("quality.wifi", value.name).apply() }
     fun chooseCellularQuality(value: StreamQuality) { cellularQuality = value; store.edit().putString("quality.cellular", value.name).apply() }
@@ -54,6 +57,7 @@ class Settings(context: Context) {
     fun chooseFadeSeconds(value: Float) { fadeSeconds = value; store.edit().putFloat("playback.fade", value).apply() }
     fun enableEqualizer(value: Boolean) { equalizerEnabled = value; store.edit().putBoolean("eq.enabled", value).apply() }
     fun limitDownloadsToWifi(value: Boolean) { downloadOverWifiOnly = value; store.edit().putBoolean("downloads.wifiOnly", value).apply() }
+    fun useLrclib(value: Boolean) { lrclib = value; store.edit().putBoolean("lyrics.lrclib", value).apply() }
     fun autoDownloadFavorites(value: Boolean) { downloadFavorites = value; store.edit().putBoolean("downloads.favorites", value).apply() }
 
     fun saveEqualizerGains(value: List<Float>) {

@@ -87,6 +87,26 @@ struct StructuredLyrics: Decodable, Sendable { var lang: String?; var synced: Bo
 struct LyricsList: Decodable, Sendable { var structuredLyrics: [StructuredLyrics]? }
 struct PlainLyrics: Decodable, Sendable { var value: String? }
 
+/// Play queue stored on the server by any client: lets a song started on one device continue on another.
+struct PlayQueue: Decodable, Sendable {
+    var entry: [Song]?
+    var current: String?
+    /// Milliseconds into the current song.
+    var position: Int64?
+    /// ISO 8601 time of the last save.
+    var changed: String?
+    /// Client name (`c` parameter) of whoever saved it: "Nocturne" here, "NocturneDesktop" on computers.
+    var changedBy: String?
+
+    var positionSeconds: Double { Double(position ?? 0) / 1000 }
+    var changedAt: Date? {
+        guard let changed else { return nil }
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter.date(from: changed) ?? ISO8601DateFormatter().date(from: changed)
+    }
+}
+
 struct ServerError: Decodable, Sendable { let code: Int; let message: String? }
 struct ServerResponse: Decodable, Sendable {
     let status: String
@@ -109,6 +129,7 @@ struct ServerResponse: Decodable, Sendable {
     var artistInfo2: ArtistInfo?
     var albumInfo: AlbumInfo?
     var shares: ShareList?
+    var playQueue: PlayQueue?
 }
 
 struct ResponseEnvelope: Decodable, Sendable {

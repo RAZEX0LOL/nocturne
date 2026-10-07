@@ -5,9 +5,14 @@ const BARS = 72
 const LOW = 40
 const HIGH = 16000
 
+/** Насколько быстро полоса догоняет звук: подъём — заметно, спад — медленнее, без рывков. */
+const ATTACK = 0.28
+const RELEASE = 0.07
+
 /**
  * Спектр звука: полосы по частотам от 40 Гц до 16 кГц на логарифмической шкале — так бас и
- * верх занимают честную долю ширины, как в студийных анализаторах. На паузе полосы плавно опадают.
+ * верх занимают честную долю ширины, как в студийных анализаторах. Полосы и поднимаются, и
+ * опадают плавно, а соседние чуть сглажены между собой — движение «дышит», а не дёргается.
  */
 export function Visualizer({ className = '' }: { className?: string }) {
   const canvas = useRef<HTMLCanvasElement>(null)
@@ -45,12 +50,21 @@ export function Visualizer({ className = '' }: { className?: string }) {
           const start = Math.floor((from / nyquist) * size)
           const end = Math.max(start + 1, Math.ceil((to / nyquist) * size))
           let peak = 0
-          for (let bin = start; bin < end && bin < size; bin++) peak = Math.max(peak, data[bin]!)
-          target = peak / 255
+          let sum = 0
+          let count = 0
+          for (let bin = start; bin < end && bin < size; bin++) {
+            peak = Math.max(peak, data[bin]!)
+            sum += data[bin]!
+            count++
+          }
+          // Голый пик скачет от кадра к кадру; смесь пика и среднего стоит спокойнее.
+          target = (peak * 0.6 + (sum / Math.max(count, 1)) * 0.4) / 255
         }
-        // Вверх — сразу, вниз — плавно: полосы не дрожат, а «дышат».
-        levels[bar] = target > levels[bar]! ? target : levels[bar]! * 0.9
-        const barHeight = Math.max(2, levels[bar]! ** 1.4 * height)
+        const level = levels[bar]!
+        levels[bar] = level + (target - level) * (target > level ? ATTACK : RELEASE)
+        // Соседние полосы чуть подтягивают друг друга: силуэт спектра без зубцов.
+        const smooth = ((levels[bar - 1] ?? levels[bar]!) + levels[bar]! * 2 + (levels[bar + 1] ?? levels[bar]!)) / 4
+        const barHeight = Math.max(2, smooth ** 1.3 * height)
         const x = bar * (barWidth + gap)
         const gradient = context.createLinearGradient(0, height - barHeight, 0, height)
         gradient.addColorStop(0, 'rgba(255,255,255,0.85)')
