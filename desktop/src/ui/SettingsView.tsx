@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { EQ_BANDS, EQ_PRESETS } from '../audio/engine'
 import { store, useStore } from '../state/store'
@@ -6,7 +6,7 @@ import { Icon, type IconName } from './Icon'
 import { Slider } from './Slider'
 import { AppearanceSettings } from './AppearanceSettings'
 import { askText } from './Dialogs'
-import { isDesktop } from '../platform'
+import { appVersion, isDesktop } from '../platform'
 import { isMac } from '../native'
 import { t } from '../i18n'
 
@@ -270,6 +270,7 @@ export function SettingsView() {
       )}
 
       <Group title={t('Приложение')}>
+        {isDesktop() && <UpdateCard />}
         <SettingsCard icon="info" title={t('Язык')}>
           <select
             value={settings.language}
@@ -301,5 +302,40 @@ export function SettingsView() {
       </>
       )}
     </div>
+  )
+}
+
+/** Версия и проверка обновлений: новая версия ставится поверх, настройки и загрузки остаются. */
+function UpdateCard() {
+  const { update } = useStore()
+  const [version, setVersion] = useState<string>()
+  const [checking, setChecking] = useState(false)
+  useEffect(() => {
+    void appVersion().then(setVersion, () => undefined)
+  }, [])
+  return (
+    <SettingsCard
+      icon="download"
+      title={version ? t('Nocturne {version}', { version }) : 'Nocturne'}
+      description={t('Обновления ставятся поверх установленной версии — настройки, загрузки и вход на сервер остаются.')}
+    >
+      {update ? (
+        <button onClick={() => void store.installUpdate()} className="btn btn-accent">
+          {t('Установить {version}', { version: update.version })}
+        </button>
+      ) : (
+        <button
+          disabled={checking}
+          onClick={async () => {
+            setChecking(true)
+            await store.checkForUpdate(true)
+            setChecking(false)
+          }}
+          className="btn"
+        >
+          {checking ? t('Проверяю…') : t('Проверить обновления')}
+        </button>
+      )}
+    </SettingsCard>
   )
 }

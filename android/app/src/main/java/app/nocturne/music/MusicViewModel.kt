@@ -73,6 +73,9 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
     var coverFiles by mutableStateOf<Map<String, String>>(emptyMap()); private set
     /** Очередь, которую другое устройство сохранило позже нас: предлагается продолжить, а не подменяется молча. */
     var remoteQueue by mutableStateOf<RemoteQueue?>(null); private set
+    /** Вышедшая новая версия приложения и ход её загрузки (null — не качается). */
+    var appUpdate by mutableStateOf<app.nocturne.core.AppUpdate?>(null); private set
+    var updateProgress by mutableStateOf<Float?>(null); private set
 
     val settings = Settings(application)
     val musicFolder: String get() = localLibrary.folderPath
@@ -87,6 +90,8 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
     /** С запуска: первая плановая отправка — не раньше чем через полминуты, после проверки чужой очереди. */
     private var lastServerSync = System.currentTimeMillis()
     private var lastRemoteCheck = 0L
+    private val updater = AppUpdater(application)
+    private var lastUpdateCheck = 0L
     private var wasPlaying = false
     /** Очередь возвращаем один раз за запуск — и только когда плеер и диск уже готовы. */
     private var restored = false
@@ -101,6 +106,7 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
     private val controllerFuture = MediaController.Builder(application, SessionToken(application, ComponentName(application, PlaybackService::class.java))).buildAsync()
 
     init {
+        UpdateEvents.listener = { message -> error = message; updateProgress = null }
         try { client = vault.load()?.let(::NavidromeClient) }
         catch (_: Exception) { error = tr("Не удалось прочитать сохранённый вход. Подключи сервер заново.") }
         onDeviceOnly = client == null && vault.prefersOnDevice()
@@ -748,6 +754,44 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
     }
 
     /** Спрашивает сервер, не сохранило ли другое устройство очередь позже нас. */
+    /**
+     * Новая версия: при открытии приложения не чаще раза в 6 часов и молча, по кнопке — с ответом.
+     * В отладочной сборке сама не проверяет: её подпись другая, поверх неё релиз не встанет.
+     */
+    fun checkForAppUpdate(manual: Boolean = false) {
+        val now = System.currentTimeMillis()
+        if (!manual && (BuildConfig.DEBUG || now - lastUpdateCheck < 6 * 60 * 60 * 1000L)) return
+        lastUpdateCheck = now
+        viewModelScope.launch {
+            runCatching { updater.check() }
+                .onSuccess { found -> appUpdate = found; if (manual && found == null) notice = tr("Установлена последняя версия") }
+                .onFailure { if (manual) error = "${tr("Не удалось проверить обновления.")} ${it.message.orEmpty()}" }
+        }
+    }
+
+    /** Скачать и поставить поверх. Первый раз Android попросит разрешить установку из Nocturne. */
+    fun installAppUpdate() {
+        val update = appUpdate ?: return
+        if (updateProgress != null) return
+        if (!updater.canInstall()) {
+            notice = tr("Разреши установку из Nocturne и нажми «Обновить» ещё раз")
+            getApplication<Application>().startActivity(updater.permissionIntent())
+            return
+        }
+        viewModelScope.launch {
+            updateProgress = 0f
+            try {
+                val file = updater.download(update) { done -> updateProgress = done }
+                withContext(Dispatchers.IO) { updater.install(file) }
+            } catch (failure: Exception) {
+                error = "${tr("Не удалось установить обновление.")} ${failure.message.orEmpty()}"
+                updateProgress = null
+            }
+        }
+    }
+
+    fun dismissAppUpdate() { appUpdate = null }
+
     fun checkRemoteQueue() {
         val api = client ?: return
         if (offline || demo || System.currentTimeMillis() - lastRemoteCheck < 15_000) return

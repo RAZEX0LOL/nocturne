@@ -60,7 +60,7 @@
   "plugins": {
     "updater": {
       "endpoints": [
-        "https://nocturne.example.com/nocturne/latest.json"
+        "https://github.com/RAZEX0LOL/nocturne-releases/releases/download/updates/{{target}}-{{arch}}.json"
       ],
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDNFQjQ0OTkyMDZEQzcxNTkKUldSWmNkd0dra20wUGdqZVlGTnE4NzB2RFNXYk5UWnFkUnlNRDN5N0x5OEoxTHZQNnR3VDZGUDgK",
       "windows": {

@@ -455,15 +455,17 @@ class Store {
   }
 
   /**
-   * Новая версия приложения. Молча: не вышла или сервер обновлений недоступен — человеку
-   * об этом знать незачем, он не просил проверять.
+   * Новая версия приложения. Сама по себе проверка молчит: не вышла или сервер обновлений
+   * недоступен — человеку об этом знать незачем, он не просил. По кнопке (manual) — отвечает.
    */
-  async checkForUpdate() {
+  async checkForUpdate(manual = false) {
     try {
       const update = await platform.checkForUpdate()
       if (update) this.patch({ update })
-    } catch {
+      else if (manual) this.showNotice(t('Установлена последняя версия'))
+    } catch (error) {
       // Сервер обновлений недоступен — приложение от этого работать не перестаёт.
+      if (manual) this.patch({ error: `${t('Не удалось проверить обновления.')} ${String(error)}` })
     }
   }
 

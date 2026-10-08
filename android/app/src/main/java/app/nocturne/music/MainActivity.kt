@@ -22,6 +22,7 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         vm.checkRemoteQueue()
+        vm.checkForAppUpdate()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

@@ -134,6 +134,14 @@ const english: Record<string, string> = {
   // Обновления
   'Вышла версия {version}': 'Version {version} is out',
   'Установить': 'Install',
+  'Установлена последняя версия': 'You have the latest version',
+  'Не удалось проверить обновления.': 'Could not check for updates.',
+  'Nocturne {version}': 'Nocturne {version}',
+  'Обновления ставятся поверх установленной версии — настройки, загрузки и вход на сервер остаются.':
+    'Updates install over the current version — settings, downloads and the server sign-in stay.',
+  'Установить {version}': 'Install {version}',
+  'Проверяю…': 'Checking…',
+  'Проверить обновления': 'Check for updates',
   'Загружаю обновление…': 'Downloading the update…',
   'Не удалось установить обновление.': 'Could not install the update.',
 

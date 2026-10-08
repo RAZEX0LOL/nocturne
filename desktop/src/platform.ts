@@ -95,6 +95,13 @@ export async function coverPalette(source: { url?: string; path?: string }) {
   )
 }
 
+/** Версия установленного приложения; в браузере при разработке — из package.json не берём, её нет. */
+export async function appVersion(): Promise<string | undefined> {
+  if (!isDesktop()) return undefined
+  const { getVersion } = await import('@tauri-apps/api/app')
+  return getVersion()
+}
+
 export interface PendingUpdate {
   version: string
   notes?: string

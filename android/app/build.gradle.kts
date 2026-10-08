@@ -21,6 +21,11 @@ val signing = Properties().apply {
 }
 val keystoreFile = signing.getProperty("storeFile")?.let(::file)?.takeIf { it.exists() }
 
+val buildNumber: Int = System.getenv("NOCTURNE_BUILD_NUMBER")?.toIntOrNull()
+    ?: providers.exec { commandLine("git", "rev-list", "--count", "HEAD"); isIgnoreExitValue = true }
+        .standardOutput.asText.get().trim().toIntOrNull()
+    ?: 1
+
 android {
     namespace = "app.nocturne.music"
     compileSdk = 36
@@ -28,8 +33,9 @@ android {
         applicationId = "app.nocturne.music"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.1.0"
+        // Номер сборки = число коммитов, как у iOS: обновление ставится поверх, только если он вырос.
+        versionCode = buildNumber
+        versionName = "1.1.$buildNumber"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     signingConfigs {

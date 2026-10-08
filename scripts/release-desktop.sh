@@ -1,16 +1,27 @@
 #!/bin/zsh
 # Настольная сборка и обновление.
-#   scripts/release-desktop.sh          → установщики для этой системы
-#   scripts/release-desktop.sh publish  → ещё и выкладывает их на сервер обновлений
+#   scripts/release-desktop.sh                    → установщик и обновление для этого Мака
+#   scripts/release-desktop.sh --windows          → ещё и Windows (NSIS, через cargo-xwin)
+#   scripts/release-desktop.sh publish [--windows] → и выложить: приложения обновятся сами
+#
+# Обновления лежат в релизе «updates» публичного репозитория NOCTURNE_RELEASES_REPO
+# (по умолчанию RAZEX0LOL/nocturne-releases): у каждой системы свой манифест
+# darwin-aarch64.json / windows-x86_64.json, его и спрашивает приложение (tauri.conf.json).
 #
 # Секреты в репозитории не лежат. Ключ подписи обновлений и пароль к нему — в ~/.nocturne/updater.env
-# (права 600), остальное — переменные окружения:
-#   NOCTURNE_UPDATE_URL  адрес файла обновлений, например https://music.example.com/nocturne/latest.json
-#   NOCTURNE_UPDATE_SSH  куда класть файлы, например nocturne@vps:/srv/nocturne
-#   APPLE_SIGNING_IDENTITY  «Developer ID Application: Имя (TEAMID)» — подпись для macOS
-#   APPLE_ID, APPLE_PASSWORD, APPLE_TEAM_ID  пароль приложения для нотаризации
+# (права 600). Подпись Apple не обязательна: APPLE_SIGNING_IDENTITY, APPLE_ID, APPLE_PASSWORD, APPLE_TEAM_ID.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+
+PUBLISH=0
+WINDOWS=0
+for arg in "$@"; do
+  case $arg in
+    publish) PUBLISH=1 ;;
+    --windows) WINDOWS=1 ;;
+    *) echo "Неизвестный параметр: $arg" >&2; exit 2 ;;
+  esac
+done
 
 SECRETS=${NOCTURNE_SECRETS:-$HOME/.nocturne/updater.env}
 if [[ -f "$SECRETS" ]]; then
@@ -19,48 +30,54 @@ else
   echo "Нет $SECRETS — обновления собрать без ключа подписи нельзя." >&2
   exit 1
 fi
-
 # Сборщик ждёт сам ключ, а не путь к нему.
 if [[ -z "${TAURI_SIGNING_PRIVATE_KEY:-}" && -n "${TAURI_SIGNING_PRIVATE_KEY_PATH:-}" ]]; then
   export TAURI_SIGNING_PRIVATE_KEY="$(cat "$TAURI_SIGNING_PRIVATE_KEY_PATH")"
 fi
+export PATH="$HOME/.cargo/bin:$PATH"
 
-VERSION=$(python3 -c "import json;print(json.load(open('desktop/src-tauri/tauri.conf.json'))['version'])")
-ARGS=()
-# Адрес обновлений не хранится в репозитории: подставляется здесь, при сборке.
-# Проверка не лишняя: обновлялка принимает только https и роняет приложение при запуске,
-# если адрес оказался другим — ошибка вылезла бы уже у людей.
-if [[ -n "${NOCTURNE_UPDATE_URL:-}" && "${NOCTURNE_UPDATE_URL}" != https://* && "${NOCTURNE_ALLOW_INSECURE_UPDATES:-}" != "1" ]]; then
-  echo "NOCTURNE_UPDATE_URL должен начинаться с https:// — иначе приложение не запустится." >&2
-  exit 1
-fi
-if [[ -n "${NOCTURNE_UPDATE_URL:-}" ]]; then
-  INSECURE=false
-  [[ "${NOCTURNE_ALLOW_INSECURE_UPDATES:-}" == "1" ]] && INSECURE=true
-  echo "{\"plugins\":{\"updater\":{\"endpoints\":[\"$NOCTURNE_UPDATE_URL\"],\"dangerousInsecureTransportProtocol\":$INSECURE}}}" > desktop/src-tauri/tauri.endpoint.json
-  ARGS+=(--config src-tauri/tauri.endpoint.json)
-fi
+# Версия растёт с каждым коммитом — как номер сборки iOS. Обновлялка сравнивает версии,
+# и с неизменной «1.0.0» новая сборка для неё ничем не отличалась от старой.
+VERSION="1.1.$(git rev-list --count HEAD)"
+REPO=${NOCTURNE_RELEASES_REPO:-RAZEX0LOL/nocturne-releases}
+BASE="https://github.com/$REPO/releases/download/updates"
+echo "{\"version\":\"$VERSION\"}" > desktop/src-tauri/tauri.version.json
+trap 'rm -f desktop/src-tauri/tauri.version.json' EXIT
+
 if [[ "$(uname)" == "Darwin" && -z "${APPLE_SIGNING_IDENTITY:-}" ]]; then
-  echo "APPLE_SIGNING_IDENTITY не задан: приложение соберётся без подписи, и macOS откроет его только через «Всё равно открыть»." >&2
+  echo "APPLE_SIGNING_IDENTITY не задан: приложение соберётся без подписи, и macOS при первой установке откроет его только через «Всё равно открыть»." >&2
 fi
 
-(cd desktop && bun install --frozen-lockfile && bun run tauri build "${ARGS[@]}")
-rm -f desktop/src-tauri/tauri.endpoint.json
-
-BUNDLE=desktop/src-tauri/target/release/bundle
 OUT=build/desktop-release
 rm -rf "$OUT" && mkdir -p "$OUT"
-# Установщики — людям, архивы с подписью — обновлялке.
-# rw.*.dmg — незавершённый образ, который остаётся после сорвавшейся сборки; людям он не нужен.
-find "$BUNDLE" -type f ! -name 'rw.*' \( -name '*.dmg' -o -name '*.msi' -o -name '*.exe' -o -name '*.deb' -o -name '*.AppImage' \
-  -o -name '*.tar.gz' -o -name '*.zip' -o -name '*.sig' \) -exec cp {} "$OUT/" \;
-# Пустой latest.json хуже отсутствующего: обновлялка приняла бы его за «обновлений нет».
-python3 scripts/updater_manifest.py "$VERSION" "$OUT" "${NOCTURNE_UPDATE_URL:-}" "$(uname -m)" > "$OUT/latest.json" \
-  || { rm -f "$OUT/latest.json"; exit 1; }
-echo "Готово: $OUT (версия $VERSION)"
+(cd desktop && bun install --frozen-lockfile)
 
-if [[ "${1:-}" == "publish" ]]; then
-  : "${NOCTURNE_UPDATE_SSH:?нужен NOCTURNE_UPDATE_SSH, например nocturne@vps:/srv/nocturne}"
-  scp "$OUT"/* "$NOCTURNE_UPDATE_SSH/"
-  echo "Выложено на $NOCTURNE_UPDATE_SSH"
+# Мак: архив .app.tar.gz для обновлялки и .dmg для первой установки.
+(cd desktop && bun run tauri build --config src-tauri/tauri.version.json --bundles app,dmg)
+BUNDLE=desktop/src-tauri/target/release/bundle
+ARCH=$(uname -m)
+# В имени архива версия: файл на сервере не подменяется под тем же именем посреди чьей-то загрузки.
+cp "$BUNDLE/macos/Nocturne.app.tar.gz" "$OUT/Nocturne_${VERSION}_${ARCH}.app.tar.gz"
+cp "$BUNDLE/macos/Nocturne.app.tar.gz.sig" "$OUT/Nocturne_${VERSION}_${ARCH}.app.tar.gz.sig"
+find "$BUNDLE/dmg" -name '*.dmg' ! -name 'rw.*' -exec cp {} "$OUT/" \;
+python3 scripts/updater_manifest.py "$VERSION" "$OUT" "$BASE" darwin "$ARCH"
+
+# Windows с Мака: NSIS-установщик он же и обновление (ставится поверх в тихом режиме).
+if (( WINDOWS )); then
+  (cd desktop && PATH=/opt/homebrew/opt/llvm/bin:$PATH bun run tauri build --config src-tauri/tauri.version.json \
+    --runner cargo-xwin --target x86_64-pc-windows-msvc --bundles nsis)
+  WIN=desktop/src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis
+  cp "$WIN"/Nocturne_${VERSION}_x64-setup.exe "$WIN"/Nocturne_${VERSION}_x64-setup.exe.sig "$OUT/"
+  python3 scripts/updater_manifest.py "$VERSION" "$OUT" "$BASE" windows x86_64
+fi
+echo "Готово: $OUT (версия $VERSION)"
+ls -1 "$OUT"
+
+if (( PUBLISH )); then
+  gh release view updates -R "$REPO" >/dev/null 2>&1 || gh release create updates -R "$REPO" \
+    --title "Nocturne — обновления" --notes "Файлы, которые приложение Nocturne скачивает само. Установщики для первой установки — тоже здесь."
+  # Сначала файлы, потом манифесты: иначе приложение могло бы увидеть версию раньше её файла.
+  gh release upload updates -R "$REPO" --clobber $(find "$OUT" -type f ! -name '*.json')
+  gh release upload updates -R "$REPO" --clobber "$OUT"/*.json
+  echo "Выложено: $BASE"
 fi

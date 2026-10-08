@@ -113,8 +113,10 @@ export function App() {
 
   useEffect(() => {
     void store.restore()
-    // Проверяем обновление один раз при запуске: чаще незачем, приложение не сервис.
+    // При запуске и потом раз в 6 часов: приложение с музыкой часто не закрывают неделями.
     void store.checkForUpdate()
+    const timer = setInterval(() => void store.checkForUpdate(), 6 * 60 * 60 * 1000)
+    return () => clearInterval(timer)
   }, [])
 
   // Переход на любую страницу (из палитры, меню трека, мини-плеера) закрывает настройки:

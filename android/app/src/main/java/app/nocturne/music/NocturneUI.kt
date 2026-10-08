@@ -137,6 +137,7 @@ internal val LocalCoverFiles = staticCompositionLocalOf<Map<String, String>> { e
         }, bottomBar = {
             Column {
                 // Над мини-плеером, а не поверх шапки: иначе плашка закрывает кнопку настроек.
+                vm.appUpdate?.let { update -> UpdateBanner(vm, update) }
                 vm.remoteQueue?.let { remote -> RemoteQueueBanner(vm, remote) }
                 vm.playback.current?.let { song ->
                     Row(
@@ -246,6 +247,33 @@ internal val LocalCoverFiles = staticCompositionLocalOf<Map<String, String>> { e
                 }
                 Button(onClick = vm::acceptRemoteQueue, shape = RoundedCornerShape(12.dp), contentPadding = PaddingValues(horizontal = 14.dp)) { Text(tr("Продолжить")) }
                 IconButton(onClick = vm::dismissRemoteQueue) { Icon(Icons.Rounded.Close, tr("Закрыть"), tint = Muted) }
+            }
+        }
+    }
+}
+
+/** Вышла новая версия: качается и ставится поверх, с ходом загрузки прямо в плашке. */
+@Composable private fun UpdateBanner(vm: MusicViewModel, update: app.nocturne.core.AppUpdate) {
+    val progress = vm.updateProgress
+    Box(Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, bottom = 8.dp)) {
+        Surface(color = Surface, shape = RoundedCornerShape(16.dp), tonalElevation = 6.dp, shadowElevation = 6.dp) {
+            Column {
+                Row(Modifier.padding(start = 16.dp, end = 4.dp, top = 10.dp, bottom = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Rounded.SystemUpdate, null, tint = MaterialTheme.colorScheme.primary)
+                    Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
+                        Text(tr("Доступно обновление"), style = MaterialTheme.typography.titleSmall, maxLines = 1)
+                        Text(
+                            if (progress == null) tr("Версия {version} — встанет поверх, ничего не потеряется", "version" to update.versionName)
+                            else tr("Скачиваю… {percent}%", "percent" to (progress * 100).toInt()),
+                            color = Muted, style = MaterialTheme.typography.bodySmall, maxLines = 2,
+                        )
+                    }
+                    if (progress == null) {
+                        Button(onClick = vm::installAppUpdate, shape = RoundedCornerShape(12.dp), contentPadding = PaddingValues(horizontal = 14.dp)) { Text(tr("Обновить")) }
+                        IconButton(onClick = vm::dismissAppUpdate) { Icon(Icons.Rounded.Close, tr("Закрыть"), tint = Muted) }
+                    }
+                }
+                if (progress != null) LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 10.dp))
             }
         }
     }
@@ -738,6 +766,15 @@ private fun androidx.compose.foundation.lazy.LazyListScope.downloadsSection(vm: 
             AccentTheme.entries.forEach { theme ->
                 FilterChip(selected = settings.accent == theme, onClick = { settings.chooseAccent(theme) }, label = { Text(tr(theme.title)) })
             }
+        }
+
+        SectionTitle(tr("Приложение"))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text("Nocturne ${BuildConfig.VERSION_NAME}")
+                Text(tr("Обновления ставятся поверх установленной версии — настройки, загрузки и вход на сервер остаются."), color = Muted, style = MaterialTheme.typography.bodySmall)
+            }
+            TextButton(onClick = { vm.checkForAppUpdate(manual = true) }) { Text(tr("Проверить")) }
         }
 
         SectionTitle(tr("Сервер"))
