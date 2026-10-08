@@ -95,12 +95,12 @@
     },
     "Nocturne сохраняет только аудиофайлы": {},
     "OpenSubsonic API": {},
-    "ReplayGain выравнивает громкость по тегам файлов: «по треку» для перемешанных очередей, «по альбому» сохраняет задуманную разницу между треками. Применяется со следующего трека.": {
+    "ReplayGain выравнивает громкость по тегам файлов: «по треку» для перемешанных очередей, «по альбому» сохраняет задуманную разницу между треками, «авто» выбирает сам. Бесконечное воспроизведение: очередь кончилась — дальше играет похожая музыка. Таймер сна плавно затихает за последние полминуты.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "ReplayGain evens out loudness using file tags: “Track” suits shuffled queues, “Album” keeps the intended differences between tracks. Applies from the next track."
+            "value": "ReplayGain evens out loudness using file tags: “by track” for shuffled queues, “by album” keeps the intended differences between songs, “auto” picks for you. Endless playback: when the queue ends, similar music keeps playing. The sleep timer fades out over the last half minute."
           }
         }
       }
@@ -124,6 +124,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "“From cover” matches the colour to the current track."
+          }
+        }
+      }
+    },
+    "Авто": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auto"
           }
         }
       }
@@ -228,6 +238,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "No rating"
+          }
+        }
+      }
+    },
+    "Бесконечное воспроизведение": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Endless playback"
           }
         }
       }
@@ -2483,6 +2503,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Download favourite tracks"
+          }
+        }
+      }
+    },
+    "Скорость воспроизведения": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Playback speed"
           }
         }
       }

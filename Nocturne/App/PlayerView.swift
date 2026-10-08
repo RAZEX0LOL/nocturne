@@ -182,6 +182,7 @@ struct PlayerView: View {
                         Button { modal = .lyrics } label: { Image(systemName: "quote.bubble").frame(width: 44, height: 44) }
                             .accessibilityLabel(String(localized: "Текст песни"))
                         Spacer()
+                        SpeedMenu()
                         SleepTimerMenu()
                         Spacer()
                         RoutePicker().frame(width: 44, height: 44).accessibilityLabel(String(localized: "Выбрать аудиоустройство"))
@@ -291,6 +292,28 @@ struct QueueView: View {
                 ToolbarItem(placement: .topBarTrailing) { Button(String(localized: "Готово")) { close() } }
             }
         }
+    }
+}
+
+/// Скорость для аудиокниг и длинных миксов: 0,5–2×, голос не становится «мультяшным».
+struct SpeedMenu: View {
+    @Environment(PlayerStore.self) private var player
+    private static let speeds: [Float] = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2]
+    private func label(_ value: Float) -> String {
+        (value == value.rounded() ? String(Int(value)) : String(format: "%g", value).replacingOccurrences(of: ".", with: ",")) + "×"
+    }
+    var body: some View {
+        Menu {
+            ForEach(Self.speeds, id: \.self) { value in
+                Button { player.setSpeed(value) } label: {
+                    if value == player.speedValue { Label(label(value), systemImage: "checkmark") } else { Text(label(value)) }
+                }
+            }
+        } label: {
+            Text(label(player.speedValue)).font(.caption.weight(.semibold).monospacedDigit())
+                .frame(minWidth: 44, minHeight: 44)
+                .foregroundStyle(player.speedValue == 1 ? Theme.secondary : Theme.accent)
+        }.accessibilityLabel(String(localized: "Скорость воспроизведения"))
     }
 }
 

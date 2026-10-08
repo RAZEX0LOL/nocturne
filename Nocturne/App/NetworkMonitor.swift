@@ -45,6 +45,12 @@ enum PlaybackSettings {
     static let replayGainKey = "playback.replayGain"
     /// Search lyrics on LRCLIB when Navidrome has none (off by default: titles go to a third party).
     static let lrclibKey = "lyrics.lrclib"
+    /// Очередь кончилась — дальше похожая музыка (включено по умолчанию, как у стриминговых сервисов).
+    static let endlessKey = "playback.endless"
+    /// Скорость воспроизведения, 0,5–2×.
+    static let speedKey = "playback.speed"
+    static var endless: Bool { UserDefaults.standard.object(forKey: endlessKey) as? Bool ?? true }
+    static var speed: Float { UserDefaults.standard.object(forKey: speedKey) as? Float ?? 1 }
 
     static func quality(expensive: Bool) -> StreamQuality {
         let saved = { (key: String) in UserDefaults.standard.string(forKey: key).flatMap(StreamQuality.init) }

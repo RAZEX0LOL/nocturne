@@ -69,6 +69,7 @@ struct RootView: View {
             if downloads.network == nil { downloads.network = player.network }
             // Files on the phone first, then offline copies of server tracks.
             player.localFile = { [downloads] id in LocalLibrary.shared.url(for: id) ?? downloads.localURL(for: id) }
+            player.use(library.client)
             if let client = library.client { player.restore(client: client) } else if library.onDeviceOnly { player.restoreOnDevice() }
             await player.checkRemoteQueue(client: library.client)
         }

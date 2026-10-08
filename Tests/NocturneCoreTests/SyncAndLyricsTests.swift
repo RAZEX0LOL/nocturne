@@ -53,4 +53,13 @@ final class SyncAndLyricsTests: XCTestCase {
         XCTAssertNil(LrclibClient.decode(Data("{}".utf8)))
         XCTAssertNil(LrclibClient.url(for: Song(id: "s", title: "Без исполнителя")))
     }
+
+    func testAutoReplayGainFollowsTheAlbumOnlyInOrder() {
+        func song(_ id: String, _ album: String?) -> Song { Song(id: id, title: id, albumId: album) }
+        let album = [song("a1", "A"), song("a2", "A"), song("a3", "A")]
+        XCTAssertEqual(ReplayGainMode.auto.resolved(songs: album, index: 1, shuffled: false), .album)
+        XCTAssertEqual(ReplayGainMode.auto.resolved(songs: album, index: 1, shuffled: true), .track)
+        XCTAssertEqual(ReplayGainMode.auto.resolved(songs: [song("x", "A"), song("y", "B")], index: 1, shuffled: false), .track)
+        XCTAssertEqual(ReplayGainMode.album.resolved(songs: album, index: 0, shuffled: true), .album)
+    }
 }

@@ -16,6 +16,8 @@ struct Song: Codable, Identifiable, Hashable, Sendable {
     var title: String
     var artist: String?
     var album: String?
+    /// Нужен «Авто» выравниванию громкости: альбом подряд узнаётся по соседям с тем же альбомом.
+    var albumId: String?
     var coverArt: String?
     var duration: Double?
     var track: Int?

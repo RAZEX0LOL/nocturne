@@ -22,6 +22,8 @@ final class PlayerStore {
     private(set) var sleepAtTrackEnd = false
     /// A newer queue saved by another device (a computer, another phone): offered, never swapped in silently.
     private(set) var remoteQueue: PlayQueue?
+    /// Текущая скорость — для подписи на кнопке.
+    private(set) var speedValue: Float = PlaybackSettings.speed
     let network = NetworkMonitor.shared
 
     var current: Song? { queue.current?.song }
@@ -75,6 +77,8 @@ final class PlayerStore {
     private static let snapshotURL = URL.applicationSupportDirectory.appendingPathComponent("queue.json")
 
     init() {
+        // play() идёт со скоростью defaultRate — сохранённая скорость действует с первого трека.
+        player.defaultRate = PlaybackSettings.speed
         timeObserver = player.addPeriodicTimeObserver(forInterval: CMTime(seconds: 0.5, preferredTimescale: 600), queue: .main) { [weak self] time in
             MainActor.assumeIsolated { self?.tick(time.seconds) }
         }
@@ -167,11 +171,23 @@ final class PlayerStore {
         guard let minutes, minutes > 0 else { return }
         let deadline = Date().addingTimeInterval(Double(minutes) * 60)
         sleepDeadline = deadline
+        // Последние полминуты музыка плавно затихает — тишина не будит резким обрывом.
+        let fade = min(30, Double(minutes) * 60)
         sleepTask = Task {
-            try? await Task.sleep(for: .seconds(deadline.timeIntervalSinceNow))
+            try? await Task.sleep(for: .seconds(max(0, deadline.timeIntervalSinceNow - fade)))
             guard !Task.isCancelled else { return }
+            let start = player.volume
+            let steps = Int(fade * 10)
+            for step in 1...max(steps, 1) {
+                try? await Task.sleep(for: .milliseconds(100))
+                guard !Task.isCancelled else { player.volume = start; return }
+                // Кривая равной мощности: громкость падает плавно, без ступеньки в конце.
+                player.volume = start * Float(cos(Double(step) / Double(max(steps, 1)) * .pi / 2))
+            }
             sleepDeadline = nil
             pause()
+            player.volume = start
+            applyReplayGain()
         }
     }
 
@@ -269,6 +285,13 @@ final class PlayerStore {
         Self.sessionQueue.async { try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation) }
         #endif
         try? FileManager.default.removeItem(at: Self.snapshotURL)
+    }
+
+    /// The server the library is connected to. Without it every server track counted as "not
+    /// downloaded" until something played — on a fresh install no track could be started from a list.
+    func use(_ client: NavidromeClient?) {
+        guard self.client?.credentials.account != client?.credentials.account else { return }
+        self.client = client
     }
 
     /// Brings back the last queue (paused) if it belongs to the same account.
@@ -391,6 +414,8 @@ final class PlayerStore {
             item = AVPlayerItem(url: url)
         }
         AudioEffects.shared.attach(to: item, duration: song.duration)
+        // На скорости 1,5× голос не должен становиться «мультяшным».
+        item.audioTimePitchAlgorithm = .timeDomain
         return item
     }
 
@@ -408,6 +433,8 @@ final class PlayerStore {
             itemObservations[ObjectIdentifier(next.item)] = nil
             nextItem = nil
         }
+        // Очередь на исходе — дописываем похожее заранее, чтобы следующий трек начался без паузы.
+        if queue.nextPosition(automatic: true) == nil { extendWithSimilar() }
         guard let currentItem, player.items().contains(currentItem),
               let position = queue.nextPosition(automatic: true),
               let item = makeItem(for: queue.items[position].song),
@@ -415,6 +442,36 @@ final class PlayerStore {
         observe(item)
         player.insert(item, after: currentItem)
         nextItem = (item, position)
+    }
+
+    // MARK: - Бесконечное воспроизведение и скорость
+
+    @ObservationIgnored private var extending = false
+
+    /// Дописывает в очередь похожие на последний трек, которых в ней ещё не было (до 20).
+    private func extendWithSimilar() {
+        guard PlaybackSettings.endless, !extending, let client, network.isOnline, let seed = current,
+              !seed.id.hasPrefix(LocalLibrary.idPrefix), directStreams[seed.id] == nil, repeatMode == .off else { return }
+        extending = true
+        Task { [weak self] in
+            defer { self?.extending = false }
+            guard let similar = try? await client.similarSongs(to: seed.id), let self else { return }
+            let known = Set(self.queue.items.map(\.song.id))
+            let fresh = Array(similar.filter { !known.contains($0.id) }.prefix(20))
+            guard !fresh.isEmpty, self.current?.id == seed.id else { return }
+            self.queue.append(fresh)
+            self.prepareNext()
+            self.save(force: true)
+        }
+    }
+
+    /// Скорость для аудиокниг и длинных миксов: применяется сразу и ко всем следующим трекам.
+    func setSpeed(_ speed: Float) {
+        let value = min(max(speed, 0.5), 2)
+        UserDefaults.standard.set(value, forKey: PlaybackSettings.speedKey)
+        player.defaultRate = value
+        if isPlaying { player.rate = value }
+        speedValue = value
     }
 
     private func queueDidChange() {
@@ -564,7 +621,8 @@ final class PlayerStore {
 
     /// Per-track volume from ReplayGain tags; radio and untagged tracks play at full volume.
     private func applyReplayGain() {
-        let mode = UserDefaults.standard.string(forKey: PlaybackSettings.replayGainKey).flatMap(ReplayGainMode.init) ?? .off
+        let saved = UserDefaults.standard.string(forKey: PlaybackSettings.replayGainKey).flatMap(ReplayGainMode.init) ?? .off
+        let mode = saved.resolved(songs: queue.items.map(\.song), index: queue.position, shuffled: queue.shuffle)
         player.volume = current.map { mode.volume(for: $0) } ?? 1
     }
 

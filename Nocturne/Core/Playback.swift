@@ -126,20 +126,32 @@ enum StreamQuality: String, Codable, CaseIterable, Identifiable, Sendable {
 }
 
 enum ReplayGainMode: String, CaseIterable, Identifiable, Sendable {
-    case off, track, album
+    case off, track, album, auto
     var id: String { rawValue }
     var title: String {
         switch self {
         case .off: String(localized: "Выключено")
         case .track: String(localized: "По треку")
         case .album: String(localized: "По альбому")
+        case .auto: String(localized: "Авто")
         }
+    }
+
+    /// «Авто»: альбом подряд звучит как задумано (по альбому), перемешанная очередь — ровно
+    /// (по треку). Альбом подряд — когда не перемешано и сосед по очереди с того же альбома.
+    func resolved(songs: [Song], index: Int, shuffled: Bool) -> ReplayGainMode {
+        guard self == .auto else { return self }
+        guard !shuffled, songs.indices.contains(index), let album = songs[index].albumId else { return .track }
+        let neighbours = [index - 1, index + 1].filter(songs.indices.contains).map { songs[$0].albumId }
+        return neighbours.contains(album) ? .album : .track
     }
 
     /// Linear volume for the song. AVPlayer can't amplify, so positive gains are capped at 1;
     /// the peak keeps the result from clipping.
     func volume(for song: Song, preamp: Double = 0) -> Float {
         guard self != .off, let gain = song.replayGain else { return 1 }
+        // Без очереди «Авто» не решить — как по треку; решение принимает resolved(...).
+        if self == .auto { return ReplayGainMode.track.volume(for: song, preamp: preamp) }
         let db = (self == .album ? gain.albumGain ?? gain.trackGain : gain.trackGain ?? gain.albumGain) ?? 0
         let peak = (self == .album ? gain.albumPeak ?? gain.trackPeak : gain.trackPeak ?? gain.albumPeak) ?? 0
         var linear = pow(10, (db + preamp) / 20)

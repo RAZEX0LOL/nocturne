@@ -12,6 +12,7 @@ struct SettingsView: View {
     @AppStorage(PlaybackSettings.replayGainKey) private var replayGain = ReplayGainMode.off
     @AppStorage(AudioEffects.fadeKey) private var fade = 0.0
     @AppStorage(PlaybackSettings.lrclibKey) private var lrclib = false
+    @AppStorage(PlaybackSettings.endlessKey) private var endless = true
     @AppStorage(DownloadStore.wifiOnlyKey) private var wifiOnly = false
     @AppStorage(DownloadStore.autoFavoritesKey) private var autoFavorites = false
     @AppStorage(DownloadStore.limitKey) private var limitGB = 0.0
@@ -85,12 +86,13 @@ struct SettingsView: View {
                     Picker(String(localized: "Выравнивание громкости"), selection: $replayGain) {
                         ForEach(ReplayGainMode.allCases) { Text($0.title).tag($0) }
                     }
+                    Toggle(String(localized: "Бесконечное воспроизведение"), isOn: $endless)
                     Picker(String(localized: "Затухание между треками"), selection: $fade) {
                         Text(String(localized: "Выключено")).tag(0.0)
                         ForEach([2.0, 4, 6, 8], id: \.self) { Text(String(localized: "\(Int($0)) с")).tag($0) }
                     }
                 } header: { Text(String(localized: "Звук")) } footer: {
-                    Text(String(localized: "ReplayGain выравнивает громкость по тегам файлов: «по треку» для перемешанных очередей, «по альбому» сохраняет задуманную разницу между треками. Применяется со следующего трека."))
+                    Text(String(localized: "ReplayGain выравнивает громкость по тегам файлов: «по треку» для перемешанных очередей, «по альбому» сохраняет задуманную разницу между треками, «авто» выбирает сам. Бесконечное воспроизведение: очередь кончилась — дальше играет похожая музыка. Таймер сна плавно затихает за последние полминуты."))
                 }
                 Section {
                     Toggle(String(localized: "Искать тексты в LRCLIB"), isOn: $lrclib)

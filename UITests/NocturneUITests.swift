@@ -49,8 +49,14 @@ final class NocturneUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Подключиться"].waitForExistence(timeout: 30))
         XCTAssertFalse(app.buttons["Подключиться"].isEnabled)
         XCTAssertTrue(app.secureTextFields["Пароль Navidrome"].exists)
-        app.buttons["Посмотреть демоверсию"].tap()
-        XCTAssertTrue(app.staticTexts["Недавно добавлено"].waitForExistence(timeout: 30))
+        // На первом запуске экран входа ещё перестраивается (клавиатура, поля) — нажатие может
+        // потеряться, как с вкладками выше; повторяем, пока главная не появится.
+        let home = app.staticTexts["Недавно добавлено"]
+        for _ in 0..<3 where !home.exists {
+            if app.buttons["Посмотреть демоверсию"].exists { app.buttons["Посмотреть демоверсию"].tap() }
+            _ = home.waitForExistence(timeout: 10)
+        }
+        XCTAssertTrue(home.exists)
         app.buttons["Настройки"].tap()
         XCTAssertTrue(app.staticTexts["Демоверсия"].waitForExistence(timeout: 30))
         app.buttons["Подключить Navidrome"].tap()
@@ -66,5 +72,39 @@ final class NocturneUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Недавно добавлено"].waitForExistence(timeout: 30))
         sleep(2)
         XCTAssertEqual(app.state, .runningForeground, "resolving theme colours off the main thread must not crash the app")
+    }
+
+    /// Живая проверка против mock-сервера с короткими треками (`mock_navidrome.py 8`, нужен запущенный):
+    /// после последнего трека альбома играет похожий, а скорость меняется из полноэкранного плеера.
+    /// Без сервера тест пропускается.
+    @MainActor func testEndlessPlaybackAndSpeedAgainstMockServer() throws {
+        let probe = URL(string: "http://127.0.0.1:4533/radio")!
+        guard (try? Data(contentsOf: probe)) != nil else { throw XCTSkip("mock-сервер не запущен") }
+        let app = XCUIApplication()
+        app.launchArguments = ["--connect", "http://127.0.0.1:4533", "test", "demo"]
+        app.launch()
+        let album = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Mock Album")).firstMatch
+        XCTAssertTrue(album.waitForExistence(timeout: 30))
+        let last = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Тестовый трек 3")).firstMatch
+        // Пока главная дорисовывает карусели, первый тап может не дойти — как с вкладками выше.
+        for _ in 0..<3 where !last.exists {
+            album.tap()
+            _ = last.waitForExistence(timeout: 5)
+        }
+        XCTAssertTrue(last.exists, "страница альбома не открылась")
+        last.tap()
+        // Трек 8 секунд, потом очередь кончается — должен заиграть похожий, которого не было в альбоме.
+        let similar = app.staticTexts["Похожий трек"]
+        XCTAssertTrue(similar.waitForExistence(timeout: 30), "после конца альбома не заиграла похожая музыка")
+        similar.tap()
+        let speed = app.buttons["Скорость воспроизведения"]
+        XCTAssertTrue(speed.waitForExistence(timeout: 10))
+        speed.tap()
+        app.buttons["1,5×"].tap()
+        XCTAssertTrue(app.buttons["Скорость воспроизведения"].staticTexts["1,5×"].waitForExistence(timeout: 5) || speed.label.contains("1,5"))
+        let attachment = XCTAttachment(screenshot: app.screenshot())
+        attachment.name = "Endless + speed"
+        attachment.lifetime = .keepAlways
+        add(attachment)
     }
 }
