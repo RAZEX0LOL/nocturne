@@ -11,6 +11,8 @@ data class Song(
     val duration: Double? = null,
     val track: Int? = null, val starred: Boolean = false, val userRating: Int? = null,
     val replayGain: ReplayGain? = null,
+    /** Для «Авто» выравнивания громкости: альбом подряд узнаётся по соседям с тем же альбомом. */
+    val albumId: String? = null,
 )
 
 /** Теги громкости OpenSubsonic, в децибелах. */

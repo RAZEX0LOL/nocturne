@@ -117,6 +117,7 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
                         }
                     })
                 }
+                controller?.setPlaybackSpeed(settings.speed)
                 updatePlayback()
                 restoreQueue()
             } catch (_: Exception) { error = tr("Аудиосервис недоступен. Перезапусти приложение.") }
@@ -153,10 +154,13 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
      */
     private fun applyFade() {
         val player = controller ?: return
+        // Итоговая громкость — произведение: затухание × выравнивание ReplayGain × таймер сна.
+        // Раньше здесь была только громкость затухания, и ReplayGain на Android не действовал вовсе.
+        val level = replayGainVolume() * sleepFactor
         val fade = settings.fadeSeconds
         val duration = player.duration.takeIf { it != C.TIME_UNSET && it > 0 } ?: 0L
         if (fade <= 0f || duration <= 0 || duration < fade * 3000) {
-            if (player.volume != 1f) player.volume = 1f
+            if (player.volume != level) player.volume = level
             return
         }
         val position = player.currentPosition.coerceAtLeast(0)
@@ -167,7 +171,78 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
             remaining < window -> remaining.coerceAtLeast(0).toFloat() / window
             else -> 1f
         }
-        if (player.volume != factor) player.volume = factor
+        val volume = factor * level
+        if (player.volume != volume) player.volume = volume
+    }
+
+    /** «Авто» выравнивания: по альбому, если альбом играет подряд, иначе по треку. */
+    private fun replayGainVolume(): Float {
+        val prepared = queue ?: return 1f
+        val song = prepared.current?.song ?: return 1f
+        val mode = settings.replayGain.resolved(prepared.items.map { it.song }, prepared.position, prepared.shuffle)
+        return mode.volume(song)
+    }
+
+    /** Множитель таймера сна: последние полминуты плавно уходит в ноль. */
+    private var sleepFactor = 1f
+
+    // MARK: - Скорость, бесконечное воспроизведение, микс, «Поделиться»
+
+    fun setSpeed(value: Float) {
+        val speed = value.coerceIn(0.5f, 2f)
+        settings.chooseSpeed(speed)
+        // Media3 меняет скорость без изменения высоты голоса.
+        controller?.setPlaybackSpeed(speed)
+    }
+
+    private var extending = false
+
+    /** Играет последний трек очереди — дописываем похожие, которых ещё не было, без паузы на стыке. */
+    private fun extendWithSimilar() {
+        val api = client ?: return
+        val prepared = queue ?: return
+        val seed = prepared.current?.song ?: return
+        if (!settings.endless || extending || offline || demo || isLocalId(seed.id)) return
+        if (prepared.position < prepared.items.lastIndex || prepared.repeatMode != PlaybackQueue.Repeat.off) return
+        extending = true
+        viewModelScope.launch {
+            try {
+                val known = prepared.items.map { it.song.id }.toSet()
+                val fresh = runCatching { api.similarSongs(seed.id, 40) }.getOrDefault(emptyList())
+                    .filter { it.id !in known && isPlayable(it) }.take(20)
+                if (fresh.isEmpty() || queue !== prepared || prepared.current?.song?.id != seed.id) return@launch
+                prepared.append(fresh)
+                // Добавляем в плеер, не пересобирая очередь: играющий трек не прерывается.
+                controller?.addMediaItems(fresh.map { mediaItem(it, api) })
+                updatePlayback()
+                saveQueue()
+            } finally { extending = false }
+        }
+    }
+
+    /** «Микс по треку»: сам трек и похожие на него. */
+    fun playMix(song: Song) {
+        val api = client ?: return
+        viewModelScope.launch {
+            val similar = runCatching { api.similarSongs(song.id) }.getOrDefault(emptyList()).filter { it.id != song.id }
+            if (similar.isEmpty()) { notice = tr("Похожих треков не нашлось"); return@launch }
+            play(listOf(song) + similar)
+        }
+    }
+
+    /** Ссылка Navidrome — в системный лист «Поделиться»: мессенджеры, почта, буфер обмена. */
+    fun share(song: Song) {
+        val api = client ?: return
+        viewModelScope.launch {
+            val url = runCatching { api.createShare(song.id) }.getOrNull()
+            if (url == null) { error = tr("Не удалось создать ссылку. Включи «Поделиться» в настройках Navidrome (EnableSharing)."); return@launch }
+            val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(android.content.Intent.EXTRA_TEXT, "${song.title} — ${song.artist}\n$url")
+            }
+            val chooser = android.content.Intent.createChooser(send, tr("Поделиться")).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            getApplication<android.app.Application>().startActivity(chooser)
+        }
     }
 
     // MARK: - Подключение
@@ -600,11 +675,20 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
         if (minutes == null || minutes <= 0) return
         val deadline = System.currentTimeMillis() + minutes * 60_000L
         sleepAt = deadline
+        // Последние полминуты музыка плавно затихает — тишина не будит резким обрывом.
+        val fadeMillis = minOf(30_000L, minutes * 60_000L)
         sleepJob = viewModelScope.launch {
-            delay(minutes * 60_000L)
-            controller?.pause()
-            sleepAt = null
-            notice = tr("Таймер сна: музыка остановлена")
+            try {
+                delay(minutes * 60_000L - fadeMillis)
+                val steps = (fadeMillis / 100).toInt().coerceAtLeast(1)
+                for (step in 1..steps) {
+                    delay(100)
+                    sleepFactor = kotlin.math.cos(step.toFloat() / steps * Math.PI.toFloat() / 2)
+                }
+                controller?.pause()
+                sleepAt = null
+                notice = tr("Таймер сна: музыка остановлена")
+            } finally { sleepFactor = 1f }
         }
     }
 
@@ -712,6 +796,7 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
         queue?.let { prepared ->
             if (player.currentMediaItemIndex != prepared.position) prepared.jump(player.currentMediaItemIndex)
         }
+        extendWithSimilar()
         startedAt = System.currentTimeMillis()
         scrobbled = false
         lyrics = null

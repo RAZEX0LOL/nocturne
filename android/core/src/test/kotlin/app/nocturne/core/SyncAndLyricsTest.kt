@@ -51,4 +51,34 @@ class SyncAndLyricsTest {
         assertNull(LrclibClient.decode("{}"))
         assertNull(LrclibClient().url(Song("s", "Без исполнителя")))
     }
+
+    @Test fun autoReplayGainFollowsTheAlbumOnlyInOrder() {
+        fun song(id: String, album: String?) = Song(id, id, albumId = album)
+        val album = listOf(song("a1", "A"), song("a2", "A"), song("a3", "A"))
+        assertEquals(ReplayGainMode.album, ReplayGainMode.auto.resolved(album, 1, shuffled = false))
+        assertEquals(ReplayGainMode.track, ReplayGainMode.auto.resolved(album, 1, shuffled = true))
+        assertEquals(ReplayGainMode.track, ReplayGainMode.auto.resolved(listOf(song("x", "A"), song("y", "B")), 1, shuffled = false))
+        assertEquals(ReplayGainMode.album, ReplayGainMode.album.resolved(album, 0, shuffled = true))
+    }
+
+    @Test fun shareLinkAndSimilarSongsComeFromTheServer() {
+        val server = okhttp3.mockwebserver.MockWebServer()
+        server.enqueue(okhttp3.mockwebserver.MockResponse().setBody("""{"subsonic-response":{"status":"ok","shares":{"share":[{"id":"sh1","url":"https://music.example.com/share/abc"}]}}}"""))
+        server.enqueue(okhttp3.mockwebserver.MockResponse().setBody("""{"subsonic-response":{"status":"ok","similarSongs2":{"song":[{"id":"s9","title":"Похожий","albumId":"al-9"}]}}}"""))
+        server.start()
+        try {
+            val api = NavidromeClient(Credentials(server.url("/").toString(), "test", "test-only"), retryDelaysSeconds = emptyList())
+            assertEquals("https://music.example.com/share/abc", kotlinx.coroutines.runBlocking { api.createShare("s1") })
+            assertEquals("s1", server.takeRequest().requestUrl?.queryParameter("id"))
+            val similar = kotlinx.coroutines.runBlocking { api.similarSongs("s1") }
+            assertEquals(listOf("s9"), similar.map { it.id })
+            assertEquals("al-9", similar.first().albumId)
+        } finally { server.shutdown() }
+    }
+
+    @Test fun albumIdSurvivesTheSnapshot() {
+        val song = NavidromeClient.song(kotlinx.serialization.json.Json.parseToJsonElement("""{"id":"s","title":"T","albumId":"al-9"}""") as kotlinx.serialization.json.JsonObject)
+        assertEquals("al-9", song.albumId)
+        assertEquals("al-9", NavidromeClient.describe(song)["albumId"].toString().trim('"'))
+    }
 }

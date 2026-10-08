@@ -56,19 +56,57 @@ import java.io.File
 import kotlin.math.sin
 import kotlinx.coroutines.delay
 
-private val Background = Color(0xFF0E0E13)
-private val Surface = Color(0xFF1B1B23)
-private val Muted = Color(0xFF9C9CAA)
+/** Цвета темы: фон, карточки, приглушённый текст и основной текст («чернила»). */
+internal data class Palette(val background: Color, val surface: Color, val muted: Color, val ink: Color, val dark: Boolean)
 
-@Composable internal fun NocturneTheme(accent: AccentTheme = AccentTheme.violet, content: @Composable () -> Unit) {
-    val color = Color(accent.color)
-    MaterialTheme(
-        colorScheme = darkColorScheme(
-            primary = color, onPrimary = Background, background = Background,
-            surface = Surface, onSurface = Color.White, onSurfaceVariant = Muted,
-        ),
-        content = content,
-    )
+private val DarkPalette = Palette(Color(0xFF0E0E13), Color(0xFF1B1B23), Color(0xFF9C9CAA), Color.White, dark = true)
+private val OledPalette = Palette(Color.Black, Color(0xFF111115), Color(0xFF8E8E9C), Color.White, dark = true)
+private val LightPalette = Palette(Color(0xFFF6F6F9), Color.White, Color(0xFF66667A), Color(0xFF15151D), dark = false)
+
+internal val LocalPalette = staticCompositionLocalOf { DarkPalette }
+
+private val Background: Color @Composable get() = LocalPalette.current.background
+private val Surface: Color @Composable get() = LocalPalette.current.surface
+private val Muted: Color @Composable get() = LocalPalette.current.muted
+private val Ink: Color @Composable get() = LocalPalette.current.ink
+
+@Composable internal fun NocturneTheme(
+    accent: AccentTheme = AccentTheme.violet,
+    theme: ThemeMode = ThemeMode.dark,
+    content: @Composable () -> Unit,
+) {
+    val systemDark = androidx.compose.foundation.isSystemInDarkTheme()
+    val palette = when (theme) {
+        ThemeMode.dark -> DarkPalette
+        ThemeMode.oled -> OledPalette
+        ThemeMode.light -> LightPalette
+        ThemeMode.system -> if (systemDark) DarkPalette else LightPalette
+    }
+    // Пастельный акцент на белом не читается: в светлой теме он темнее.
+    val color = if (palette.dark) Color(accent.color) else androidx.compose.ui.graphics.lerp(Color(accent.color), Color.Black, 0.35f)
+    // Значки строки состояния и навигации — тёмные на светлом фоне, светлые на тёмном.
+    val view = androidx.compose.ui.platform.LocalView.current
+    if (!view.isInEditMode) {
+        SideEffect {
+            val window = (view.context as? android.app.Activity)?.window ?: return@SideEffect
+            androidx.core.view.WindowCompat.getInsetsController(window, view).apply {
+                isAppearanceLightStatusBars = !palette.dark
+                isAppearanceLightNavigationBars = !palette.dark
+            }
+        }
+    }
+    val scheme = if (palette.dark) {
+        darkColorScheme(
+            primary = color, onPrimary = palette.background, background = palette.background,
+            surface = palette.surface, onSurface = palette.ink, onSurfaceVariant = palette.muted,
+        )
+    } else {
+        lightColorScheme(
+            primary = color, onPrimary = Color.White, background = palette.background,
+            surface = palette.surface, onSurface = palette.ink, onSurfaceVariant = palette.muted,
+        )
+    }
+    CompositionLocalProvider(LocalPalette provides palette) { MaterialTheme(colorScheme = scheme, content = content) }
 }
 
 /**
@@ -98,6 +136,8 @@ internal val LocalCoverFiles = staticCompositionLocalOf<Map<String, String>> { e
             )
         }, bottomBar = {
             Column {
+                // Над мини-плеером, а не поверх шапки: иначе плашка закрывает кнопку настроек.
+                vm.remoteQueue?.let { remote -> RemoteQueueBanner(vm, remote) }
                 vm.playback.current?.let { song ->
                     Row(
                         Modifier.padding(horizontal = 12.dp).clip(RoundedCornerShape(18.dp)).background(Surface)
@@ -151,7 +191,6 @@ internal val LocalCoverFiles = staticCompositionLocalOf<Map<String, String>> { e
             confirmButton = { TextButton(onClick = { vm.error = null }) { Text(tr("Понятно")) } },
         )
     }
-    vm.remoteQueue?.let { remote -> RemoteQueueBanner(vm, remote) }
     vm.notice?.let { message ->
         LaunchedEffect(message) { delay(2500); vm.notice = null }
         Box(Modifier.fillMaxSize().padding(top = 90.dp), contentAlignment = Alignment.TopCenter) {
@@ -197,7 +236,7 @@ internal val LocalCoverFiles = staticCompositionLocalOf<Map<String, String>> { e
     val song = remote.songs.firstOrNull { it.id == remote.currentId } ?: remote.songs.first()
     val seconds = remote.positionMillis / 1000
     val fromComputer = remote.changedBy == "NocturneDesktop"
-    Box(Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 12.dp, vertical = 8.dp), contentAlignment = Alignment.TopCenter) {
+    Box(Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, bottom = 8.dp)) {
         Surface(color = Surface, shape = RoundedCornerShape(16.dp), tonalElevation = 6.dp, shadowElevation = 6.dp) {
             Row(Modifier.padding(start = 16.dp, end = 4.dp, top = 10.dp, bottom = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                 Icon(if (fromComputer) Icons.Rounded.Computer else Icons.Rounded.PhoneIphone, null, tint = MaterialTheme.colorScheme.primary)
@@ -440,7 +479,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.downloadsSection(vm: 
     ) {
         Cover(song.coverArt, vm.client, Modifier.size(48.dp))
         Column(Modifier.weight(1f).padding(horizontal = 12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(song.title, color = if (vm.playback.current?.id == song.id) accent else Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleSmall)
+            Text(song.title, color = if (vm.playback.current?.id == song.id) accent else Ink, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleSmall)
             Text(tr(song.artist), color = Muted, maxLines = 1, style = MaterialTheme.typography.bodySmall)
         }
         if (vm.isDownloaded(song)) Icon(Icons.Rounded.DownloadDone, tr("Скачано"), tint = Muted, modifier = Modifier.size(18.dp))
@@ -451,6 +490,8 @@ private fun androidx.compose.foundation.lazy.LazyListScope.downloadsSection(vm: 
                 DropdownMenuItem(text = { Text(tr("Сыграть следующим")) }, onClick = { menu = false; vm.playNext(listOf(song)) })
                 DropdownMenuItem(text = { Text(tr("В конец очереди")) }, onClick = { menu = false; vm.appendToQueue(listOf(song)) })
                 if (!isLocalId(song.id) && vm.client != null && !vm.offline) {
+                    DropdownMenuItem(text = { Text(tr("Микс по треку")) }, onClick = { menu = false; vm.playMix(song) })
+                    DropdownMenuItem(text = { Text(tr("Поделиться")) }, onClick = { menu = false; vm.share(song) })
                     DropdownMenuItem(
                         text = { Text(if (vm.isStarred(song)) tr("Убрать из избранного") else tr("В избранное")) },
                         onClick = { menu = false; vm.toggleStar(song) },
@@ -510,7 +551,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.downloadsSection(vm: 
             Text(tr("СЕЙЧАС ИГРАЕТ"), Modifier.weight(1f), style = MaterialTheme.typography.labelSmall, letterSpacing = 2.sp)
             if (!isLocalId(song.id) && vm.client != null) PlayerButton(
                 if (vm.isStarred(song)) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
-                tr("В избранное"), { vm.toggleStar(song) }, if (vm.isStarred(song)) accent else Color.White,
+                tr("В избранное"), { vm.toggleStar(song) }, if (vm.isStarred(song)) accent else Ink,
             )
             PlayerButton(Icons.AutoMirrored.Rounded.QueueMusic, tr("Очередь"), { showQueue = true })
         }
@@ -533,11 +574,11 @@ private fun androidx.compose.foundation.lazy.LazyListScope.downloadsSection(vm: 
             }
         }
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-            PlayerButton(Icons.Rounded.Shuffle, tr("Перемешивать"), vm::toggleShuffle, if (state.shuffle) accent else Color.White)
+            PlayerButton(Icons.Rounded.Shuffle, tr("Перемешивать"), vm::toggleShuffle, if (state.shuffle) accent else Ink)
             PlayerButton(Icons.Rounded.SkipPrevious, tr("Предыдущий трек"), vm::previous)
             FilledIconButton(
                 onClick = vm::toggle, modifier = Modifier.size(80.dp),
-                colors = IconButtonDefaults.filledIconButtonColors(containerColor = Color.White.copy(alpha = .12f), contentColor = Color.White),
+                colors = IconButtonDefaults.filledIconButtonColors(containerColor = Ink.copy(alpha = .12f), contentColor = Ink),
             ) {
                 if (state.buffering) CircularProgressIndicator(Modifier.size(30.dp))
                 else Icon(if (state.playing) Icons.Rounded.Pause else Icons.Rounded.PlayArrow, tr("Воспроизведение / пауза"), Modifier.size(38.dp))
@@ -545,11 +586,25 @@ private fun androidx.compose.foundation.lazy.LazyListScope.downloadsSection(vm: 
             PlayerButton(Icons.Rounded.SkipNext, tr("Следующий трек"), vm::next)
             PlayerButton(
                 if (state.repeat == PlaybackQueue.Repeat.one) Icons.Rounded.RepeatOne else Icons.Rounded.Repeat,
-                tr("Режим повтора"), vm::cycleRepeat, if (state.repeat == PlaybackQueue.Repeat.off) Color.White else accent,
+                tr("Режим повтора"), vm::cycleRepeat, if (state.repeat == PlaybackQueue.Repeat.off) Ink else accent,
             )
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
             TextButton(onClick = { showLyrics = true; vm.loadLyrics(song) }) { Text(tr("Текст")) }
+            Box {
+                var speedMenu by remember { mutableStateOf(false) }
+                val speed = vm.settings.speed
+                val label = (if (speed == speed.toInt().toFloat()) "${speed.toInt()}" else "$speed".replace('.', ',')) + "×"
+                TextButton(onClick = { speedMenu = true }, modifier = Modifier.testTag("speed")) {
+                    Text(label, color = if (speed == 1f) Muted else MaterialTheme.colorScheme.primary)
+                }
+                DropdownMenu(expanded = speedMenu, onDismissRequest = { speedMenu = false }) {
+                    listOf(0.5f, 0.75f, 1f, 1.25f, 1.5f, 1.75f, 2f).forEach { value ->
+                        val text = (if (value == value.toInt().toFloat()) "${value.toInt()}" else "$value".replace('.', ',')) + "×"
+                        DropdownMenuItem(text = { Text(if (value == speed) "$text  ✓" else text) }, onClick = { speedMenu = false; vm.setSpeed(value) })
+                    }
+                }
+            }
             Box {
                 TextButton(onClick = { sleepMenu = true }) { Text(if (timerOn) tr("Таймер включён") else tr("Таймер сна")) }
                 DropdownMenu(expanded = sleepMenu, onDismissRequest = { sleepMenu = false }) {
@@ -568,7 +623,12 @@ private fun androidx.compose.foundation.lazy.LazyListScope.downloadsSection(vm: 
         LazyColumn(contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             item { SectionTitle(tr("Очередь")) }
             itemsIndexed(state.queue) { index, entry ->
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                // Что уже сыграло — «Ранее» и приглушено; дальше — «Сейчас» и «Дальше».
+                when (index) {
+                    0 -> if (state.index > 0) Text(tr("Ранее"), color = Muted, style = MaterialTheme.typography.labelMedium)
+                    state.index + 1 -> Text(tr("Дальше"), color = Muted, style = MaterialTheme.typography.labelMedium)
+                }
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.alpha(if (index < state.index) 0.55f else 1f)) {
                     Box(Modifier.weight(1f)) { SongRow(entry, vm) { vm.selectQueue(index) } }
                     IconButton(onClick = { vm.removeFromQueue(index) }) { Icon(Icons.Rounded.Close, tr("Убрать из очереди"), tint = Muted) }
                 }
@@ -598,12 +658,12 @@ private fun androidx.compose.foundation.lazy.LazyListScope.downloadsSection(vm: 
         Text(tr("Новое качество применяется со следующего трека."), color = Muted, style = MaterialTheme.typography.bodySmall)
 
         SectionTitle(tr("Громкость"))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
             ReplayGainMode.entries.forEach { mode ->
                 FilterChip(
                     selected = settings.replayGain == mode,
                     onClick = { settings.chooseReplayGain(mode) },
-                    label = { Text(when (mode) { ReplayGainMode.off -> tr("Выключено"); ReplayGainMode.track -> tr("По треку"); ReplayGainMode.album -> tr("По альбому") }) },
+                    label = { Text(when (mode) { ReplayGainMode.off -> tr("Выключено"); ReplayGainMode.track -> tr("По треку"); ReplayGainMode.album -> tr("По альбому"); ReplayGainMode.auto -> tr("Авто") }) },
                 )
             }
         }
@@ -618,6 +678,13 @@ private fun androidx.compose.foundation.lazy.LazyListScope.downloadsSection(vm: 
             }
         }
         Text(tr("Затухание между треками."), color = Muted, style = MaterialTheme.typography.bodySmall)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(tr("Бесконечное воспроизведение"))
+                Text(tr("Очередь закончилась — дальше играет похожая музыка, как радио по последнему треку."), color = Muted, style = MaterialTheme.typography.bodySmall)
+            }
+            Switch(checked = settings.endless, onCheckedChange = { settings.useEndless(it) })
+        }
 
         SectionTitle(tr("Эквалайзер"))
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -662,7 +729,12 @@ private fun androidx.compose.foundation.lazy.LazyListScope.downloadsSection(vm: 
         }
 
         SectionTitle(tr("Оформление"))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
+            ThemeMode.entries.forEach { theme ->
+                FilterChip(selected = settings.theme == theme, onClick = { settings.chooseTheme(theme) }, label = { Text(tr(theme.title)) })
+            }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
             AccentTheme.entries.forEach { theme ->
                 FilterChip(selected = settings.accent == theme, onClick = { settings.chooseAccent(theme) }, label = { Text(tr(theme.title)) })
             }
@@ -704,7 +776,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.downloadsSection(vm: 
     }
 }
 
-@Composable private fun PlayerButton(icon: ImageVector, label: String, click: () -> Unit, tint: Color = Color.White) {
+@Composable private fun PlayerButton(icon: ImageVector, label: String, click: () -> Unit, tint: Color = Ink) {
     IconButton(onClick = click) { Icon(icon, label, tint = tint, modifier = Modifier.size(27.dp)) }
 }
 
@@ -795,7 +867,7 @@ private fun timeLabel(milliseconds: Long): String {
                         line.value.ifEmpty { " " },
                         style = if (synced) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyLarge,
                         fontWeight = if (synced && index == active) FontWeight.Bold else FontWeight.Normal,
-                        color = if (!synced || index == active) Color.White else Muted,
+                        color = if (!synced || index == active) Ink else Muted,
                         modifier = Modifier.fillMaxWidth().then(
                             if (synced && start != null) Modifier.clickable { vm.seek(start.toLong()) } else Modifier
                         ),

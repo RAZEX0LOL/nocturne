@@ -195,6 +195,20 @@ private val english = mapOf(
     "Закрыть" to "Close",
     "Искать тексты в LRCLIB" to "Find lyrics on LRCLIB",
     "Если у Navidrome текста нет, он берётся из открытой базы lrclib.net. Туда уходят название, исполнитель и альбом трека." to "If Navidrome has no lyrics, they come from the open lrclib.net database. The song title, artist and album are sent there.",
+    // ТРИЗ: темы, скорость, бесконечное воспроизведение, микс, «Поделиться»
+    "Тёмная" to "Dark",
+    "OLED-чёрная" to "OLED black",
+    "Светлая" to "Light",
+    "Как в системе" to "System",
+    "Авто" to "Auto",
+    "Бесконечное воспроизведение" to "Endless playback",
+    "Очередь закончилась — дальше играет похожая музыка, как радио по последнему треку." to "When the queue ends, similar music keeps playing, like a radio from the last song.",
+    "Микс по треку" to "Song mix",
+    "Поделиться" to "Share",
+    "Похожих треков не нашлось" to "No similar songs found",
+    "Не удалось создать ссылку. Включи «Поделиться» в настройках Navidrome (EnableSharing)." to "Could not create a link. Turn on sharing in Navidrome (EnableSharing).",
+    "Ранее" to "Earlier",
+    "Дальше" to "Up next",
 )
 
 /** Русская система оставляет исходный текст; любая другая получает английский. */

@@ -34,7 +34,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val vm: MusicViewModel = viewModel()
             // Акцент оформления выбирают в настройках, поэтому тема читает его из состояния.
-            NocturneTheme(vm.settings.accent) {
+            NocturneTheme(vm.settings.accent, vm.settings.theme) {
                 CompositionLocalProvider(LocalCoverFiles provides vm.coverFiles) { NocturneApp(vm) }
             }
             connectFromIntentIfDebug(vm)

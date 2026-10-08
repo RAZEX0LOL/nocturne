@@ -178,6 +178,14 @@ class NavidromeClient(
     /** Последняя сохранённая очередь; null — если её нет. */
     suspend fun playQueue(): RemoteQueue? = parsePlayQueue(request("getPlayQueue"))
 
+    /** «Микс по треку» и бесконечное воспроизведение: похожие треки от Last.fm через Navidrome. */
+    suspend fun similarSongs(id: String, count: Int = 50): List<Song> =
+        request("getSimilarSongs2", mapOf("id" to id, "count" to "$count")).obj("similarSongs2").objects("song").map(::song)
+
+    /** Публичная ссылка Navidrome (нужно EnableSharing на сервере); её откроют без аккаунта. */
+    suspend fun createShare(id: String): String? =
+        request("createShare", mapOf("id" to id)).obj("shares").objects("share").firstOrNull()?.optional("url")
+
     suspend fun favorite(id: String, starred: Boolean, isAlbum: Boolean = false) {
         request(if (starred) "star" else "unstar", mapOf((if (isAlbum) "albumId" else "id") to id))
     }
@@ -223,6 +231,7 @@ class NavidromeClient(
             o.optional("coverArt"), o["duration"]?.jsonPrimitive?.doubleOrNull,
             o["track"]?.jsonPrimitive?.intOrNull, o.optional("starred") != null,
             o["userRating"]?.jsonPrimitive?.intOrNull, replayGain(o["replayGain"] as? JsonObject),
+            albumId = o.optional("albumId"),
         )
 
         /** Обратная операция к [song]: в таком виде трек ложится на диск и читается обратно. */
@@ -235,6 +244,7 @@ class NavidromeClient(
             song.duration?.let { put("duration", it) }
             song.track?.let { put("track", it) }
             if (song.starred) put("starred", true)
+            song.albumId?.let { put("albumId", it) }
         }
 
         private fun replayGain(o: JsonObject?) = o?.let {

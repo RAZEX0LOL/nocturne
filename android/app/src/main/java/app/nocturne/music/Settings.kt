@@ -21,6 +21,14 @@ enum class AccentTheme(val title: String, val color: Long) {
     mono("Серый", 0xFFD4D4D8),
 }
 
+/** Тема: тёмная, OLED-чёрная (пиксели OLED-экрана не светятся), светлая или как в системе. */
+enum class ThemeMode(val title: String) {
+    dark("Тёмная"),
+    oled("OLED-чёрная"),
+    light("Светлая"),
+    system("Как в системе"),
+}
+
 /**
  * Настройки приложения в SharedPreferences: их читают и плеер, и интерфейс.
  * Значения простые, поэтому хранилище тоже простое — базы данных здесь не нужно.
@@ -35,6 +43,14 @@ class Settings(context: Context) {
     var replayGain by mutableStateOf(enum(store.getString("replayGain", null), ReplayGainMode.off))
         private set
     var accent by mutableStateOf(enum(store.getString("accent", null), AccentTheme.violet))
+        private set
+    var theme by mutableStateOf(enum(store.getString("theme", null), ThemeMode.dark))
+        private set
+    /** Скорость воспроизведения, 0,5–2×. */
+    var speed by mutableStateOf(store.getFloat("playback.speed", 1f))
+        private set
+    /** Очередь кончилась — дальше похожая музыка. */
+    var endless by mutableStateOf(store.getBoolean("playback.endless", true))
         private set
     var equalizerEnabled by mutableStateOf(store.getBoolean("eq.enabled", false))
         private set
@@ -53,6 +69,9 @@ class Settings(context: Context) {
     fun chooseWifiQuality(value: StreamQuality) { wifiQuality = value; store.edit().putString("quality.wifi", value.name).apply() }
     fun chooseCellularQuality(value: StreamQuality) { cellularQuality = value; store.edit().putString("quality.cellular", value.name).apply() }
     fun chooseReplayGain(value: ReplayGainMode) { replayGain = value; store.edit().putString("replayGain", value.name).apply() }
+    fun chooseTheme(value: ThemeMode) { theme = value; store.edit().putString("theme", value.name).apply() }
+    fun chooseSpeed(value: Float) { speed = value; store.edit().putFloat("playback.speed", value).apply() }
+    fun useEndless(value: Boolean) { endless = value; store.edit().putBoolean("playback.endless", value).apply() }
     fun chooseAccent(value: AccentTheme) { accent = value; store.edit().putString("accent", value.name).apply() }
     fun chooseFadeSeconds(value: Float) { fadeSeconds = value; store.edit().putFloat("playback.fade", value).apply() }
     fun enableEqualizer(value: Boolean) { equalizerEnabled = value; store.edit().putBoolean("eq.enabled", value).apply() }

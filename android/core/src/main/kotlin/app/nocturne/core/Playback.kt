@@ -115,10 +115,24 @@ enum class StreamQuality(val parameters: Map<String, String>) {
 
 /** Выравнивание громкости по тегам ReplayGain: усиливать выше 1 нельзя, пик защищает от перегрузки. */
 enum class ReplayGainMode {
-    off, track, album;
+    off, track, album, auto;
+
+    /**
+     * «Авто»: альбом подряд звучит как задумано (по альбому), перемешанная очередь — ровно
+     * (по треку). Альбом подряд — когда не перемешано и сосед по очереди с того же альбома.
+     */
+    fun resolved(songs: List<Song>, index: Int, shuffled: Boolean): ReplayGainMode {
+        if (this != auto) return this
+        val album = songs.getOrNull(index)?.albumId
+        if (shuffled || album == null) return track
+        val inOrder = songs.getOrNull(index - 1)?.albumId == album || songs.getOrNull(index + 1)?.albumId == album
+        return if (inOrder) ReplayGainMode.album else track
+    }
 
     fun volume(song: Song, preamp: Double = 0.0): Float {
         if (this == off) return 1f
+        // Без очереди «Авто» не решить — как по треку; решение принимает resolved(...).
+        if (this == auto) return track.volume(song, preamp)
         val gain = song.replayGain ?: return 1f
         val decibels = (if (this == album) gain.albumGain ?: gain.trackGain else gain.trackGain ?: gain.albumGain) ?: 0.0
         val peak = (if (this == album) gain.albumPeak ?: gain.trackPeak else gain.trackPeak ?: gain.albumPeak) ?: 0.0
