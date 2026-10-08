@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
-import { SHELVES, store, useStore, type AccentMode, type Settings, type ShelfId } from '../state/store'
+import { PLAYER_BUTTONS, SHELVES, store, useStore, type AccentMode, type PlayerButton, type Settings, type ShelfId } from '../state/store'
+import { isMac } from '../native'
 import { ACCENT_SWATCHES, accentModes } from '../theme'
 import { Icon } from './Icon'
 import { Slider } from './Slider'
@@ -150,6 +151,14 @@ function HomeShelves({ settings }: { settings: Settings }) {
   )
 }
 
+const PLAYER_BUTTON_LABELS: Record<PlayerButton, string> = {
+  speed: 'Скорость',
+  sleep: 'Таймер сна',
+  mini: 'Мини-плеер',
+  lyrics: 'Текст песни',
+  queue: 'Очередь',
+}
+
 const ACCENT_LABELS: Record<AccentMode, string> = { system: 'Системный', cover: 'Из обложки', brand: 'Nocturne', custom: 'Свой' }
 
 /** «Оформление»: всё, что меняет вид, в одном месте и сразу видно. */
@@ -225,6 +234,90 @@ export function AppearanceSettings() {
             }
           />
         </Row>
+      </section>
+
+      <section className="space-y-1">
+        <h2 className="px-1 pb-1 text-sm font-semibold">{t('Текст песни')}</h2>
+        <Row title={t('Размер')}>
+          <Segmented
+            label={t('Размер текста песни')}
+            value={settings.lyricsScale}
+            options={[
+              { value: 0.85, label: t('Мелкий') },
+              { value: 1, label: t('Обычный') },
+              { value: 1.2, label: t('Крупный') },
+              { value: 1.45, label: t('Огромный') },
+            ]}
+            onChange={(lyricsScale) => store.update({ lyricsScale })}
+          />
+        </Row>
+        <Row title={t('Выравнивание')}>
+          <Segmented
+            label={t('Выравнивание текста песни')}
+            value={settings.lyricsAlign}
+            options={[
+              { value: 'left', label: t('По левому краю') },
+              { value: 'center', label: t('По центру') },
+            ]}
+            onChange={(lyricsAlign) => store.update({ lyricsAlign })}
+          />
+        </Row>
+      </section>
+
+      <section className="space-y-1">
+        <h2 className="px-1 pb-1 text-sm font-semibold">{t('Форма')}</h2>
+        <Row title={t('Углы')} description={t('Окна, карточки, кнопки и обложки.')}>
+          <Segmented
+            label={t('Углы')}
+            value={settings.corners}
+            options={[
+              { value: 'sharp', label: t('Острые') },
+              { value: 'normal', label: t('Как в системе') },
+              { value: 'round', label: t('Круглые') },
+            ]}
+            onChange={(corners) => store.update({ corners })}
+          />
+        </Row>
+        {isMac && (
+          <Row title={t('Шрифт')}>
+            <Segmented
+              label={t('Шрифт')}
+              value={settings.fontStyle}
+              options={[
+                { value: 'system', label: t('Системный') },
+                { value: 'rounded', label: t('Скруглённый') },
+              ]}
+              onChange={(fontStyle) => store.update({ fontStyle })}
+            />
+          </Row>
+        )}
+      </section>
+
+      <section className="space-y-1">
+        <h2 className="px-1 pb-1 text-sm font-semibold">{t('Панель плеера')}</h2>
+        <div className="card grid grid-cols-1 gap-x-6 px-4 py-2 sm:grid-cols-2 lg:grid-cols-3">
+          {PLAYER_BUTTONS.map((button) => {
+            const hidden = settings.hiddenPlayerButtons.includes(button)
+            return (
+              <label key={button} className="flex items-center gap-3 py-2" data-player-button={button}>
+                <input
+                  type="checkbox"
+                  className="toggle"
+                  checked={!hidden}
+                  onChange={(event) =>
+                    store.update({
+                      hiddenPlayerButtons: event.target.checked
+                        ? settings.hiddenPlayerButtons.filter((one) => one !== button)
+                        : [...settings.hiddenPlayerButtons, button],
+                    })
+                  }
+                  aria-label={t(PLAYER_BUTTON_LABELS[button])}
+                />
+                <span className={hidden ? 'text-secondary' : ''}>{t(PLAYER_BUTTON_LABELS[button])}</span>
+              </label>
+            )
+          })}
+        </div>
       </section>
 
       <section className="space-y-1">

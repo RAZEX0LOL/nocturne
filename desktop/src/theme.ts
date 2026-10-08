@@ -54,6 +54,14 @@ function resolveAccent(mode: AccentMode, palette: CoverPalette | undefined, cust
   return light ? BRAND_LIGHT : BRAND_DARK
 }
 
+/** «Острые» и «круглые» углы; «как в системе» — токены платформы из styles.css без изменений. */
+const CORNERS: Record<'sharp' | 'normal' | 'round', [string, string, string] | undefined> = {
+  sharp: ['2px', '3px', '4px'],
+  normal: undefined,
+  round: ['14px', '20px', '24px'],
+}
+const RADIUS_NAMES: Record<string, 0 | 1 | 2> = { '--radius-control': 0, '--radius-card': 1, '--radius-overlay': 2 }
+
 let shownAccent = ''
 let shownTheme = ''
 
@@ -79,6 +87,13 @@ function apply() {
 
   // Масштаб, плотность и размер обложек — переменные и классы на корне: их читают стили.
   root.style.zoom = String(settings.uiScale)
+  // Углы — поверх токенов платформы: инлайн-переменные на корне сильнее любых правил в CSS.
+  const radius = CORNERS[settings.corners]
+  for (const [name, value] of Object.entries(RADIUS_NAMES)) {
+    if (radius) root.style.setProperty(name, radius[value])
+    else root.style.removeProperty(name)
+  }
+  root.classList.toggle('font-rounded', settings.fontStyle === 'rounded' && isMac)
   root.classList.toggle('compact', settings.density === 'compact')
   root.style.setProperty('--card', `${settings.cardSize}px`)
 

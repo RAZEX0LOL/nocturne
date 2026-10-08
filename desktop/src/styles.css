@@ -1024,3 +1024,8 @@ body.dragging-songs * {
     box-shadow: 0 8px 16px rgb(0 0 0 / 0.26);
   }
 }
+
+/* Скруглённый шрифт (только Mac: SF Rounded — системный шрифт, его не нужно везти с собой). */
+:root.font-rounded body {
+  font-family: ui-rounded, 'SF Pro Rounded', -apple-system, system-ui, sans-serif;
+}

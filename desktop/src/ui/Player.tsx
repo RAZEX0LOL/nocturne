@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { store, useStore } from '../state/store'
+import { store, useStore, type PlayerButton } from '../state/store'
 import { popupMenu } from '../shell'
 import { Cover } from './Cover'
 import { Icon } from './Icon'
@@ -32,6 +32,7 @@ export function Player({
   const starred = starredIds.has(song.id)
   const canStar = !!client && !offline && !song.id.startsWith('local:') && !song.id.startsWith('radio:')
   const muted = settings.volume === 0
+  const shown = (button: PlayerButton) => !settings.hiddenPlayerButtons.includes(button)
 
   const toggleMute = () => {
     if (muted) store.update({ volume: unmuted.current || 1 })
@@ -73,11 +74,14 @@ export function Player({
       </div>
 
       <div className="flex items-center justify-end gap-1">
-        <SpeedButton />
-        <SleepTimerButton />
-        <button onClick={onMini} className="icon-btn" title={t('Мини-плеер')} aria-label={t('Мини-плеер')}>
-          <Icon name="miniPlayer" />
-        </button>
+        {shown('speed') && <SpeedButton />}
+        {shown('sleep') && <SleepTimerButton />}
+        {shown('mini') && (
+          <button onClick={onMini} className="icon-btn" title={t('Мини-плеер')} aria-label={t('Мини-плеер')}>
+            <Icon name="miniPlayer" />
+          </button>
+        )}
+        {shown('lyrics') && (
         <button
           onClick={() => onPanel(panel === 'lyrics' ? null : 'lyrics')}
           className="icon-btn toggle-btn"
@@ -87,6 +91,8 @@ export function Player({
         >
           <Icon name="lyrics" />
         </button>
+        )}
+        {shown('queue') && (
         <button
           onClick={() => onPanel(panel === 'queue' ? null : 'queue')}
           className="icon-btn toggle-btn"
@@ -96,6 +102,7 @@ export function Player({
         >
           <Icon name="queue" />
         </button>
+        )}
         <button onClick={toggleMute} className="icon-btn" title={muted ? t('Включить звук') : t('Выключить звук')} aria-label={muted ? t('Включить звук') : t('Выключить звук')}>
           <Icon name={muted ? 'mute' : 'volume'} />
         </button>

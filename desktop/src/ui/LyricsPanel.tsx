@@ -74,17 +74,22 @@ export function Lyrics({ large = false }: { large?: boolean }) {
 
   const lineClass = (index: number) => {
     if (large) {
-      const base = synced ? 'cursor-pointer text-[1.75rem] leading-snug font-bold tracking-tight transition-all duration-300' : 'text-xl font-semibold'
+      const base = synced ? 'cursor-pointer text-[1.75em] leading-snug font-bold tracking-tight transition-all duration-300' : 'text-[1.25em] font-semibold'
       if (!synced || index === active) return `${base} text-white`
       // Прошедшие строки только тусклее: blur в WebKit под маской оставляет полоски по краю слоя.
       return `${base} ${index < active ? 'text-white/25' : 'text-white/35'} hover:text-white/60`
     }
-    const base = synced ? 'cursor-pointer text-base font-medium' : 'text-sm'
+    const base = synced ? 'cursor-pointer text-[1em] font-medium' : 'text-[0.875em]'
     return `${base} ${!synced || index === active ? 'text-primary' : 'text-secondary/50'}`
   }
 
   return (
-    <div ref={container} className={synced ? (large ? 'space-y-6 py-[30vh]' : 'space-y-4') : 'space-y-1'}>
+    // Размер — в em от корня блока: настройка «размер текста» меняет одно число, а не каждую строку.
+    <div
+      ref={container}
+      className={`${synced ? (large ? 'space-y-6 py-[30vh]' : 'space-y-4') : 'space-y-1'} ${settings.lyricsAlign === 'center' ? 'text-center' : ''}`}
+      style={{ fontSize: `${settings.lyricsScale}rem` }}
+    >
       {lines.map((line, index) => (
         <p
           key={index}

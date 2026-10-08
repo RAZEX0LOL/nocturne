@@ -50,6 +50,10 @@ export type ShelfId = 'played' | 'recent' | 'starred' | 'frequent' | 'random'
 
 export const SHELVES: ShelfId[] = ['played', 'recent', 'starred', 'frequent', 'random']
 
+/** Кнопки справа в панели плеера, которые можно спрятать. */
+export type PlayerButton = 'speed' | 'sleep' | 'mini' | 'lyrics' | 'queue'
+export const PLAYER_BUTTONS: PlayerButton[] = ['speed', 'sleep', 'mini', 'lyrics', 'queue']
+
 export interface Settings {
   /** Очередь кончилась — дальше играет похожая музыка (как радио по последнему треку). */
   autoplaySimilar: boolean
@@ -70,6 +74,15 @@ export interface Settings {
   homeShelves: ShelfId[]
   /** Разделы бокового меню, которые человек скрыл. */
   hiddenSections: string[]
+  /** Кнопки панели плеера, которые человек скрыл. */
+  hiddenPlayerButtons: PlayerButton[]
+  /** Текст песни: размер (1 — обычный) и выравнивание строк. */
+  lyricsScale: number
+  lyricsAlign: 'left' | 'center'
+  /** Углы окон, карточек и кнопок: острые, как в системе или круглые. */
+  corners: 'sharp' | 'normal' | 'round'
+  /** Шрифт интерфейса: системный или скруглённый (SF Rounded — только на Mac). */
+  fontStyle: 'system' | 'rounded'
   /** Свой цвет акцента (режим 'custom'). */
   accentColor: string
   /** Искать текст в LRCLIB, если у Navidrome его нет: названия треков уходят стороннему сервису. */
@@ -212,6 +225,11 @@ const defaultSettings: Settings = {
   cardSize: 176,
   homeShelves: [...SHELVES],
   hiddenSections: [],
+  hiddenPlayerButtons: [],
+  lyricsScale: 1,
+  lyricsAlign: 'left',
+  corners: 'normal',
+  fontStyle: 'system',
   accentColor: '#f472b6',
   lrclib: false,
   closeToTray: false,
