@@ -31,6 +31,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import android.os.Build
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -50,6 +52,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import app.nocturne.core.*
 import coil.compose.AsyncImage
+import coil.imageLoader
 import coil.request.CachePolicy
 import coil.request.ImageRequest
 import java.io.File
@@ -70,9 +73,23 @@ private val Surface: Color @Composable get() = LocalPalette.current.surface
 private val Muted: Color @Composable get() = LocalPalette.current.muted
 private val Ink: Color @Composable get() = LocalPalette.current.ink
 
+/** Множитель радиусов из настройки «Углы»: все скругления интерфейса идут через rounded(). */
+internal val LocalCornerScale = staticCompositionLocalOf { 1f }
+
+@Composable internal fun rounded(radius: Int) = RoundedCornerShape((radius * LocalCornerScale.current).dp)
+
+/**
+ * Акцент из обложки: тот же оттенок, что выбрал бы iPhone, — пастельный на тёмном фоне.
+ * hue/saturation — из CoverColor.vibrant.
+ */
+internal fun coverAccent(hue: Float, saturation: Float): Color =
+    Color(android.graphics.Color.HSVToColor(floatArrayOf(hue * 360f, minOf(saturation, 0.5f), 0.98f)))
+
 @Composable internal fun NocturneTheme(
     accent: AccentTheme = AccentTheme.violet,
     theme: ThemeMode = ThemeMode.dark,
+    cover: Pair<Float, Float>? = null,
+    corners: Corners = Corners.normal,
     content: @Composable () -> Unit,
 ) {
     val systemDark = androidx.compose.foundation.isSystemInDarkTheme()
@@ -83,7 +100,8 @@ private val Ink: Color @Composable get() = LocalPalette.current.ink
         ThemeMode.system -> if (systemDark) DarkPalette else LightPalette
     }
     // Пастельный акцент на белом не читается: в светлой теме он темнее.
-    val color = if (palette.dark) Color(accent.color) else androidx.compose.ui.graphics.lerp(Color(accent.color), Color.Black, 0.35f)
+    val base = if (accent == AccentTheme.cover && cover != null) coverAccent(cover.first, cover.second) else Color(accent.color)
+    val color = if (palette.dark) base else androidx.compose.ui.graphics.lerp(base, Color.Black, 0.35f)
     // Значки строки состояния и навигации — тёмные на светлом фоне, светлые на тёмном.
     val view = androidx.compose.ui.platform.LocalView.current
     if (!view.isInEditMode) {
@@ -106,7 +124,14 @@ private val Ink: Color @Composable get() = LocalPalette.current.ink
             surface = palette.surface, onSurface = palette.ink, onSurfaceVariant = palette.muted,
         )
     }
-    CompositionLocalProvider(LocalPalette provides palette) { MaterialTheme(colorScheme = scheme, content = content) }
+    val shapes = Shapes(
+        extraSmall = RoundedCornerShape((4 * corners.scale).dp), small = RoundedCornerShape((8 * corners.scale).dp),
+        medium = RoundedCornerShape((12 * corners.scale).dp), large = RoundedCornerShape((16 * corners.scale).dp),
+        extraLarge = RoundedCornerShape((28 * corners.scale).dp),
+    )
+    CompositionLocalProvider(LocalPalette provides palette, LocalCornerScale provides corners.scale) {
+        MaterialTheme(colorScheme = scheme, shapes = shapes, content = content)
+    }
 }
 
 /**
@@ -141,7 +166,7 @@ internal val LocalCoverFiles = staticCompositionLocalOf<Map<String, String>> { e
                 vm.remoteQueue?.let { remote -> RemoteQueueBanner(vm, remote) }
                 vm.playback.current?.let { song ->
                     Row(
-                        Modifier.padding(horizontal = 12.dp).clip(RoundedCornerShape(18.dp)).background(Surface)
+                        Modifier.padding(horizontal = 12.dp).clip(rounded(18)).background(Surface)
                             .clickable { fullPlayer = true }.padding(10.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
@@ -195,7 +220,7 @@ internal val LocalCoverFiles = staticCompositionLocalOf<Map<String, String>> { e
     vm.notice?.let { message ->
         LaunchedEffect(message) { delay(2500); vm.notice = null }
         Box(Modifier.fillMaxSize().padding(top = 90.dp), contentAlignment = Alignment.TopCenter) {
-            Surface(color = Surface, shape = RoundedCornerShape(12.dp), tonalElevation = 3.dp) {
+            Surface(color = Surface, shape = rounded(12), tonalElevation = 3.dp) {
                 Text(message, Modifier.padding(horizontal = 16.dp, vertical = 10.dp), color = accent, style = MaterialTheme.typography.bodyMedium)
             }
         }
@@ -219,7 +244,7 @@ internal val LocalCoverFiles = staticCompositionLocalOf<Map<String, String>> { e
         Button(
             onClick = { vm.connect(server, username, password) { password = ""; done() } },
             enabled = !vm.connecting && server.isNotBlank() && username.isNotBlank() && password.isNotEmpty(),
-            modifier = Modifier.fillMaxWidth().height(54.dp), shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth().height(54.dp), shape = rounded(16),
         ) {
             if (vm.connecting) CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp) else Text(tr("Подключиться"), fontWeight = FontWeight.SemiBold)
         }
@@ -238,14 +263,14 @@ internal val LocalCoverFiles = staticCompositionLocalOf<Map<String, String>> { e
     val seconds = remote.positionMillis / 1000
     val fromComputer = remote.changedBy == "NocturneDesktop"
     Box(Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, bottom = 8.dp)) {
-        Surface(color = Surface, shape = RoundedCornerShape(16.dp), tonalElevation = 6.dp, shadowElevation = 6.dp) {
+        Surface(color = Surface, shape = rounded(16), tonalElevation = 6.dp, shadowElevation = 6.dp) {
             Row(Modifier.padding(start = 16.dp, end = 4.dp, top = 10.dp, bottom = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                 Icon(if (fromComputer) Icons.Rounded.Computer else Icons.Rounded.PhoneIphone, null, tint = MaterialTheme.colorScheme.primary)
                 Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
                     Text(if (fromComputer) tr("Играло на компьютере") else tr("Играло на другом устройстве"), style = MaterialTheme.typography.titleSmall, maxLines = 1)
                     Text(tr("«{title}», с {time}", "title" to song.title, "time" to "%d:%02d".format(seconds / 60, seconds % 60)), color = Muted, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                 }
-                Button(onClick = vm::acceptRemoteQueue, shape = RoundedCornerShape(12.dp), contentPadding = PaddingValues(horizontal = 14.dp)) { Text(tr("Продолжить")) }
+                Button(onClick = vm::acceptRemoteQueue, shape = rounded(12), contentPadding = PaddingValues(horizontal = 14.dp)) { Text(tr("Продолжить")) }
                 IconButton(onClick = vm::dismissRemoteQueue) { Icon(Icons.Rounded.Close, tr("Закрыть"), tint = Muted) }
             }
         }
@@ -256,7 +281,7 @@ internal val LocalCoverFiles = staticCompositionLocalOf<Map<String, String>> { e
 @Composable private fun UpdateBanner(vm: MusicViewModel, update: app.nocturne.core.AppUpdate) {
     val progress = vm.updateProgress
     Box(Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, bottom = 8.dp)) {
-        Surface(color = Surface, shape = RoundedCornerShape(16.dp), tonalElevation = 6.dp, shadowElevation = 6.dp) {
+        Surface(color = Surface, shape = rounded(16), tonalElevation = 6.dp, shadowElevation = 6.dp) {
             Column {
                 Row(Modifier.padding(start = 16.dp, end = 4.dp, top = 10.dp, bottom = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Rounded.SystemUpdate, null, tint = MaterialTheme.colorScheme.primary)
@@ -269,7 +294,7 @@ internal val LocalCoverFiles = staticCompositionLocalOf<Map<String, String>> { e
                         )
                     }
                     if (progress == null) {
-                        Button(onClick = vm::installAppUpdate, shape = RoundedCornerShape(12.dp), contentPadding = PaddingValues(horizontal = 14.dp)) { Text(tr("Обновить")) }
+                        Button(onClick = vm::installAppUpdate, shape = rounded(12), contentPadding = PaddingValues(horizontal = 14.dp)) { Text(tr("Обновить")) }
                         IconButton(onClick = vm::dismissAppUpdate) { Icon(Icons.Rounded.Close, tr("Закрыть"), tint = Muted) }
                     }
                 }
@@ -282,7 +307,7 @@ internal val LocalCoverFiles = staticCompositionLocalOf<Map<String, String>> { e
 @Composable private fun OfflineBanner(vm: MusicViewModel) {
     if (!vm.offline) return
     Row(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Surface).padding(14.dp),
+        Modifier.fillMaxWidth().clip(rounded(16)).background(Surface).padding(14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(Icons.Rounded.CloudOff, null, tint = Color(0xFFFFB86B))
@@ -312,7 +337,7 @@ internal val LocalCoverFiles = staticCompositionLocalOf<Map<String, String>> { e
     }
     LazyVerticalGrid(GridCells.Fixed(2), contentPadding = PaddingValues(24.dp), horizontalArrangement = Arrangement.spacedBy(16.dp), verticalArrangement = Arrangement.spacedBy(22.dp)) {
         if (vm.demo) item(span = { GridItemSpan(2) }) {
-            Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(Surface).clickable(onClick = settings).padding(18.dp)) {
+            Column(Modifier.fillMaxWidth().clip(rounded(18)).background(Surface).clickable(onClick = settings).padding(18.dp)) {
                 Text(tr("Твоя музыка будет здесь"), fontWeight = FontWeight.SemiBold)
                 Text(tr("Демоверсия · Подключить Navidrome"), color = Muted, style = MaterialTheme.typography.bodySmall)
             }
@@ -541,7 +566,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.downloadsSection(vm: 
             OutlinedTextField(
                 query, { query = it }, placeholder = { Text(tr("Поиск в медиатеке")) },
                 leadingIcon = { Icon(Icons.Rounded.Search, null) }, modifier = Modifier.fillMaxWidth(),
-                singleLine = true, shape = RoundedCornerShape(18.dp),
+                singleLine = true, shape = rounded(18),
             )
         }
         if (query.isBlank()) item { EmptyState(tr("Найди своё звучание"), tr("Альбомы, исполнители и любимые треки.")) }
@@ -569,8 +594,19 @@ private fun androidx.compose.foundation.lazy.LazyListScope.downloadsSection(vm: 
     var scrub by remember(song.id) { mutableFloatStateOf(-1f) }
     val accent = MaterialTheme.colorScheme.primary
 
+    // Фон — по настройке: градиент акцента, размытая обложка или просто фон темы.
+    Box(Modifier.fillMaxSize().background(Background)) {
+    when (vm.settings.playerBackground) {
+        PlayerBackground.gradient -> Box(Modifier.matchParentSize().background(Brush.verticalGradient(listOf(accent.copy(alpha = .22f), Background))))
+        // Размытие есть с Android 12; на старых обложка просто сильно притушена — читаемость та же.
+        PlayerBackground.cover -> {
+            Cover(song.coverArt, vm.client, Modifier.matchParentSize().blur(80.dp).alpha(.6f))
+            Box(Modifier.matchParentSize().background(Background.copy(alpha = if (Build.VERSION.SDK_INT >= 31) .45f else .75f)))
+        }
+        PlayerBackground.solid -> Unit
+    }
     Column(
-        Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(accent.copy(alpha = .22f), Background)))
+        Modifier.fillMaxSize()
             .verticalScroll(rememberScrollState()).padding(24.dp).systemBarsPadding(),
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
@@ -645,6 +681,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.downloadsSection(vm: 
             }
             TextButton(onClick = { showQueue = true }) { Text(tr("Очередь · {n}", "n" to state.queue.size)) }
         }
+    }
     }
 
     if (showQueue) ModalBottomSheet(onDismissRequest = { showQueue = false }, containerColor = Background) {
@@ -767,6 +804,15 @@ private fun androidx.compose.foundation.lazy.LazyListScope.downloadsSection(vm: 
                 FilterChip(selected = settings.accent == theme, onClick = { settings.chooseAccent(theme) }, label = { Text(tr(theme.title)) })
             }
         }
+        ChipRow(tr("Углы"), Corners.entries, settings.corners, { tr(it.title) }, settings::chooseCorners)
+        ChipRow(tr("Фон плеера"), PlayerBackground.entries, settings.playerBackground, { tr(it.title) }, settings::choosePlayerBackground)
+        ChipRow(tr("Размер текста песни"), listOf(0.85f, 1f, 1.2f, 1.45f), settings.lyricsScale, {
+            when (it) { 0.85f -> tr("Мелкий"); 1f -> tr("Обычный"); 1.2f -> tr("Крупный"); else -> tr("Огромный") }
+        }, settings::chooseLyricsScale)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(tr("Текст песни по центру"), Modifier.weight(1f))
+            Switch(checked = settings.lyricsCenter, onCheckedChange = settings::useLyricsCenter)
+        }
 
         SectionTitle(tr("Приложение"))
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -818,7 +864,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.downloadsSection(vm: 
 }
 
 @Composable private fun Cover(id: String?, client: NavidromeClient?, modifier: Modifier = Modifier) {
-    val shape = RoundedCornerShape(12.dp)
+    val shape = rounded(12)
     val accent = MaterialTheme.colorScheme.primary
     if (id?.startsWith("demo-") == true) {
         val seed = id.last().digitToIntOrNull() ?: 0
@@ -842,15 +888,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.downloadsSection(vm: 
     } else {
         val context = LocalContext.current
         val saved = LocalCoverFiles.current
-        // Обложка своего файла лежит на диске, скачанная — рядом с треком, серверная — по подписанному адресу.
-        val source = remember(id, client, saved) {
-            when {
-                id == null -> null
-                id.startsWith(LocalLibrary.FILE_COVER_PREFIX) -> File(id.removePrefix(LocalLibrary.FILE_COVER_PREFIX))
-                saved[id] != null -> File(saved.getValue(id))
-                else -> client?.cover(id)
-            }
-        }
+        val source = remember(id, client, saved) { coverSource(id, client, saved) }
         val request = remember(source) {
             ImageRequest.Builder(context).data(source).diskCachePolicy(CachePolicy.DISABLED).crossfade(true).build()
         }
@@ -909,7 +947,10 @@ private fun timeLabel(milliseconds: Long): String {
                     val start = line.start
                     Text(
                         line.value.ifEmpty { " " },
-                        style = if (synced) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyLarge,
+                        style = (if (synced) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyLarge).let { base ->
+                            base.copy(fontSize = base.fontSize * vm.settings.lyricsScale, lineHeight = base.lineHeight * vm.settings.lyricsScale)
+                        },
+                        textAlign = if (vm.settings.lyricsCenter) androidx.compose.ui.text.style.TextAlign.Center else null,
                         fontWeight = if (synced && index == active) FontWeight.Bold else FontWeight.Normal,
                         color = if (!synced || index == active) Ink else Muted,
                         modifier = Modifier.fillMaxWidth().then(
@@ -917,6 +958,45 @@ private fun timeLabel(milliseconds: Long): String {
                         ),
                     )
                 }
+            }
+        }
+    }
+}
+
+/** Обложка своего файла лежит на диске, скачанная — рядом с треком, серверная — по подписанному адресу. */
+private fun coverSource(id: String?, client: NavidromeClient?, saved: Map<String, String>): Any? = when {
+    id == null -> null
+    id.startsWith(LocalLibrary.FILE_COVER_PREFIX) -> File(id.removePrefix(LocalLibrary.FILE_COVER_PREFIX))
+    saved[id] != null -> File(saved.getValue(id))
+    else -> client?.cover(id)
+}
+
+/**
+ * Цвет обложки играющего трека — для акцента «Из обложки». Считается по копии 24×24, как на iPhone.
+ * Пока грузится новая обложка, остаётся прежний цвет: акцент не мигает фиолетовым между треками.
+ */
+@Composable internal fun rememberCoverHue(id: String?, client: NavidromeClient?, saved: Map<String, String>, enabled: Boolean): Pair<Float, Float>? {
+    val context = LocalContext.current
+    var hue by remember { mutableStateOf<Pair<Float, Float>?>(null) }
+    LaunchedEffect(id, enabled) {
+        if (!enabled || id == null || id.startsWith("demo-")) { hue = null; return@LaunchedEffect }
+        val source = coverSource(id, client, saved) ?: return@LaunchedEffect
+        val request = ImageRequest.Builder(context).data(source).size(24).allowHardware(false).build()
+        val bitmap = (context.imageLoader.execute(request).drawable as? android.graphics.drawable.BitmapDrawable)?.bitmap ?: return@LaunchedEffect
+        val pixels = IntArray(bitmap.width * bitmap.height)
+        bitmap.getPixels(pixels, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
+        hue = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { app.nocturne.core.CoverColor.vibrant(pixels) }
+    }
+    return hue
+}
+
+/** Подпись и ряд вариантов-чипов с прокруткой: длинные русские названия не сминаются в столбик. */
+@Composable private fun <T> ChipRow(title: String, options: List<T>, selected: T, label: (T) -> String, choose: (T) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(title, style = MaterialTheme.typography.bodyMedium)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
+            options.forEach { option ->
+                FilterChip(selected = option == selected, onClick = { choose(option) }, label = { Text(label(option)) })
             }
         }
     }

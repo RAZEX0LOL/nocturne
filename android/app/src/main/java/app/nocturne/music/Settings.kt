@@ -15,10 +15,29 @@ import app.nocturne.core.qualityForNetwork
  * Название хранится по-русски: это ключ перевода, английский берётся при показе.
  */
 enum class AccentTheme(val title: String, val color: Long) {
+    /** Цвет играющей обложки; пока её нет — фиолетовый. */
+    cover("Из обложки", 0xFFA78BFA),
     violet("Фиолетовый", 0xFFA78BFA),
     mint("Мятный", 0xFF5EEAD4),
     dawn("Рассвет", 0xFFFDA4AF),
+    amber("Янтарь", 0xFFFCD34D),
+    sky("Небо", 0xFF7DD3FC),
+    lime("Лайм", 0xFFBEF264),
     mono("Серый", 0xFFD4D4D8),
+}
+
+/** Углы карточек, обложек и кнопок: множитель к радиусам интерфейса. */
+enum class Corners(val title: String, val scale: Float) {
+    sharp("Острые", 0.3f),
+    normal("Обычные", 1f),
+    round("Круглые", 1.6f),
+}
+
+/** Фон полноэкранного плеера. */
+enum class PlayerBackground(val title: String) {
+    gradient("Градиент"),
+    cover("Размытая обложка"),
+    solid("Однотонный"),
 }
 
 /** Тема: тёмная, OLED-чёрная (пиксели OLED-экрана не светятся), светлая или как в системе. */
@@ -65,6 +84,15 @@ class Settings(context: Context) {
     /** Искать текст в LRCLIB, если у Navidrome его нет: названия треков уходят стороннему сервису. */
     var lrclib by mutableStateOf(store.getBoolean("lyrics.lrclib", false))
         private set
+    var corners by mutableStateOf(enum(store.getString("appearance.corners", null), Corners.normal))
+        private set
+    var playerBackground by mutableStateOf(enum(store.getString("appearance.playerBackground", null), PlayerBackground.gradient))
+        private set
+    /** Текст песни: размер (1 — обычный) и строки по центру. */
+    var lyricsScale by mutableStateOf(store.getFloat("lyrics.scale", 1f))
+        private set
+    var lyricsCenter by mutableStateOf(store.getBoolean("lyrics.center", false))
+        private set
 
     fun chooseWifiQuality(value: StreamQuality) { wifiQuality = value; store.edit().putString("quality.wifi", value.name).apply() }
     fun chooseCellularQuality(value: StreamQuality) { cellularQuality = value; store.edit().putString("quality.cellular", value.name).apply() }
@@ -76,6 +104,10 @@ class Settings(context: Context) {
     fun chooseFadeSeconds(value: Float) { fadeSeconds = value; store.edit().putFloat("playback.fade", value).apply() }
     fun enableEqualizer(value: Boolean) { equalizerEnabled = value; store.edit().putBoolean("eq.enabled", value).apply() }
     fun limitDownloadsToWifi(value: Boolean) { downloadOverWifiOnly = value; store.edit().putBoolean("downloads.wifiOnly", value).apply() }
+    fun chooseCorners(value: Corners) { corners = value; store.edit().putString("appearance.corners", value.name).apply() }
+    fun choosePlayerBackground(value: PlayerBackground) { playerBackground = value; store.edit().putString("appearance.playerBackground", value.name).apply() }
+    fun chooseLyricsScale(value: Float) { lyricsScale = value; store.edit().putFloat("lyrics.scale", value).apply() }
+    fun useLyricsCenter(value: Boolean) { lyricsCenter = value; store.edit().putBoolean("lyrics.center", value).apply() }
     fun useLrclib(value: Boolean) { lrclib = value; store.edit().putBoolean("lyrics.lrclib", value).apply() }
     fun autoDownloadFavorites(value: Boolean) { downloadFavorites = value; store.edit().putBoolean("downloads.favorites", value).apply() }
 
