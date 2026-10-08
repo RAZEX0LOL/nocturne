@@ -129,7 +129,7 @@ struct BrowserView: View {
                             .accessibilityLabel(String(localized: "Очистить адрес"))
                     }
                 }
-                .padding(10).background(Theme.surface, in: RoundedRectangle(cornerRadius: 12)).padding(.horizontal, 12).padding(.vertical, 8)
+                .padding(10).background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.radius(12))).padding(.horizontal, 12).padding(.vertical, 8)
                 WebView(webView: model.webView)
                 if !model.downloads.isEmpty {
                     VStack(alignment: .leading, spacing: 6) {

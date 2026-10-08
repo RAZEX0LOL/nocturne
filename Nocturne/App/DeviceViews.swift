@@ -44,7 +44,7 @@ struct DeviceLibraryView: View {
     private func addButton(_ title: String, _ icon: String, _ source: AddMusicCoordinator.Source) -> some View {
         Button { AddMusicCoordinator.shared.request = source } label: {
             Label(title, systemImage: icon).font(.subheadline.weight(.semibold)).frame(maxWidth: .infinity).padding(12)
-                .background(Theme.surface, in: RoundedRectangle(cornerRadius: 12))
+                .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.radius(12)))
         }.buttonStyle(.plain).disabled(local.isImporting)
     }
 }
@@ -111,7 +111,7 @@ struct OnDeviceHomeSection: View {
                     Spacer()
                     Button(String(localized: "Повторить")) { Task { await library.refresh() } }.font(.callout)
                 }
-                .padding(14).background(Theme.surface, in: RoundedRectangle(cornerRadius: 14))
+                .padding(14).background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.radius(14)))
             }
             if songs.isEmpty {
                 if !library.isOffline {

@@ -21,7 +21,7 @@ struct HomeView: View {
                                     Text(String(localized: "Демоверсия · Подключить Navidrome")).font(.caption).foregroundStyle(Theme.secondary)
                                 }
                                 Spacer(); Image(systemName: "arrow.up.right")
-                            }.padding(16).background(Theme.surface, in: RoundedRectangle(cornerRadius: 17))
+                            }.padding(16).background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.radius(17)))
                         }.buttonStyle(.plain)
                     }
                     if library.isOffline || library.onDeviceOnly { OnDeviceHomeSection() }
@@ -311,7 +311,7 @@ struct RadioStationsView: View {
                 Button { player.playRadio(station, client: library.client) } label: {
                     HStack(spacing: 14) {
                         Image(systemName: "antenna.radiowaves.left.and.right").font(.title3).frame(width: 48, height: 48)
-                            .background(Theme.surface, in: RoundedRectangle(cornerRadius: 10)).foregroundStyle(Theme.accent)
+                            .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.radius(10))).foregroundStyle(Theme.accent)
                         VStack(alignment: .leading, spacing: 3) {
                             Text(station.name).foregroundStyle(Theme.primary)
                             Text(URL(string: station.streamUrl)?.host() ?? "").font(.caption).foregroundStyle(Theme.secondary)
@@ -361,10 +361,10 @@ struct PlayButtons: View {
         HStack(spacing: 14) {
             Button { player.play(songs, shuffle: false, client: library.client) } label: {
                 Label(String(localized: "Слушать"), systemImage: "play.fill").fontWeight(.semibold).frame(maxWidth: .infinity).padding(16)
-                    .background(Theme.accent, in: RoundedRectangle(cornerRadius: 15)).foregroundStyle(Theme.onAccent)
+                    .background(Theme.accent, in: RoundedRectangle(cornerRadius: Theme.radius(15))).foregroundStyle(Theme.onAccent)
             }
             Button { player.play(songs, at: songs.indices.randomElement() ?? 0, shuffle: true, client: library.client) } label: {
-                Image(systemName: "shuffle").frame(width: 52, height: 52).background(Theme.surface, in: RoundedRectangle(cornerRadius: 15))
+                Image(systemName: "shuffle").frame(width: 52, height: 52).background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.radius(15)))
             }.accessibilityLabel(String(localized: "Перемешать"))
         }.disabled(songs.isEmpty)
     }

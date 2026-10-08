@@ -59,8 +59,13 @@ final class NocturneUITests: XCTestCase {
         XCTAssertTrue(home.exists)
         app.buttons["Настройки"].tap()
         XCTAssertTrue(app.staticTexts["Демоверсия"].waitForExistence(timeout: 30))
-        app.buttons["Подключить Navidrome"].tap()
-        XCTAssertTrue(app.textFields["https://music.example.com"].waitForExistence(timeout: 30))
+        // Лист настроек ещё выезжает — нажатие может прийтись на анимацию; повторяем, как выше.
+        let address = app.textFields["https://music.example.com"]
+        for _ in 0..<3 where !address.exists {
+            if app.buttons["Подключить Navidrome"].exists { app.buttons["Подключить Navidrome"].tap() }
+            _ = address.waitForExistence(timeout: 10)
+        }
+        XCTAssertTrue(address.exists)
     }
 
     /// Regression: theme colours were closures isolated to the main actor and crashed when

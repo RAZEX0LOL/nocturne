@@ -58,7 +58,7 @@ struct StatsView: View {
             Text(caption).font(.caption2).foregroundStyle(Theme.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading).padding(14)
-        .background(Theme.surface, in: RoundedRectangle(cornerRadius: 14))
+        .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.radius(14)))
     }
 
     @ViewBuilder private func ranking(_ title: String, _ items: [(name: String, count: Int)]) -> some View {

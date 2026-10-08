@@ -29,8 +29,8 @@ struct MiniPlayer: View {
                         .accessibilityLabel(String(localized: "Следующий трек"))
                 }
             }.padding(10).foregroundStyle(Theme.primary)
-                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18))
-                .overlay(RoundedRectangle(cornerRadius: 18).stroke(Theme.primary.opacity(0.08)))
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: Theme.radius(18)))
+                .overlay(RoundedRectangle(cornerRadius: Theme.radius(18)).stroke(Theme.primary.opacity(0.08)))
         }
     }
 }

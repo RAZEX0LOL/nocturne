@@ -30,7 +30,7 @@ struct Cover: View {
                 }
             }
         }
-        .frame(width: size, height: size).clipped().clipShape(RoundedRectangle(cornerRadius: size > 100 ? 12 : 7))
+        .frame(width: size, height: size).clipped().clipShape(RoundedRectangle(cornerRadius: Theme.radius(size > 100 ? 12 : 7)))
         .task(id: key) {
             guard let key, image == nil, let id else { return }
             let bucket = ArtworkCache.bucket(for: size, scale: displayScale)

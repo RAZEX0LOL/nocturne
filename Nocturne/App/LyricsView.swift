@@ -63,12 +63,14 @@ struct LyricsView: View {
         let active = synced ? activeLine(in: lines) : nil
         ScrollViewReader { proxy in
             ScrollView {
-                VStack(alignment: .leading, spacing: synced ? 18 : 6) {
+                let centered = Appearance.shared.lyricsCentered
+                VStack(alignment: centered ? .center : .leading, spacing: synced ? 18 : 6) {
                     ForEach(Array(lines.enumerated()), id: \.offset) { index, line in
                         Text(line.value.isEmpty ? " " : line.value)
                             .font(.system(size: (synced ? 22 : 17) * Appearance.shared.lyricsScale, weight: synced ? .semibold : .regular))
                             .foregroundStyle(!synced || index == active ? Theme.primary : Theme.secondary.opacity(0.6))
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .multilineTextAlignment(centered ? .center : .leading)
+                            .frame(maxWidth: .infinity, alignment: centered ? .center : .leading)
                             .id(index)
                             .onTapGesture { if synced, let start = line.start { player.seek(Double(start) / 1000) } }
                     }

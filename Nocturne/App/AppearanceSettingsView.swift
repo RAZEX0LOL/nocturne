@@ -49,6 +49,13 @@ struct AppearanceSettingsView: View {
                 LabeledContent(String(localized: "Размер текста песен")) {
                     Slider(value: $appearance.lyricsScale, in: 0.8...1.6, step: 0.1).frame(maxWidth: 160)
                 }
+                Toggle(String(localized: "Текст песни по центру"), isOn: $appearance.lyricsCentered)
+            }
+            Section(String(localized: "Форма")) {
+                Picker(String(localized: "Углы"), selection: $appearance.corners) {
+                    ForEach(Appearance.Corners.allCases) { Text($0.title).tag($0) }
+                }.pickerStyle(.segmented)
+                Toggle(String(localized: "Скруглённый шрифт"), isOn: $appearance.roundedFont)
             }
             Section(String(localized: "Медиатека")) {
                 Toggle(String(localized: "Альбомы сеткой"), isOn: $appearance.libraryGrid)

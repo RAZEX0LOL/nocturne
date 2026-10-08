@@ -67,6 +67,26 @@ final class Appearance {
         var title: String { self == .next ? String(localized: "Следующий трек") : String(localized: "Вперёд на 15 с") }
     }
 
+    /// Corners of cards, covers and buttons: a multiplier for every radius in the app.
+    enum Corners: String, CaseIterable, Identifiable {
+        case sharp, normal, round
+        var id: String { rawValue }
+        var title: String {
+            switch self {
+            case .sharp: String(localized: "Острые")
+            case .normal: String(localized: "Обычные")
+            case .round: String(localized: "Круглые")
+            }
+        }
+        var scale: CGFloat {
+            switch self {
+            case .sharp: 0.3
+            case .normal: 1
+            case .round: 1.6
+            }
+        }
+    }
+
     enum HomeSection: String, CaseIterable, Identifiable, Codable {
         case recentlyPlayed, recentlyAdded, starredSongs, frequent, favoriteAlbums, discover
         var id: String { rawValue }
@@ -88,6 +108,10 @@ final class Appearance {
     var miniButton: MiniButton { didSet { store(miniButton.rawValue, "miniButton") } }
     var libraryGrid: Bool { didSet { store(libraryGrid, "libraryGrid") } }
     var lyricsScale: Double { didSet { store(lyricsScale, "lyricsScale") } }
+    var lyricsCentered: Bool { didSet { store(lyricsCentered, "lyricsCentered") } }
+    var corners: Corners { didSet { store(corners.rawValue, "corners") } }
+    /// SF Rounded across the whole app.
+    var roundedFont: Bool { didSet { store(roundedFont, "roundedFont") } }
     var haptics: Bool { didSet { store(haptics, "haptics") } }
     var animateCover: Bool { didSet { store(animateCover, "animateCover") } }
     var coverSwipe: Bool { didSet { store(coverSwipe, "coverSwipe") } }
@@ -114,6 +138,9 @@ final class Appearance {
         miniButton = Self.stored("miniButton", MiniButton.next)
         libraryGrid = defaults.bool(forKey: "appearance.libraryGrid")
         lyricsScale = defaults.object(forKey: "appearance.lyricsScale") as? Double ?? 1
+        lyricsCentered = defaults.bool(forKey: "appearance.lyricsCentered")
+        corners = Self.stored("corners", Corners.normal)
+        roundedFont = defaults.bool(forKey: "appearance.roundedFont")
         haptics = defaults.object(forKey: "appearance.haptics") as? Bool ?? true
         animateCover = defaults.object(forKey: "appearance.animateCover") as? Bool ?? true
         coverSwipe = defaults.object(forKey: "appearance.coverSwipe") as? Bool ?? true
@@ -137,6 +164,9 @@ final class Appearance {
 enum Theme {
     private static var appearance: Appearance { Appearance.shared }
     private static var isOLED: Bool { appearance.theme == .oled }
+
+    /// A corner radius scaled by the "Corners" setting.
+    static func radius(_ value: CGFloat) -> CGFloat { value * appearance.corners.scale }
 
     static var background: Color {
         isOLED ? .black : dynamic(dark: UIColor(red: 0.055, green: 0.055, blue: 0.075, alpha: 1),

@@ -133,6 +133,7 @@ struct RootView: View {
             Button(String(localized: "Понятно")) { player.error = nil }
         } message: { Text(player.error ?? "") }
         .preferredColorScheme(Appearance.shared.colorScheme)
+        .fontDesign(Appearance.shared.roundedFont ? .rounded : .default)
         .tint(Theme.accent)
         .overlay(alignment: .top) { if let notice = player.notice, !fullPlayer { Toast(text: notice).padding(.top, 8) } }
         .animation(.spring(duration: 0.3), value: player.notice)
@@ -162,7 +163,7 @@ struct ConnectionView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 28) {
                     ZStack {
-                        RoundedRectangle(cornerRadius: 28).fill(Theme.accent.opacity(0.12)).frame(width: 86, height: 86)
+                        RoundedRectangle(cornerRadius: Theme.radius(28)).fill(Theme.accent.opacity(0.12)).frame(width: 86, height: 86)
                         Image(systemName: "waveform").font(.system(size: 37, weight: .light)).foregroundStyle(Theme.accent)
                     }.padding(.top, 35)
                     VStack(alignment: .leading, spacing: 12) {
@@ -189,7 +190,7 @@ struct ConnectionView: View {
                         }
                     } label: {
                         HStack { Spacer(); if busy { ProgressView().tint(Theme.onAccent) } else { Text(String(localized: "Подключиться")).fontWeight(.semibold); Image(systemName: "arrow.right") }; Spacer() }
-                            .padding(18).background(Theme.accent, in: RoundedRectangle(cornerRadius: 18)).foregroundStyle(Theme.onAccent)
+                            .padding(18).background(Theme.accent, in: RoundedRectangle(cornerRadius: Theme.radius(18))).foregroundStyle(Theme.onAccent)
                     }.disabled(busy || server.isEmpty || username.isEmpty || password.isEmpty)
                     Label(String(localized: "Пароль хранится в Связке ключей на этом устройстве."), systemImage: "lock.shield")
                         .font(.caption).foregroundStyle(Theme.secondary)
@@ -221,7 +222,7 @@ struct ConnectionView: View {
     private func field<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title).font(.caption).foregroundStyle(Theme.secondary)
-            content().padding(16).background(Theme.surface, in: RoundedRectangle(cornerRadius: 14))
+            content().padding(16).background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.radius(14)))
         }
     }
 }
