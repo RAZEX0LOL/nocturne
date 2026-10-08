@@ -182,6 +182,12 @@ function followTray() {
 // MARK: - Discord
 
 /**
+ * Приложение «Nocturne» в Discord Developer Portal: его имя Discord показывает в статусе
+ * («Слушает Nocturne»). ID не секрет — он и так виден всем в профиле.
+ */
+const DISCORD_APP_ID = '1557743642607616000'
+
+/**
  * Статус в Discord: что играет и полоса времени. Обновляется при смене трека, паузе и перемотке;
  * на паузе статус убирается, как у Spotify. Discord не запущен — молча ждём следующего раза.
  */
@@ -192,8 +198,8 @@ function followDiscord() {
     const { settings, queue, playing, position, duration } = store.snapshot()
     const jumped = Math.abs(position - lastPosition) > 3
     lastPosition = position
-    const clientId = settings.discordClientId.trim()
-    if (!settings.discord || !clientId) {
+    const clientId = DISCORD_APP_ID
+    if (!settings.discord) {
       if (sent) void invoke('discord_disconnect').catch(() => {})
       sent = ''
       return
@@ -211,12 +217,16 @@ function followDiscord() {
           ? { title: song.title, artist: song.artist, album: song.album, startedAt: Math.round(startedAt), endsAt: total ? Math.round(startedAt + total * 1000) : null }
           : null,
     }).catch(() => {
-      // Discord не запущен или ID неверный — попробуем снова при следующем изменении.
+      // Discord не запущен — повторим сами (ниже), не дожидаясь следующего трека.
       sent = ''
     })
   }
   store.subscribe(sync)
   sync()
+  // Discord открыли уже после Nocturne: статус появится сам через несколько секунд.
+  setInterval(() => {
+    if (!sent && store.snapshot().settings.discord) sync()
+  }, 15_000)
 }
 
 // MARK: - Мини-плеер

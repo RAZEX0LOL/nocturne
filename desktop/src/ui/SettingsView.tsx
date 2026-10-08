@@ -240,29 +240,10 @@ export function SettingsView() {
           <SettingsCard
             icon="artist"
             title={t('Статус в Discord')}
-            description={t('«Слушает» с названием трека и временем, пока играет музыка. Discord должен быть запущен на этом компьютере.')}
+            description={t('Друзья увидят «Слушает Nocturne» с треком, исполнителем и временем. Нужен только запущенный Discord на этом компьютере.')}
           >
             <Toggle checked={settings.discord} onChange={(discord) => store.update({ discord })} label={t('Статус в Discord')} />
           </SettingsCard>
-          {settings.discord && (
-            <div className="card settings-card">
-              <span className="w-[18px]" />
-              <div className="min-w-0 flex-1 space-y-1">
-                <div>{t('ID приложения Discord')}</div>
-                <div className="text-xs text-secondary">
-                  {t('На discord.com/developers/applications создай приложение «Nocturne» и скопируй Application ID. Картинку для статуса можно загрузить в Rich Presence → Art Assets под именем nocturne.')}
-                </div>
-              </div>
-              <input
-                className="field w-56"
-                inputMode="numeric"
-                placeholder="1234567890123456789"
-                value={settings.discordClientId}
-                onChange={(event) => store.update({ discordClientId: event.target.value.replace(/\D/g, '') })}
-                aria-label={t('ID приложения Discord')}
-              />
-            </div>
-          )}
           <SettingsCard icon="settings" title={t('Глобальные сочетания клавиш')} description={shortcutHint()}>
             <Toggle checked={settings.globalShortcuts} onChange={(globalShortcuts) => store.update({ globalShortcuts })} label={t('Глобальные сочетания клавиш')} />
           </SettingsCard>

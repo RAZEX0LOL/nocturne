@@ -95,7 +95,6 @@ export interface Settings {
   visualizer: boolean
   /** «Слушает … в Nocturne» в статусе Discord; нужен ID своего приложения Discord. */
   discord: boolean
-  discordClientId: string
   accent: AccentMode
   quality: StreamQuality
   replayGain: ReplayGainMode
@@ -236,7 +235,6 @@ const defaultSettings: Settings = {
   globalShortcuts: true,
   visualizer: true,
   discord: false,
-  discordClientId: '',
   accent: 'system',
   quality: 'mp3High',
   replayGain: 'off',

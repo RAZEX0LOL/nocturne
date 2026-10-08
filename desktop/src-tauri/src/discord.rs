@@ -1,9 +1,9 @@
 //! Статус в Discord: «Слушает Nocturne — Песня, Исполнитель» с полосой времени, как у Spotify.
 //!
-//! Связь с запущенным клиентом Discord — локальная (IPC), без интернета и без токенов. Нужен ID
-//! приложения из Discord Developer Portal: его вводят в настройках. Обложку не отправляем: адрес
-//! обложки Navidrome содержит токен доступа, а статус в Discord видят все. Вместо неё — картинка
-//! «nocturne», если её загрузили в своё приложение Discord (Rich Presence → Art Assets).
+//! Связь с запущенным клиентом Discord — локальная (IPC), без интернета и без токенов. ID приложения
+//! «Nocturne» встроен (src/shell.ts) — человеку ничего настраивать не нужно. Обложку не отправляем:
+//! адрес обложки Navidrome содержит токен доступа, а статус в Discord видят все. Вместо неё — значок
+//! Nocturne по ссылке с сайта: Discord сам скачивает картинки по https, загружать их в портал не нужно.
 
 use std::sync::Mutex;
 
@@ -17,6 +17,9 @@ struct Connection {
 }
 
 static CONNECTION: Mutex<Option<Connection>> = Mutex::new(None);
+
+/** Значок Nocturne в статусе — с сайта, по https. */
+const ICON: &str = "https://nocturne.razex.online/discord.png";
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -64,7 +67,7 @@ fn apply(client_id: &str, presence: Option<&Presence>) -> Result<(), String> {
             if let Some(end) = presence.ends_at {
                 timestamps = timestamps.end(end);
             }
-            let mut assets = Assets::new().large_image("nocturne");
+            let mut assets = Assets::new().large_image(ICON);
             if let Some(album) = album.as_deref() {
                 assets = assets.large_text(album);
             }
@@ -126,5 +129,17 @@ mod tests {
         assert!(result.is_err());
         let empty = tauri::async_runtime::block_on(discord_presence("  ".into(), None));
         assert!(empty.is_err());
+    }
+
+    /// Живая проверка с настоящим Discord (должен быть запущен): `cargo test discord_live -- --ignored`.
+    #[test]
+    #[ignore]
+    fn discord_live() {
+        let id = std::env::var("NOCTURNE_DISCORD_APP_ID").unwrap_or_else(|_| "1557743642607616000".into());
+        let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() as i64;
+        let presence = Presence { title: "Между нами".into(), artist: Some("Корали".into()), album: Some("Тихие дни".into()), started_at: now, ends_at: Some(now + 207_000) };
+        apply(&id, Some(&presence)).expect("Discord принял статус");
+        std::thread::sleep(std::time::Duration::from_secs(std::env::var("HOLD").ok().and_then(|v| v.parse().ok()).unwrap_or(5)));
+        apply(&id, None).expect("Discord убрал статус");
     }
 }

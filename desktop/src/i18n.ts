@@ -399,11 +399,8 @@ const english: Record<string, string> = {
   'треков': 'songs',
   // Discord
   'Статус в Discord': 'Discord status',
-  '«Слушает» с названием трека и временем, пока играет музыка. Discord должен быть запущен на этом компьютере.':
-    '“Listening to” with the song and time while music plays. Discord must be running on this computer.',
-  'ID приложения Discord': 'Discord application ID',
-  'На discord.com/developers/applications создай приложение «Nocturne» и скопируй Application ID. Картинку для статуса можно загрузить в Rich Presence → Art Assets под именем nocturne.':
-    'At discord.com/developers/applications create an application called “Nocturne” and copy its Application ID. An image for the status can be uploaded in Rich Presence → Art Assets as “nocturne”.',
+  'Друзья увидят «Слушает Nocturne» с треком, исполнителем и временем. Нужен только запущенный Discord на этом компьютере.':
+    'Friends see “Listening to Nocturne” with the song, artist and time. All it needs is Discord running on this computer.',
   // ТРИЗ: оформление, палитра, бесконечное воспроизведение
   'OLED-чёрная': 'OLED black',
   'Авто: альбом подряд — по альбому': 'Auto: album in order — by album',
