@@ -24,6 +24,8 @@ APKSIGNER=$(ls -d "$SDK"/build-tools/*/apksigner | sort -V | tail -1)
 rm -rf "$OUT" && mkdir -p "$OUT"
 NAME="Nocturne-$VERSION.apk"
 cp "$APK" "$OUT/$NAME"
+# Постоянное имя — для сайта: кнопка «Скачать» всегда ведёт на последнюю версию.
+cp "$APK" "$OUT/Nocturne-android.apk"
 SUM=$(shasum -a 256 "$OUT/$NAME" | cut -d' ' -f1)
 cat > "$OUT/android.json" <<JSON
 {
@@ -39,7 +41,7 @@ if [[ "${1:-}" == "publish" ]]; then
   gh release view updates -R "$REPO" >/dev/null 2>&1 || gh release create updates -R "$REPO" \
     --title "Nocturne — обновления" --notes "Файлы, которые приложение Nocturne скачивает само. Установщики для первой установки — тоже здесь."
   # Сначала APK, потом манифест: иначе приложение увидело бы версию раньше её файла.
-  gh release upload updates -R "$REPO" --clobber "$OUT/$NAME"
+  gh release upload updates -R "$REPO" --clobber "$OUT/$NAME" "$OUT/Nocturne-android.apk"
   gh release upload updates -R "$REPO" --clobber "$OUT/android.json"
   echo "Выложено: $BASE/android.json"
 fi

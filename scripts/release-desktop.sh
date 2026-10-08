@@ -60,6 +60,8 @@ ARCH=$(uname -m)
 cp "$BUNDLE/macos/Nocturne.app.tar.gz" "$OUT/Nocturne_${VERSION}_${ARCH}.app.tar.gz"
 cp "$BUNDLE/macos/Nocturne.app.tar.gz.sig" "$OUT/Nocturne_${VERSION}_${ARCH}.app.tar.gz.sig"
 find "$BUNDLE/dmg" -name '*.dmg' ! -name 'rw.*' -exec cp {} "$OUT/" \;
+# Постоянные имена — для сайта: кнопка «Скачать» всегда ведёт на последнюю версию.
+find "$BUNDLE/dmg" -name '*.dmg' ! -name 'rw.*' -exec cp {} "$OUT/Nocturne-mac.dmg" \;
 python3 scripts/updater_manifest.py "$VERSION" "$OUT" "$BASE" darwin "$ARCH"
 
 # Windows с Мака: NSIS-установщик он же и обновление (ставится поверх в тихом режиме).
@@ -68,6 +70,7 @@ if (( WINDOWS )); then
     --runner cargo-xwin --target x86_64-pc-windows-msvc --bundles nsis)
   WIN=desktop/src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis
   cp "$WIN"/Nocturne_${VERSION}_x64-setup.exe "$WIN"/Nocturne_${VERSION}_x64-setup.exe.sig "$OUT/"
+  cp "$WIN"/Nocturne_${VERSION}_x64-setup.exe "$OUT/Nocturne-windows-setup.exe"
   python3 scripts/updater_manifest.py "$VERSION" "$OUT" "$BASE" windows x86_64
 fi
 echo "Готово: $OUT (версия $VERSION)"

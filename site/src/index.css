@@ -1,0 +1,46 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Manrope', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --color-night: #0b0b10;
+  --color-panel: #15151d;
+  --color-line: #262633;
+  --color-ink: #f4f3f8;
+  --color-muted: #a3a2b4;
+  --color-accent: #a78bfa;
+  --color-accent-deep: #7c3aed;
+}
+
+html {
+  scroll-behavior: smooth;
+  background: var(--color-night);
+  color: var(--color-ink);
+}
+
+body {
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Пятна цвета на фоне — как «живой» фон полноэкранного плеера. */
+.glow {
+  background:
+    radial-gradient(40rem 26rem at 18% 8%, rgb(167 139 250 / 0.22), transparent 70%),
+    radial-gradient(34rem 24rem at 85% 18%, rgb(200 171 120 / 0.14), transparent 70%),
+    radial-gradient(40rem 30rem at 50% 100%, rgb(88 146 138 / 0.12), transparent 70%);
+}
+
+.card {
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.045), rgb(255 255 255 / 0.015));
+  border: 1px solid var(--color-line);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .rise {
+    animation: rise 700ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: none; }
+  }
+}
