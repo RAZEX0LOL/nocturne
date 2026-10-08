@@ -354,6 +354,7 @@ function UpdateBanner() {
         severity="info"
         title={t('Доступно обновление')}
         message={t('Вышла версия {version}', { version: update.version })}
+        details={update.notes}
         onClose={() => store.dismissUpdate()}
         action={
           <button onClick={() => void store.installUpdate()} className="btn btn-accent">

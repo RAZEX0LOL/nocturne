@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { PLATFORMS, detectPlatform, downloadUrl, loadRelease, megabytes, type Platform, type PlatformId, type ReleaseInfo } from './downloads'
+import { PLATFORMS, detectPlatform, downloadUrl, loadRelease, megabytes, type ChangelogEntry, type Platform, type PlatformId, type ReleaseInfo } from './downloads'
+import bundledChangelog from '../changelog.json'
 
 /** Логотип — те же пять полосок звука, что на экране входа в приложении. */
 function Logo({ size = 28 }: { size?: number }) {
@@ -41,6 +42,7 @@ function Header() {
           <a href="#features" className="hover:text-ink">Возможности</a>
           <a href="#screens" className="hover:text-ink">Скриншоты</a>
           <a href="#download" className="hover:text-ink">Скачать</a>
+          <a href="#changelog" className="hover:text-ink">Что нового</a>
           <a href="#faq" className="hover:text-ink">Вопросы</a>
         </nav>
         <a href="#download" className="rounded-full bg-accent px-4 py-2 text-sm font-bold text-night hover:bg-[#b9a3fb]">
@@ -271,6 +273,83 @@ function Download({ main, release }: { main?: PlatformId; release: ReleaseInfo }
   )
 }
 
+const KIND_LABEL = { new: 'Новое', better: 'Лучше', fix: 'Исправлено' } as const
+const KIND_STYLE = {
+  new: 'bg-accent/15 text-accent',
+  better: 'bg-[#5eead4]/12 text-[#5eead4]',
+  fix: 'bg-[#fcd34d]/12 text-[#fcd34d]',
+} as const
+const PLATFORM_LABEL: Record<PlatformId, string> = { mac: 'Mac', windows: 'Windows', linux: 'Linux', android: 'Android', ios: 'iPhone' }
+
+const dateLabel = (date: string) =>
+  new Date(`${date}T12:00:00`).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
+
+/** Что нового в каждой версии: последние раскрыты, фильтр — по своей платформе. */
+function Changelog({ entries, main }: { entries: ChangelogEntry[]; main?: PlatformId }) {
+  const [filter, setFilter] = useState<PlatformId | 'all'>('all')
+  const [all, setAll] = useState(false)
+  const platforms = (['mac', 'windows', 'android', 'ios'] as PlatformId[]).filter((id) => entries.some((entry) => entry.platforms.includes(id)))
+  const shown = entries
+    .map((entry) => ({ ...entry, changes: entry.changes.filter((change) => filter === 'all' || (change.platforms ?? entry.platforms).includes(filter)) }))
+    .filter((entry) => entry.changes.length)
+  const visible = all ? shown : shown.slice(0, 3)
+  return (
+    <Section id="changelog" eyebrow="Что нового" title="История версий" lead="Каждое обновление — что появилось, что стало лучше и что исправлено.">
+      <div role="radiogroup" aria-label="Платформа" className="flex flex-wrap gap-2">
+        {(['all', ...platforms] as const).map((id) => (
+          <button
+            key={id}
+            role="radio"
+            aria-checked={filter === id}
+            onClick={() => setFilter(id)}
+            className={`rounded-full border px-4 py-1.5 text-sm font-semibold transition ${
+              filter === id ? 'border-accent bg-accent text-night' : 'border-line text-muted hover:text-ink'
+            }`}
+          >
+            {id === 'all' ? 'Все' : PLATFORM_LABEL[id]}
+            {id === main && <span className="ml-1.5 opacity-70">· твоя</span>}
+          </button>
+        ))}
+      </div>
+      <ol className="mt-10 space-y-6 border-l border-line pl-6 sm:pl-8">
+        {visible.map((entry, index) => (
+          <li key={entry.version} className="relative" data-version={entry.version}>
+            <span className={`absolute -left-[31px] top-2 h-3 w-3 rounded-full ring-4 ring-night sm:-left-[39px] ${index === 0 ? 'bg-accent' : 'bg-line'}`} aria-hidden="true" />
+            <article className="card rounded-2xl p-6">
+              <header className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <h3 className="text-xl font-extrabold">{entry.version}</h3>
+                {index === 0 && filter === 'all' && <span className="rounded-full bg-accent/15 px-2 py-0.5 text-xs font-semibold text-accent">Последняя</span>}
+                <span className="text-sm text-muted">
+                  {dateLabel(entry.date)} · {entry.platforms.map((id) => PLATFORM_LABEL[id]).join(', ')}
+                </span>
+              </header>
+              <p className="mt-2 font-semibold">{entry.summary}</p>
+              <ul className="mt-4 space-y-2.5">
+                {entry.changes.map((change) => (
+                  <li key={change.text} className="flex gap-3 text-[15px] leading-relaxed">
+                    <span className={`mt-0.5 h-fit shrink-0 rounded-md px-2 py-0.5 text-xs font-semibold ${KIND_STYLE[change.kind]}`}>{KIND_LABEL[change.kind]}</span>
+                    <span className="text-muted">
+                      {change.text}
+                      {change.platforms && filter === 'all' && (
+                        <span className="ml-1.5 whitespace-nowrap text-xs text-muted/70">· {change.platforms.map((id) => PLATFORM_LABEL[id]).join(', ')}</span>
+                      )}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </article>
+          </li>
+        ))}
+      </ol>
+      {shown.length > visible.length && (
+        <button onClick={() => setAll(true)} className="mt-8 rounded-xl border border-line px-5 py-3 text-sm font-semibold hover:border-accent/60">
+          Показать все версии ({shown.length})
+        </button>
+      )}
+    </Section>
+  )
+}
+
 const FAQ: Array<[string, ReactNode]> = [
   [
     'Что такое Navidrome и зачем он нужен?',
@@ -324,6 +403,7 @@ export function App() {
         <Features />
         <Screens />
         <Download main={main?.id} release={release} />
+        <Changelog entries={release.changelog ?? (bundledChangelog.releases as ChangelogEntry[])} main={main?.id} />
         <Faq />
       </main>
       <footer className="border-t border-line">

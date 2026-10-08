@@ -41,6 +41,9 @@ export PATH="$HOME/.cargo/bin:$PATH"
 VERSION="1.1.$(git rev-list --count HEAD)"
 REPO=${NOCTURNE_RELEASES_REPO:-RAZEX0LOL/nocturne-releases}
 BASE="https://github.com/$REPO/releases/download/updates"
+# Без записи в чейнджлоге не выпускаем: «что нового» видят и на сайте, и в плашке обновления.
+bun scripts/changelog.ts check "$VERSION" mac
+(( WINDOWS )) && bun scripts/changelog.ts check "$VERSION" windows
 echo "{\"version\":\"$VERSION\"}" > desktop/src-tauri/tauri.version.json
 trap 'rm -f desktop/src-tauri/tauri.version.json' EXIT
 
@@ -62,7 +65,7 @@ cp "$BUNDLE/macos/Nocturne.app.tar.gz.sig" "$OUT/Nocturne_${VERSION}_${ARCH}.app
 find "$BUNDLE/dmg" -name '*.dmg' ! -name 'rw.*' -exec cp {} "$OUT/" \;
 # Постоянные имена — для сайта: кнопка «Скачать» всегда ведёт на последнюю версию.
 find "$BUNDLE/dmg" -name '*.dmg' ! -name 'rw.*' -exec cp {} "$OUT/Nocturne-mac.dmg" \;
-python3 scripts/updater_manifest.py "$VERSION" "$OUT" "$BASE" darwin "$ARCH"
+NOTES=$(bun scripts/changelog.ts notes "$VERSION" mac) python3 scripts/updater_manifest.py "$VERSION" "$OUT" "$BASE" darwin "$ARCH"
 
 # Windows с Мака: NSIS-установщик он же и обновление (ставится поверх в тихом режиме).
 if (( WINDOWS )); then
@@ -71,7 +74,7 @@ if (( WINDOWS )); then
   WIN=desktop/src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis
   cp "$WIN"/Nocturne_${VERSION}_x64-setup.exe "$WIN"/Nocturne_${VERSION}_x64-setup.exe.sig "$OUT/"
   cp "$WIN"/Nocturne_${VERSION}_x64-setup.exe "$OUT/Nocturne-windows-setup.exe"
-  python3 scripts/updater_manifest.py "$VERSION" "$OUT" "$BASE" windows x86_64
+  NOTES=$(bun scripts/changelog.ts notes "$VERSION" windows) python3 scripts/updater_manifest.py "$VERSION" "$OUT" "$BASE" windows x86_64
 fi
 echo "Готово: $OUT (версия $VERSION)"
 ls -1 "$OUT"
@@ -82,5 +85,8 @@ if (( PUBLISH )); then
   # Сначала файлы, потом манифесты: иначе приложение могло бы увидеть версию раньше её файла.
   gh release upload updates -R "$REPO" --clobber $(find "$OUT" -type f ! -name '*.json')
   gh release upload updates -R "$REPO" --clobber "$OUT"/*.json
+  # Описание релиза — чейнджлог: его читает сайт.
+  bun scripts/changelog.ts release-body > build/release-body.md
+  gh release edit updates -R "$REPO" --notes-file build/release-body.md
   echo "Выложено: $BASE"
 fi

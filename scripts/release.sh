@@ -42,6 +42,8 @@ if [[ "${1:-}" == "mac" ]]; then
   exit 0
 fi
 OUT=build/release
+# В TestFlight — только с записью в чейнджлоге: она же уходит в «Что тестировать».
+[[ "${1:-}" == "upload" ]] && bun scripts/changelog.ts check "1.1.$BUILD_NUMBER" ios
 rm -rf "$OUT" && mkdir -p "$OUT"
 xcodebuild -project Nocturne.xcodeproj -scheme Nocturne -configuration Release \
   -destination 'generic/platform=iOS' -archivePath "$OUT/Nocturne.xcarchive" \
@@ -54,3 +56,7 @@ fi
 xcodebuild -exportArchive -archivePath "$OUT/Nocturne.xcarchive" -exportPath "$OUT" \
   -exportOptionsPlist "$OUT/ExportOptions.plist" -allowProvisioningUpdates "${AUTH[@]}"
 echo "Build $BUILD_NUMBER ready in $OUT"
+if [[ "${1:-}" == "upload" ]]; then
+  # «Что тестировать» — из чейнджлога; ждёт, пока App Store Connect покажет сборку.
+  bun scripts/changelog.ts testflight "$BUILD_NUMBER"
+fi

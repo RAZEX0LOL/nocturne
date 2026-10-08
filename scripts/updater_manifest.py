@@ -10,6 +10,7 @@
     → печатает имя файла манифеста и кладёт его в ПАПКУ
 """
 import json
+import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -52,6 +53,9 @@ def main(version: str, folder: str, base: str, system: str, machine: str) -> int
         "url": f"{base.rstrip('/')}/{archive.name}",
         "signature": signature.read_text().strip(),
     }
+    # Пункты чейнджлога (scripts/changelog.ts notes) — приложение показывает их в плашке обновления.
+    if os.environ.get("NOTES"):
+        manifest["notes"] = os.environ["NOTES"]
     (directory / f"{target}.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n")
     print(f"{target}.json")
     return 0

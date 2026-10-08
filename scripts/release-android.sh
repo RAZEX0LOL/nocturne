@@ -13,6 +13,8 @@ BASE="https://github.com/$REPO/releases/download/updates"
 BUILD=$(git rev-list --count HEAD)
 VERSION="1.1.$BUILD"
 OUT=build/android-release
+# Без записи в чейнджлоге не выпускаем: «что нового» видят и на сайте, и в плашке обновления.
+bun scripts/changelog.ts check "$VERSION" android
 
 (cd android && NOCTURNE_BUILD_NUMBER=$BUILD ./gradlew -q :app:assembleRelease)
 APK=android/app/build/outputs/apk/release/app-release.apk
@@ -27,14 +29,11 @@ cp "$APK" "$OUT/$NAME"
 # Постоянное имя — для сайта: кнопка «Скачать» всегда ведёт на последнюю версию.
 cp "$APK" "$OUT/Nocturne-android.apk"
 SUM=$(shasum -a 256 "$OUT/$NAME" | cut -d' ' -f1)
-cat > "$OUT/android.json" <<JSON
-{
-  "versionCode": $BUILD,
-  "versionName": "$VERSION",
-  "url": "$BASE/$NAME",
-  "sha256": "$SUM"
-}
-JSON
+# Пункты чейнджлога — в плашку «Доступно обновление»; JSON собирает Python, чтобы кавычки в тексте не сломали файл.
+NOTES=$(bun scripts/changelog.ts notes "$VERSION" android) BUILD=$BUILD VERSION=$VERSION URL="$BASE/$NAME" SUM=$SUM python3 -c '
+import json, os
+print(json.dumps({"versionCode": int(os.environ["BUILD"]), "versionName": os.environ["VERSION"], "url": os.environ["URL"],
+                  "sha256": os.environ["SUM"], "notes": os.environ["NOTES"]}, ensure_ascii=False, indent=2))' > "$OUT/android.json"
 echo "Готово: $OUT/$NAME (версия $VERSION)"
 
 if [[ "${1:-}" == "publish" ]]; then
@@ -43,5 +42,8 @@ if [[ "${1:-}" == "publish" ]]; then
   # Сначала APK, потом манифест: иначе приложение увидело бы версию раньше её файла.
   gh release upload updates -R "$REPO" --clobber "$OUT/$NAME" "$OUT/Nocturne-android.apk"
   gh release upload updates -R "$REPO" --clobber "$OUT/android.json"
+  # Описание релиза — чейнджлог: его читает сайт.
+  bun scripts/changelog.ts release-body > "$OUT/release-body.md"
+  gh release edit updates -R "$REPO" --notes-file "$OUT/release-body.md"
   echo "Выложено: $BASE/android.json"
 fi

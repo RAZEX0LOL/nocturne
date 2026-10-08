@@ -298,6 +298,13 @@ internal val LocalCoverFiles = staticCompositionLocalOf<Map<String, String>> { e
                         IconButton(onClick = vm::dismissAppUpdate) { Icon(Icons.Rounded.Close, tr("Закрыть"), tint = Muted) }
                     }
                 }
+                // Что нового — из чейнджлога, который пишется к каждой версии (site/changelog.json).
+                if (progress == null && update.notes.isNotBlank()) {
+                    Text(
+                        update.notes, color = Muted, style = MaterialTheme.typography.bodySmall, maxLines = 4,
+                        overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
+                    )
+                }
                 if (progress != null) LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 10.dp))
             }
         }

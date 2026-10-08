@@ -75,9 +75,36 @@ export function detectPlatform(): PlatformId | undefined {
   return undefined
 }
 
+export interface Change {
+  kind: 'new' | 'better' | 'fix'
+  text: string
+  platforms?: PlatformId[]
+}
+
+export interface ChangelogEntry {
+  version: string
+  date: string
+  platforms: PlatformId[]
+  summary: string
+  changes: Change[]
+}
+
 export interface ReleaseInfo {
   version?: string
   sizes: Partial<Record<PlatformId, number>>
+  /** Чейнджлог из описания релиза; нет — сайт показывает вшитую при сборке копию. */
+  changelog?: ChangelogEntry[]
+}
+
+/** Скрипты выпуска кладут весь чейнджлог в описание релиза скрытым комментарием (scripts/changelog.ts). */
+function changelogFrom(body: string | undefined): ChangelogEntry[] | undefined {
+  const json = body && /<!-- nocturne-changelog (.*?) -->/s.exec(body)?.[1]
+  if (!json) return undefined
+  try {
+    return JSON.parse(json) as ChangelogEntry[]
+  } catch {
+    return undefined
+  }
 }
 
 /**
@@ -87,7 +114,7 @@ export interface ReleaseInfo {
 export async function loadRelease(): Promise<ReleaseInfo> {
   const response = await fetch(`https://api.github.com/repos/${REPO}/releases/tags/updates`)
   if (!response.ok) return { sizes: {} }
-  const release = (await response.json()) as { assets: Array<{ name: string; size: number }> }
+  const release = (await response.json()) as { body?: string; assets: Array<{ name: string; size: number }> }
   const versions = release.assets
     .map((asset) => /^Nocturne-(\d+\.\d+\.\d+)\.apk$/.exec(asset.name)?.[1] ?? /^Nocturne_(\d+\.\d+\.\d+)_/.exec(asset.name)?.[1])
     .filter((version): version is string => !!version)
@@ -97,7 +124,7 @@ export async function loadRelease(): Promise<ReleaseInfo> {
     const asset = release.assets.find((one) => one.name === platform.file)
     if (asset) sizes[platform.id] = asset.size
   }
-  return { version: versions[0], sizes }
+  return { version: versions[0], sizes, changelog: changelogFrom(release.body) }
 }
 
 export const megabytes = (bytes: number) => `${(bytes / 1024 / 1024).toFixed(bytes > 50 * 1024 * 1024 ? 0 : 1)} МБ`

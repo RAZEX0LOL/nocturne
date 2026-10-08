@@ -13,12 +13,15 @@ export function InfoBar({
   severity,
   title,
   message,
+  details,
   action,
   onClose,
 }: {
   severity: 'info' | 'warning' | 'error'
   title: string
   message?: string
+  /** Подробности под заголовком — например, что нового в обновлении. */
+  details?: string
   action?: ReactNode
   onClose?: () => void
 }) {
@@ -29,6 +32,7 @@ export function InfoBar({
       <div className="min-w-0 flex-1">
         <span className="font-semibold">{title}</span>
         {message && <span className="ml-3 text-primary">{message}</span>}
+        {details && <p className="mt-1 line-clamp-4 whitespace-pre-line text-xs text-secondary">{details}</p>}
       </div>
       {action}
       {onClose && (
