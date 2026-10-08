@@ -764,8 +764,15 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
         lastUpdateCheck = now
         viewModelScope.launch {
             runCatching { updater.check() }
-                .onSuccess { found -> appUpdate = found; if (manual && found == null) notice = tr("Установлена последняя версия") }
-                .onFailure { if (manual) error = "${tr("Не удалось проверить обновления.")} ${it.message.orEmpty()}" }
+                .onSuccess { found ->
+                    android.util.Log.i("Nocturne", "update check: installed ${updater.installedCode}, available ${found?.versionName ?: "none newer"}")
+                    appUpdate = found
+                    if (manual && found == null) notice = tr("Установлена последняя версия")
+                }
+                .onFailure {
+                    android.util.Log.w("Nocturne", "update check failed", it)
+                    if (manual) error = "${tr("Не удалось проверить обновления.")} ${it.message.orEmpty()}"
+                }
         }
     }
 
