@@ -47,8 +47,20 @@ bun scripts/changelog.ts check "$VERSION" mac
 echo "{\"version\":\"$VERSION\"}" > desktop/src-tauri/tauri.version.json
 trap 'rm -f desktop/src-tauri/tauri.version.json' EXIT
 
-if [[ "$(uname)" == "Darwin" && -z "${APPLE_SIGNING_IDENTITY:-}" ]]; then
-  echo "APPLE_SIGNING_IDENTITY не задан: приложение соберётся без подписи, и macOS при первой установке откроет его только через «Всё равно открыть»." >&2
+# Mac: подпись Developer ID и нотаризация Apple. Без них скачанное из браузера приложение macOS
+# объявляет «повреждённым» (у бандла только подпись компоновщика) — и открыть его нельзя вовсе.
+# Сертификат — из связки ключей, нотаризация — ключом App Store Connect, тем же, что у TestFlight
+# (ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_PATH; по умолчанию из ~/.config/razex-panel/asc.env).
+if [[ "$(uname)" == "Darwin" ]]; then
+  if [[ -z "${ASC_KEY_ID:-}" && -f "$HOME/.config/razex-panel/asc.env" ]]; then
+    set -a; source "$HOME/.config/razex-panel/asc.env"; set +a
+  fi
+  export APPLE_SIGNING_IDENTITY=${APPLE_SIGNING_IDENTITY:-$(security find-identity -v -p codesigning | sed -n 's/.*"\(Developer ID Application: [^"]*\)".*/\1/p' | head -1)}
+  if [[ -z "$APPLE_SIGNING_IDENTITY" || -z "${ASC_KEY_ID:-}" ]]; then
+    echo "Нет сертификата Developer ID или ключа App Store Connect: Mac-версию людям выпускать нельзя — macOS назовёт её повреждённой." >&2
+    exit 1
+  fi
+  export APPLE_API_KEY=$ASC_KEY_ID APPLE_API_ISSUER=$ASC_ISSUER_ID APPLE_API_KEY_PATH=${ASC_KEY_PATH/#\~/$HOME}
 fi
 
 OUT=build/desktop-release
@@ -59,6 +71,15 @@ rm -rf "$OUT" && mkdir -p "$OUT"
 (cd desktop && bun run tauri build --config src-tauri/tauri.version.json --bundles app,dmg)
 BUNDLE=desktop/src-tauri/target/release/bundle
 ARCH=$(uname -m)
+# Приложение Tauri уже подписал и нотаризовал; образ .dmg — отдельный файл: подписываем, отправляем
+# Apple и вшиваем ответ (staple), чтобы проверка проходила и без сети.
+DMG=$(find "$BUNDLE/dmg" -name '*.dmg' ! -name 'rw.*' | head -1)
+codesign --force --sign "$APPLE_SIGNING_IDENTITY" --timestamp "$DMG"
+xcrun notarytool submit "$DMG" --key "$APPLE_API_KEY_PATH" --key-id "$APPLE_API_KEY" --issuer "$APPLE_API_ISSUER" --wait
+xcrun stapler staple "$DMG"
+# Проверка глазами Gatekeeper — та же, что у Mac, на который приложение скачали из браузера.
+spctl -a -vv -t install "$DMG"
+spctl -a -vv "$BUNDLE/macos/Nocturne.app"
 # В имени архива версия: файл на сервере не подменяется под тем же именем посреди чьей-то загрузки.
 cp "$BUNDLE/macos/Nocturne.app.tar.gz" "$OUT/Nocturne_${VERSION}_${ARCH}.app.tar.gz"
 cp "$BUNDLE/macos/Nocturne.app.tar.gz.sig" "$OUT/Nocturne_${VERSION}_${ARCH}.app.tar.gz.sig"

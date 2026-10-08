@@ -27,7 +27,7 @@ export const PLATFORMS: Platform[] = [
     detail: 'Mac на Apple Silicon (M1 и новее)',
     file: 'Nocturne-mac.dmg',
     action: 'Скачать .dmg',
-    note: 'Приложение пока без подписи Apple: при первом запуске нажми на значок правой кнопкой → «Открыть».',
+    note: 'Открой образ и перетащи Nocturne в «Программы». Приложение подписано и проверено Apple — откроется без предупреждений.',
   },
   {
     id: 'windows',
