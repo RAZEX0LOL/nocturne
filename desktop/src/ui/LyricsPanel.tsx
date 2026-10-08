@@ -55,7 +55,8 @@ export function Lyrics({ large = false }: { large?: boolean }) {
     if (large) {
       const base = synced ? 'cursor-pointer text-[1.75rem] leading-snug font-bold tracking-tight transition-all duration-300' : 'text-xl font-semibold'
       if (!synced || index === active) return `${base} text-white`
-      return `${base} text-white/35 hover:text-white/60 ${index < active ? 'blur-[0.5px]' : ''}`
+      // Прошедшие строки только тусклее: blur в WebKit под маской оставляет полоски по краю слоя.
+      return `${base} ${index < active ? 'text-white/25' : 'text-white/35'} hover:text-white/60`
     }
     const base = synced ? 'cursor-pointer text-base font-medium' : 'text-sm'
     return `${base} ${!synced || index === active ? 'text-primary' : 'text-secondary/50'}`

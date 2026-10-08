@@ -143,6 +143,10 @@ export function SongList({
   const drag = useDrag()
 
   // Строки в показанном порядке, с позицией в исходном списке: сортировка не меняет сам список.
+  // Колонка номера по самому длинному номеру: «145» не влезал в 24 px и съезжал влево от кнопки ▶.
+  const numberDigits = String(numbered ? Math.max(0, ...songs.map((song, index) => song.track ?? index + 1)) : songs.length).length
+  const numberWidth = `${Math.max(2, numberDigits) + 1}ch`
+
   const rows = useMemo(() => {
     const indexed = songs.map((song, index) => ({ song, index }))
     if (!sort) return indexed
@@ -274,7 +278,7 @@ export function SongList({
   return (
     <div className="song-table card overflow-hidden p-1" tabIndex={0} onKeyDown={onKeyDown} role="grid" aria-multiselectable>
       <div className="flex items-center gap-4 border-b border-stroke px-3 pb-1.5 pt-1">
-        <span className="w-6 text-right text-xs text-secondary">#</span>
+        <span className="shrink-0 text-center text-xs text-secondary" style={{ width: numberWidth }}>#</span>
         {header('title', t('Название'), 'min-w-0 flex-1')}
         {showAlbum && header('album', t('Альбом'), 'hidden w-[24%] min-w-0 md:flex')}
         {online && header('rating', t('Оценка'), 'w-[88px]')}
@@ -318,7 +322,7 @@ export function SongList({
               }`}
               title={playable ? undefined : t('Трек не скачан — недоступен без сети')}
             >
-              <span className="relative grid w-6 place-items-end text-sm tabular-nums">
+              <span className="relative grid shrink-0 place-items-center text-sm tabular-nums" style={{ width: numberWidth }}>
                 <span className={`group-hover:invisible ${current ? 'text-accent-text' : 'text-secondary'}`}>
                   {current ? <Icon name={playing ? 'volume' : 'note'} size={14} /> : numbered ? song.track ?? index + 1 : position + 1}
                 </span>
@@ -327,7 +331,7 @@ export function SongList({
                     event.stopPropagation()
                     if (playable) playFrom(position)
                   }}
-                  className="invisible absolute inset-0 grid place-items-end text-primary group-hover:visible"
+                  className="invisible absolute inset-0 grid place-items-center text-primary group-hover:visible"
                   aria-label={t('Играть «{title}»', { title: song.title })}
                   tabIndex={-1}
                 >
