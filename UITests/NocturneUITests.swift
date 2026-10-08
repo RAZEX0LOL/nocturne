@@ -34,6 +34,8 @@ final class NocturneUITests: XCTestCase {
         selectTab("Поиск", in: app)
         let search = app.searchFields.firstMatch
         XCTAssertTrue(search.waitForExistence(timeout: 5))
+        // Поле должно быть видно сразу, а не только после того, как список потянут вниз.
+        XCTAssertTrue(search.isHittable, "поле поиска спрятано")
         search.tap()
         search.typeText("Afterglow")
         XCTAssertTrue(app.staticTexts["Треки"].waitForExistence(timeout: 5))

@@ -804,7 +804,8 @@ struct SearchView: View {
                 }
             }.padding(24)
         }.background(Theme.background).navigationTitle(String(localized: "Поиск"))
-            .searchable(text: $query, prompt: String(localized: "Поиск в медиатеке"))
+            // Поле всегда на виду: по умолчанию iOS прячет его, пока список не потянуть вниз.
+            .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: String(localized: "Поиск в медиатеке"))
             .onSubmit(of: .search) { remember(query) }
             .navigationDestination(for: Album.self) { AlbumDetailView(album: $0) }
             .task(id: query) {
