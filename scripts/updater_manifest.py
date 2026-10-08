@@ -36,7 +36,9 @@ def normalise(machine: str) -> str:
 def main(version: str, folder: str, base: str, system: str, machine: str) -> int:
     directory = Path(folder)
     matches = ARCHIVES[system]
-    archive = next((path for path in sorted(directory.iterdir()) if matches(path.name)), None)
+    # Только файл с версией в имени: рядом лежат копии с постоянными именами для сайта
+    # (Nocturne-windows-setup.exe), и подписи у них нет.
+    archive = next((path for path in sorted(directory.iterdir()) if matches(path.name) and f"_{version}_" in path.name), None)
     if archive is None:
         print(f"не нашлось файла обновления для {system}", file=sys.stderr)
         return 1
