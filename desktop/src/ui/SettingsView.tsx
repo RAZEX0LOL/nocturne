@@ -215,7 +215,7 @@ export function SettingsView() {
         <SettingsCard
           icon="lyrics"
           title={t('Искать тексты в LRCLIB')}
-          description={t('Если у Navidrome текста нет, он берётся из открытой базы lrclib.net. Туда уходят название, исполнитель и альбом трека.')}
+          description={t('Если у Navidrome текста нет, он берётся из открытой базы lrclib.net. Туда уходят название, исполнитель и длительность трека.')}
         >
           <Toggle checked={settings.lrclib} onChange={(lrclib) => store.update({ lrclib })} label={t('Искать тексты в LRCLIB')} />
         </SettingsCard>

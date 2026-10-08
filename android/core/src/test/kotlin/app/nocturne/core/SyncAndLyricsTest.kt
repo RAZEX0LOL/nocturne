@@ -43,13 +43,47 @@ class SyncAndLyricsTest {
     @Test fun lrclibAsksWithDurationAndPrefersSynced() {
         val url = assertNotNull(LrclibClient().url(Song("s", "Кукушка", "Кино", "Чёрный альбом", duration = 397.4))).toHttpUrl()
         assertEquals("397", url.queryParameter("duration"))
-        assertEquals("Чёрный альбом", url.queryParameter("album_name"))
+        assertNull(url.queryParameter("album_name"))
         val synced = assertNotNull(LrclibClient.decode("""{"syncedLyrics":"[00:01.00] Песен ещё ненаписанных","plainLyrics":"x"}"""))
         assertTrue(synced.synced)
         assertEquals(1000, synced.lines.first().start)
         assertEquals(listOf("раз", "два"), LrclibClient.decode("""{"plainLyrics":"раз\nдва"}""")?.lines?.map { it.value })
         assertNull(LrclibClient.decode("{}"))
         assertNull(LrclibClient().url(Song("s", "Без исполнителя")))
+    }
+
+    @Test fun lrclibFallsBackToSearchWithCleanedTitle() {
+        val server = okhttp3.mockwebserver.MockWebServer()
+        server.enqueue(okhttp3.mockwebserver.MockResponse().setResponseCode(404).setBody("{}"))
+        server.enqueue(okhttp3.mockwebserver.MockResponse().setBody("""[
+            {"trackName":"Scars","duration":140,"syncedLyrics":"[00:01.00] чужая версия"},
+            {"trackName":"Scars (feat. Mishaal)","duration":96,"syncedLyrics":"[00:02.00] та самая"}]"""))
+        server.start()
+        val lyrics = kotlinx.coroutines.runBlocking {
+            LrclibClient(base = server.url("/").toString().trimEnd('/')).lyrics(Song("v", "Scars (feat. mishaal)", "Ondi vil & Mishaal", "VK", duration = 96.0))
+        }
+        server.takeRequest()
+        val search = assertNotNull(server.takeRequest().requestUrl)
+        assertEquals("Scars", search.queryParameter("track_name"))
+        assertEquals("Ondi vil", search.queryParameter("artist_name"))
+        assertEquals(listOf(2000), lyrics?.lines?.map { it.start })
+        server.shutdown()
+    }
+
+    @Test fun lyricsQueryCleansTitlesAndArtists() {
+        assertEquals("Another Love", LyricsQuery.cleanTitle("Another Love (Sped Up)"))
+        assertEquals("Experience", LyricsQuery.cleanTitle("Experience (Starkey Remix / Remastered 2020) (Slowed)"))
+        assertEquals("Arcade", LyricsQuery.cleanTitle("Arcade - Bonus Track"))
+        assertEquals("Кукушка (Live)", LyricsQuery.cleanTitle("Кукушка (Live)"))
+        assertEquals("Lil Wayne", LyricsQuery.primaryArtist("Lil Wayne, Ty Dolla \$ign, XXXTentacion"))
+        assertEquals("Duncan Laurence", LyricsQuery.primaryArtist("Duncan Laurence feat. FLETCHER"))
+        assertEquals("", LyricsQuery.knownArtist("Неизвестен"))
+        val searches = LrclibClient().searchUrls(Song("u", "ALL TIME LOW - Jon Bellion (Version SAD)", "Неизвестен"))
+        assertEquals(listOf("ALL TIME LOW - Jon Bellion"), searches.map { it.toHttpUrl().queryParameter("q") })
+        val sped = kotlinx.serialization.json.Json.parseToJsonElement("""{"duration":244,"syncedLyrics":"[00:01.00] раз\n[00:02.00] два"}""") as kotlinx.serialization.json.JsonObject
+        val plain = assertNotNull(LrclibClient.pick(listOf(sped), 203.0))
+        assertEquals(false, plain.synced)
+        assertEquals(listOf("раз", "два"), plain.lines.map { it.value })
     }
 
     @Test fun autoReplayGainFollowsTheAlbumOnlyInOrder() {

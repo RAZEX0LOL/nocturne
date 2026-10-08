@@ -43,7 +43,7 @@ final class SyncAndLyricsTests: XCTestCase {
         let url = try XCTUnwrap(LrclibClient.url(for: song))
         let items = try XCTUnwrap(URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems)
         XCTAssertEqual(items.first { $0.name == "duration" }?.value, "397")
-        XCTAssertEqual(items.first { $0.name == "album_name" }?.value, "Чёрный альбом")
+        XCTAssertNil(items.first { $0.name == "album_name" })
         let synced = LrclibClient.decode(Data(#"{"syncedLyrics":"[00:01.00] Песен ещё ненаписанных","plainLyrics":"x"}"#.utf8))
         XCTAssertEqual(synced?.synced, true)
         XCTAssertEqual(synced?.line?.first?.start, 1000)
@@ -52,6 +52,33 @@ final class SyncAndLyricsTests: XCTestCase {
         XCTAssertEqual(plain?.line?.map(\.value), ["раз", "два"])
         XCTAssertNil(LrclibClient.decode(Data("{}".utf8)))
         XCTAssertNil(LrclibClient.url(for: Song(id: "s", title: "Без исполнителя")))
+    }
+
+    func testLyricsQueryCleansTitlesAndArtists() throws {
+        XCTAssertEqual(LyricsQuery.cleanTitle("Another Love (Sped Up)"), "Another Love")
+        XCTAssertEqual(LyricsQuery.cleanTitle("Experience (Starkey Remix / Remastered 2020) (Slowed)"), "Experience")
+        XCTAssertEqual(LyricsQuery.cleanTitle("Arcade - Bonus Track"), "Arcade")
+        XCTAssertEqual(LyricsQuery.cleanTitle("Кукушка (Live)"), "Кукушка (Live)")
+        XCTAssertEqual(LyricsQuery.primaryArtist("Lil Wayne, Ty Dolla $ign, XXXTentacion"), "Lil Wayne")
+        XCTAssertEqual(LyricsQuery.primaryArtist("Ondi vil & Mishaal"), "Ondi vil")
+        XCTAssertEqual(LyricsQuery.knownArtist("Неизвестен"), "")
+
+        let vk = Song(id: "v", title: "Scars (feat. mishaal)", artist: "Ondi vil & Mishaal", album: "VK", duration: 96)
+        let first = try XCTUnwrap(URLComponents(url: try XCTUnwrap(LrclibClient.searchURLs(for: vk).first), resolvingAgainstBaseURL: false)?.queryItems)
+        XCTAssertEqual(first.first { $0.name == "track_name" }?.value, "Scars")
+        XCTAssertEqual(first.first { $0.name == "artist_name" }?.value, "Ondi vil")
+        let unknown = LrclibClient.searchURLs(for: Song(id: "u", title: "ALL TIME LOW - Jon Bellion (Version SAD)", artist: "Неизвестен"))
+        XCTAssertEqual(unknown.count, 1)
+        XCTAssertEqual(URLComponents(url: unknown[0], resolvingAgainstBaseURL: false)?.queryItems?.first?.value, "ALL TIME LOW - Jon Bellion")
+
+        let records = [
+            LrclibClient.Record(duration: 140, syncedLyrics: "[00:01.00] чужая версия"),
+            LrclibClient.Record(duration: 96, syncedLyrics: "[00:02.00] та самая"),
+        ]
+        XCTAssertEqual(LrclibClient.pick(records, duration: 96)?.line?.map(\.start), [2000])
+        let sped = LrclibClient.pick([LrclibClient.Record(duration: 244, syncedLyrics: "[00:01.00] раз\n[00:02.00] два")], duration: 203)
+        XCTAssertEqual(sped?.synced, false)
+        XCTAssertEqual(sped?.line?.map(\.value), ["раз", "два"])
     }
 
     func testAutoReplayGainFollowsTheAlbumOnlyInOrder() {

@@ -426,6 +426,12 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
         }
     }
 
+    /** Включить LRCLIB с экрана текста и сразу поискать для играющего трека. */
+    fun searchLrclib() {
+        settings.useLrclib(true)
+        playback.current?.let(::loadLyrics)
+    }
+
     fun addToPlaylist(playlist: Playlist, songs: List<Song>) {
         val api = client ?: return
         viewModelScope.launch {

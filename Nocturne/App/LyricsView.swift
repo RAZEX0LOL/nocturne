@@ -16,7 +16,22 @@ struct LyricsView: View {
             Group {
                 switch state {
                 case .loading: ProgressView()
-                case .empty: ContentUnavailableView(String(localized: "Текста нет"), systemImage: "quote.bubble", description: Text(String(localized: "Navidrome не нашёл текст для этого трека.")))
+                case .empty:
+                    ContentUnavailableView {
+                        Label(String(localized: "Текста нет"), systemImage: "quote.bubble")
+                    } description: {
+                        Text(String(localized: "Navidrome не нашёл текст для этого трека."))
+                    } actions: {
+                        // LRCLIB is off — offer it right here instead of hiding it in settings.
+                        if !UserDefaults.standard.bool(forKey: PlaybackSettings.lrclibKey) {
+                            Text(String(localized: "Можно поискать в открытой базе lrclib.net — туда уйдут название и исполнитель."))
+                                .font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                            Button(String(localized: "Искать в LRCLIB")) {
+                                UserDefaults.standard.set(true, forKey: PlaybackSettings.lrclibKey)
+                                Task { await load() }
+                            }.buttonStyle(.borderedProminent)
+                        }
+                    }
                 case .failed: ContentUnavailableView(String(localized: "Не удалось загрузить текст"), systemImage: "exclamationmark.triangle")
                 case .loaded: content
                 }

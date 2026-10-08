@@ -299,8 +299,11 @@ const english: Record<string, string> = {
   'Выйти из Nocturne': 'Quit Nocturne',
   'Текст песни и визуализация': 'Lyrics and visuals',
   'Искать тексты в LRCLIB': 'Find lyrics on LRCLIB',
-  'Если у Navidrome текста нет, он берётся из открытой базы lrclib.net. Туда уходят название, исполнитель и альбом трека.':
-    'If Navidrome has no lyrics, they come from the open lrclib.net database. The song title, artist and album are sent there.',
+  'Если у Navidrome текста нет, он берётся из открытой базы lrclib.net. Туда уходят название, исполнитель и длительность трека.':
+    'If Navidrome has no lyrics, they come from the open lrclib.net database. The song title, artist and duration are sent there.',
+  'Искать в LRCLIB': 'Search LRCLIB',
+  'Navidrome не нашёл текст. Можно поискать в открытой базе lrclib.net — туда уйдут название и исполнитель.':
+    'Navidrome has no lyrics. You can search the open lrclib.net database — the title and artist will be sent there.',
   'Визуализатор': 'Visualizer',
   'Спектр звука в полноэкранном плеере.': 'An audio spectrum in the full-screen player.',
   'Система': 'System',

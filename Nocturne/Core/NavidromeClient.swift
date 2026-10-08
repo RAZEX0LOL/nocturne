@@ -219,41 +219,137 @@ enum Lrc {
     }
 }
 
+/// Cleaning titles and artists for an LRCLIB search — the same rules as on Android and the desktop.
+enum LyricsQuery {
+    private static var noise: Regex<Substring> { /(?i)feat\.?|ft\.|prod\.|sped|slowed|reverb|remaster|version|edit|bonus|explicit|official|audio|video|lyrics/ }
+    private static var suffix: Regex<Substring> { /(?i)\s+-\s+(?:bonus track|single version|radio edit|remaster(?:ed)?(?: \d{4})?)$/ }
+    private static var featTail: Regex<Substring> { /(?i)\s+(?:feat\.?|ft\.)\s.*$/ }
+    private static var separators: Regex<Substring> { /(?i)\s*(?:,|\/|;|\s&\s|\sx\s|\sfeat\.?\s|\sft\.\s|\sи\s)\s*/ }
+    private static var unknown: Regex<Substring> { /(?i)^(?:неизвестен|неизвестный исполнитель|unknown(?: artist)?|various artists|\[unknown\])$/ }
+    private static var altered: Regex<Substring> { /(?i)sped\s*up|slowed|nightcore|speed\s*up/ }
+
+    /// Without "(feat. …)", "(Sped Up)", "[Remastered 2020]", " - Bonus Track".
+    static func cleanTitle(_ title: String) -> String {
+        var result = title.replacing(/\s*[(\[][^)\]]*[)\]]/) { match in
+            String(match.output).contains(noise) ? "" : String(match.output)
+        }
+        result = result.replacing(suffix, with: "").replacing(featTail, with: "").replacing(/\s{2,}/, with: " ")
+        return result.trimmingCharacters(in: .whitespaces)
+    }
+
+    /// "Lil Wayne, Ty Dolla $ign" → "Lil Wayne".
+    static func primaryArtist(_ artist: String) -> String {
+        String(artist.split(separator: separators).first ?? Substring(artist)).trimmingCharacters(in: .whitespaces)
+    }
+
+    static func knownArtist(_ artist: String?) -> String {
+        let trimmed = (artist ?? "").trimmingCharacters(in: .whitespaces)
+        return trimmed.isEmpty || trimmed.wholeMatch(of: unknown) != nil ? "" : trimmed
+    }
+
+    static func isAltered(_ title: String) -> Bool { title.contains(altered) }
+}
+
 /// Lyrics from LRCLIB (lrclib.net), an open database of synced lyrics. Asked only when Navidrome has
 /// none and the user turned it on: song titles go to a third-party service.
+///
+/// The album is not sent: LRCLIB matches it literally, and songs from VK or compilations carry "VK"
+/// or a playlist name there, so the exact query always got 404. No exact match — search by the
+/// cleaned title and the first artist.
 struct LrclibClient: Sendable {
     let session: URLSession
 
     init(session: URLSession = .shared) { self.session = session }
 
+    /// The exact query; there is none without an artist.
     static func url(for song: Song) -> URL? {
-        guard let artist = song.artist, !artist.isEmpty, !song.title.isEmpty else { return nil }
-        var components = URLComponents(string: "https://lrclib.net/api/get")
+        let artist = LyricsQuery.knownArtist(song.artist)
+        guard !artist.isEmpty, !song.title.isEmpty else { return nil }
         var items = [URLQueryItem(name: "track_name", value: song.title), URLQueryItem(name: "artist_name", value: artist)]
-        if let album = song.album { items.append(URLQueryItem(name: "album_name", value: album)) }
         if let duration = song.duration { items.append(URLQueryItem(name: "duration", value: String(Int(duration.rounded())))) }
+        return address("get", items)
+    }
+
+    /// Searches in order when the exact query finds nothing.
+    static func searchURLs(for song: Song) -> [URL] {
+        guard !song.title.isEmpty else { return [] }
+        let artist = LyricsQuery.knownArtist(song.artist)
+        let cleaned = LyricsQuery.cleanTitle(song.title)
+        let title = cleaned.isEmpty ? song.title : cleaned
+        guard !artist.isEmpty else { return [address("search", [URLQueryItem(name: "q", value: title)])].compactMap { $0 } }
+        let first = LyricsQuery.primaryArtist(artist)
+        var queries = [
+            [URLQueryItem(name: "track_name", value: title), URLQueryItem(name: "artist_name", value: first)],
+            [URLQueryItem(name: "q", value: "\(first) \(title)")],
+        ]
+        // A sped-up or slowed version is usually someone else's song: the original's lyrics by title alone.
+        if LyricsQuery.isAltered(song.title) { queries.append([URLQueryItem(name: "track_name", value: title)]) }
+        return queries.compactMap { address("search", $0) }
+    }
+
+    private static func address(_ path: String, _ items: [URLQueryItem]) -> URL? {
+        var components = URLComponents(string: "https://lrclib.net/api/\(path)")
         components?.queryItems = items
         return components?.url
     }
 
-    private struct Answer: Decodable { var syncedLyrics: String?; var plainLyrics: String? }
+    struct Record: Decodable {
+        var duration: Double?
+        var instrumental: Bool?
+        var syncedLyrics: String?
+        var plainLyrics: String?
+    }
 
     static func decode(_ data: Data) -> StructuredLyrics? {
-        guard let answer = try? JSONDecoder().decode(Answer.self, from: data) else { return nil }
-        if let synced = answer.syncedLyrics {
-            let lines = Lrc.parse(synced)
+        guard let record = try? JSONDecoder().decode(Record.self, from: data) else { return nil }
+        return lyrics(from: record, synced: true)
+    }
+
+    private static func lyrics(from record: Record, synced: Bool) -> StructuredLyrics? {
+        let lrc = record.syncedLyrics.flatMap { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : $0 }
+        if synced, let lrc {
+            let lines = Lrc.parse(lrc)
             if !lines.isEmpty { return StructuredLyrics(synced: true, line: lines) }
         }
-        if let plain = answer.plainLyrics, !plain.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return StructuredLyrics(synced: false, line: plain.split(separator: "\n", omittingEmptySubsequences: false).map { LyricLine(value: String($0)) })
+        var plain = record.plainLyrics ?? ""
+        if plain.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, let lrc { plain = Lrc.parse(lrc).map(\.value).joined(separator: "\n") }
+        guard !plain.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
+        return StructuredLyrics(synced: false, line: plain.split(separator: "\n", omittingEmptySubsequences: false).map { LyricLine(value: String($0)) })
+    }
+
+    /// The best match: duration within 5 seconds, synced first. No duration matches (a sped-up
+    /// version) — plain text only: someone else's timings would drift from the sound.
+    static func pick(_ records: [Record], duration: Double?) -> StructuredLyrics? {
+        let usable = records.filter { $0.instrumental != true && ($0.syncedLyrics?.isEmpty == false || $0.plainLyrics?.isEmpty == false) }
+        guard !usable.isEmpty else { return nil }
+        func distance(_ record: Record) -> Double {
+            guard let duration, let own = record.duration else { return 0 }
+            return abs(own - duration)
+        }
+        let close = usable.filter { distance($0) <= 5 }
+        if !close.isEmpty {
+            let best = close.min { a, b in
+                let (sa, sb) = (a.syncedLyrics?.isEmpty == false, b.syncedLyrics?.isEmpty == false)
+                return sa != sb ? sa : distance(a) < distance(b)
+            }!
+            return lyrics(from: best, synced: true)
+        }
+        return lyrics(from: usable.min { distance($0) < distance($1) }!, synced: false)
+    }
+
+    func lyrics(for song: Song) async -> StructuredLyrics? {
+        if let url = Self.url(for: song), let data = await fetch(url),
+           let record = try? JSONDecoder().decode(Record.self, from: data),
+           let found = Self.pick([record], duration: song.duration) { return found }
+        for url in Self.searchURLs(for: song) {
+            guard let data = await fetch(url), let records = try? JSONDecoder().decode([Record].self, from: data) else { continue }
+            if let found = Self.pick(records, duration: song.duration) { return found }
         }
         return nil
     }
 
-    func lyrics(for song: Song) async -> StructuredLyrics? {
-        guard let url = Self.url(for: song),
-              let (data, response) = try? await session.data(from: url),
-              (response as? HTTPURLResponse)?.statusCode == 200 else { return nil }
-        return Self.decode(data)
+    private func fetch(_ url: URL) async -> Data? {
+        guard let (data, response) = try? await session.data(from: url), (response as? HTTPURLResponse)?.statusCode == 200 else { return nil }
+        return data
     }
 }

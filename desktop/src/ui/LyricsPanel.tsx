@@ -9,7 +9,7 @@ import { t } from '../i18n'
  * полноэкранного плеера: строки как в «Музыке» Apple, прошедшие и будущие приглушены.
  */
 export function Lyrics({ large = false }: { large?: boolean }) {
-  const { queue, lyrics, position } = useStore()
+  const { queue, lyrics, position, settings } = useStore()
   const song = queue?.current?.song
   const container = useRef<HTMLDivElement>(null)
 
@@ -41,14 +41,35 @@ export function Lyrics({ large = false }: { large?: boolean }) {
         </button>
       </div>
     )
+  // LRCLIB выключен — предлагаем включить прямо здесь, а не прятать это в настройках.
+  const offerLrclib = !settings.lrclib && (
+    <div className={large ? 'flex flex-col items-center gap-3' : 'space-y-2'}>
+      <p className={large ? 'max-w-sm text-sm text-white/50' : 'text-xs text-secondary'}>
+        {t('Navidrome не нашёл текст. Можно поискать в открытой базе lrclib.net — туда уйдут название и исполнитель.')}
+      </p>
+      <button
+        className="btn"
+        onClick={() => {
+          store.update({ lrclib: true })
+          void store.loadLyrics(true)
+        }}
+      >
+        {t('Искать в LRCLIB')}
+      </button>
+    </div>
+  )
   if (!lines.length)
     return large ? (
       <div className="flex h-full flex-col items-center justify-center gap-3 py-[20vh] text-center text-white/60">
         <Icon name="lyrics" size={36} />
         <p className="text-lg">{t('Для этого трека нет текста')}</p>
+        {offerLrclib}
       </div>
     ) : (
-      <p className={hint}>{t('Navidrome не нашёл текст для этого трека.')}</p>
+      <div className="space-y-3">
+        <p className={hint}>{t('Navidrome не нашёл текст для этого трека.')}</p>
+        {offerLrclib}
+      </div>
     )
 
   const lineClass = (index: number) => {

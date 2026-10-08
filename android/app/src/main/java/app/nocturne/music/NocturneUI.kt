@@ -713,7 +713,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.downloadsSection(vm: 
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(tr("Искать тексты в LRCLIB"))
-                Text(tr("Если у Navidrome текста нет, он берётся из открытой базы lrclib.net. Туда уходят название, исполнитель и альбом трека."), color = Muted, style = MaterialTheme.typography.bodySmall)
+                Text(tr("Если у Navidrome текста нет, он берётся из открытой базы lrclib.net. Туда уходят название, исполнитель и длительность трека."), color = Muted, style = MaterialTheme.typography.bodySmall)
             }
             Switch(checked = settings.lrclib, onCheckedChange = { settings.useLrclib(it) })
         }
@@ -859,7 +859,14 @@ private fun timeLabel(milliseconds: Long): String {
         SectionTitle(tr("Текст песни"))
         when {
             lyrics == null -> Loading()
-            lines.isEmpty() -> Text(tr("Navidrome не нашёл текст для этого трека."), color = Muted)
+            lines.isEmpty() -> Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(tr("Navidrome не нашёл текст для этого трека."), color = Muted)
+                // LRCLIB выключен — предлагаем включить прямо здесь, а не прятать это в настройках.
+                if (!vm.settings.lrclib) {
+                    Text(tr("Можно поискать в открытой базе lrclib.net — туда уйдут название и исполнитель."), color = Muted, style = MaterialTheme.typography.bodySmall)
+                    FilledTonalButton(onClick = vm::searchLrclib) { Text(tr("Искать в LRCLIB")) }
+                }
+            }
             else -> LazyColumn(state = listState, verticalArrangement = Arrangement.spacedBy(if (synced) 14.dp else 6.dp)) {
                 itemsIndexed(lines) { index, line ->
                     val start = line.start

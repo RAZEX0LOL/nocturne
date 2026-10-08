@@ -762,12 +762,32 @@
       }
     },
     "Доступно без сети": {},
-    "Если у Navidrome текста нет, он берётся из открытой базы lrclib.net. Туда уходят название, исполнитель и альбом трека.": {
+    "Искать в LRCLIB": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "If Navidrome has no lyrics, they come from the open lrclib.net database. The song title, artist and album are sent there."
+            "value": "Search LRCLIB"
+          }
+        }
+      }
+    },
+    "Можно поискать в открытой базе lrclib.net — туда уйдут название и исполнитель.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can search the open lrclib.net database — the title and artist will be sent there."
+          }
+        }
+      }
+    },
+    "Если у Navidrome текста нет, он берётся из открытой базы lrclib.net. Туда уходят название, исполнитель и длительность трека.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If Navidrome has no lyrics, they come from the open lrclib.net database. The song title, artist and duration are sent there."
           }
         }
       }

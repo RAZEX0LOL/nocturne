@@ -97,7 +97,7 @@ struct SettingsView: View {
                 Section {
                     Toggle(String(localized: "Искать тексты в LRCLIB"), isOn: $lrclib)
                 } header: { Text(String(localized: "Текст песни")) } footer: {
-                    Text(String(localized: "Если у Navidrome текста нет, он берётся из открытой базы lrclib.net. Туда уходят название, исполнитель и альбом трека."))
+                    Text(String(localized: "Если у Navidrome текста нет, он берётся из открытой базы lrclib.net. Туда уходят название, исполнитель и длительность трека."))
                 }
                 Section {
                     NavigationLink { StatsView() } label: { Label(String(localized: "Статистика прослушиваний"), systemImage: "chart.bar") }

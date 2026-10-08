@@ -194,7 +194,9 @@ private val english = mapOf(
     "Продолжить" to "Continue",
     "Закрыть" to "Close",
     "Искать тексты в LRCLIB" to "Find lyrics on LRCLIB",
-    "Если у Navidrome текста нет, он берётся из открытой базы lrclib.net. Туда уходят название, исполнитель и альбом трека." to "If Navidrome has no lyrics, they come from the open lrclib.net database. The song title, artist and album are sent there.",
+    "Если у Navidrome текста нет, он берётся из открытой базы lrclib.net. Туда уходят название, исполнитель и длительность трека." to "If Navidrome has no lyrics, they come from the open lrclib.net database. The song title, artist and duration are sent there.",
+    "Искать в LRCLIB" to "Search LRCLIB",
+    "Можно поискать в открытой базе lrclib.net — туда уйдут название и исполнитель." to "You can search the open lrclib.net database — the title and artist will be sent there.",
     // ТРИЗ: темы, скорость, бесконечное воспроизведение, микс, «Поделиться»
     "Тёмная" to "Dark",
     "OLED-чёрная" to "OLED black",

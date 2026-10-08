@@ -1315,10 +1315,11 @@ class Store {
   // MARK: - Текст песни
 
   /** Текст берётся с сервера по требованию: без него плеер работает точно так же. */
-  async loadLyrics() {
+  /** force — искать заново, даже если текст уже загружен (включили LRCLIB). */
+  async loadLyrics(force = false) {
     const song = this.state.queue?.current?.song
     if (!song) return
-    if (this.state.lyrics?.songID === song.id && this.state.lyrics.state !== 'failed') return
+    if (!force && this.state.lyrics?.songID === song.id && this.state.lyrics.state !== 'failed') return
     const client = this.state.client
     if (isLocalId(song.id) || isRadio(song) || !client || !this.online) {
       this.patch({ lyrics: { songID: song.id, state: 'ready', synced: false, lines: [] } })
