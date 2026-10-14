@@ -6,64 +6,80 @@
 | Что | Где |
 |---|---|
 | Ключ подписи Android | `~/.nocturne/nocturne-release.jks`, пароли — в `android/keystore.properties` |
-| Ключ подписи обновлений | `~/.nocturne/nocturne-updater.key`, пароль — в `~/.nocturne/updater.env` |
-| Подпись macOS | сертификат «Developer ID Application» в связке ключей |
+| Ключ подписи обновлений (desktop) | `~/.nocturne/nocturne-updater.key`, пароль — в `~/.nocturne/updater.env` |
+| Подпись macOS | сертификат «Developer ID Application» в связке ключей (скрипт находит его сам) |
+| App Store Connect (TestFlight, нотаризация) | `~/.config/razex-panel/asc.env`: `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_PATH` |
 
 Потеря ключа Android означает, что обновить установленное приложение уже нельзя — его придётся
 ставить заново. Потеря ключа обновлений означает то же самое для настольной версии. Обе копии
 стоит держать в менеджере паролей.
 
-## iPhone, iPad и Mac (App Store)
+GitHub Actions не работает (биллинг аккаунта) — всё собирается и подписывается на этом Mac.
+
+## Версия и чейнджлог
+
+Версия — `1.1.<число коммитов>` (`git rev-list --count HEAD`); номер сборки iOS — то же число.
+
+К каждой версии пишется запись в `site/changelog.json` — по-русски, для людей: что появилось
+(`new`), что стало лучше (`better`), что исправлено (`fix`), для каких платформ. Без записи скрипты
+выпуска остановятся (`bun scripts/changelog.ts check <версия> <платформа>`). Запись — отдельный
+коммит, поэтому её версия = текущее число коммитов + 1.
+
+Из чейнджлога `scripts/changelog.ts` делает:
+- заметки в манифестах обновлений → их показывает плашка «Доступно обновление» (Android, desktop);
+- описание релиза на GitHub → его читает сайт, раздел «Что нового» (без пересборки сайта);
+- «Что тестировать» в TestFlight.
+
+## iPhone, iPad и Mac (App Store / TestFlight)
 
 ```
-scripts/release.sh upload      # iOS и iPadOS в TestFlight
-scripts/release.sh mac-upload  # Mac Catalyst туда же, в ту же запись
+set -a; source ~/.config/razex-panel/asc.env; set +a
+zsh scripts/release.sh upload      # iOS и iPadOS в TestFlight (+ «Что тестировать» из чейнджлога)
+zsh scripts/release.sh mac-upload  # Mac Catalyst туда же, в ту же запись
 ```
+
+Внутренняя группа «Noсturne test» получает все сборки сразу. Публичная «Nocturne public test»
+(ссылка на сайте) — только после проверки Apple: добавить сборку в группу и отправить
+`betaAppReviewSubmissions` через API App Store Connect.
 
 ## Android
 
 ```
-cd android && ./gradlew :app:assembleRelease   # app/build/outputs/apk/release/app-release.apk
+scripts/release-android.sh          # build/android-release/Nocturne-1.1.N.apk + android.json
+scripts/release-android.sh publish  # и выложить: установленные приложения предложат обновиться
 ```
 
-Сборка подписывается, если рядом есть `keystore.properties` (см. `keystore.properties.example`)
-или заданы `ANDROID_KEYSTORE`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`,
-`ANDROID_KEY_PASSWORD`. Без них получится неподписанный apk — им нельзя обновить установленное
-приложение, но можно проверить, что R8 ничего лишнего не выбросил.
+Скрипт проверяет подпись (`apksigner verify`), считает SHA-256 и пишет `android.json`
+(`versionCode`, `url`, `sha256`, `notes`). Приложение скачивает APK, сверяет сумму и подпись и
+ставит поверх через системный установщик.
 
-Для магазина нужен `:app:bundleRelease` (`.aab`), для раздачи файлом — `assembleRelease` (`.apk`).
-
-## Windows, Linux, macOS (файлом)
+## Mac, Windows (файлом)
 
 ```
-scripts/release-desktop.sh          # установщики в build/desktop-release
-scripts/release-desktop.sh publish  # и выкладка на сервер обновлений
+scripts/release-desktop.sh                     # Mac: .dmg + архив обновления
+scripts/release-desktop.sh publish --windows   # + Windows (NSIS через cargo-xwin) и выкладка
 ```
 
-Переменные окружения:
+- Mac подписывается Developer ID и нотаризуется: приложение — Tauri, образ .dmg — скрипт
+  (`notarytool` + `stapler`), затем проверка `spctl`. Без сертификата или ключа ASC скрипт откажется:
+  неподписанное приложение macOS называет «повреждённым».
+- Windows не подписан (сертификат платный) — SmartScreen предупреждает при первом запуске.
+- Linux собирается только в CI, который сейчас не работает.
 
-- `NOCTURNE_UPDATE_URL` — адрес `latest.json`, например `https://music.example.com/nocturne/latest.json`.
-  Он подставляется в сборку: в репозитории домена нет.
-- `NOCTURNE_UPDATE_SSH` — куда класть файлы, например `nocturne@vps:/srv/nocturne`.
-- `APPLE_SIGNING_IDENTITY` — `Developer ID Application: Имя (TEAMID)`; без неё macOS открывает
-  приложение только через «Всё равно открыть».
-- `APPLE_ID`, `APPLE_PASSWORD` (пароль приложения), `APPLE_TEAM_ID` — нотаризация.
+## Где лежат обновления
 
-Windows-установщик не подписан: сертификат для подписи кода стоит денег, а SmartScreen ругается
-только на первые запуски. Linux-пакеты тоже идут без подписи — там доверие обеспечивает источник.
+Публичный репозиторий `RAZEX0LOL/nocturne-releases`, релиз с тегом `updates` (файлы перезаписываются):
 
-### Сервер обновлений
+- `darwin-aarch64.json`, `windows-x86_64.json` — манифесты обновлений Tauri, у каждой системы свой
+  (адрес в `desktop/src-tauri/tauri.conf.json`: `…/updates/{{target}}-{{arch}}.json`). Общий
+  `latest.json` с одной версией на всех ломался: система, чья запись ещё указывала на старый файл,
+  обновлялась по кругу.
+- `android.json` — манифест Android.
+- версионные файлы (`Nocturne_1.1.N_…`) — их скачивают обновлялки;
+- копии с постоянными именами (`Nocturne-mac.dmg`, `Nocturne-windows-setup.exe`, `Nocturne-android.apk`) —
+  на них ведут кнопки сайта. Подписей у копий нет — манифест берёт только файл с версией в имени.
 
-Обновлялка спрашивает один статический файл и сама выбирает строку под свою систему, поэтому на
-сервере достаточно nginx и папки:
+## Сайт
 
-```nginx
-location /nocturne/ {
-    alias /srv/nocturne/;
-    add_header Cache-Control "no-cache";
-}
-```
-
-`scripts/release-desktop.sh publish` кладёт туда установщики, архивы обновлений, их подписи и
-`latest.json`. Версию приложение берёт из `desktop/src-tauri/tauri.conf.json` — её и надо поднять
-перед выпуском.
+`site/deploy/deploy.sh` — сборка и rsync на nl (`/var/www/nocturne`), `--nginx` — ещё и конфиг nginx.
+Конфиг в репозитории содержит строки certbot — не выкладывать старую версию поверх.
