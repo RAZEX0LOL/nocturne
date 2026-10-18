@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { store, useStore } from '../state/store'
+import { store, useStore, useTransport } from '../state/store'
 import { Icon } from './Icon'
 import { t } from '../i18n'
 
@@ -9,7 +9,8 @@ import { t } from '../i18n'
  * полноэкранного плеера: строки как в «Музыке» Apple, прошедшие и будущие приглушены.
  */
 export function Lyrics({ large = false }: { large?: boolean }) {
-  const { queue, lyrics, position, settings } = useStore()
+  const { queue, lyrics, settings } = useStore()
+  const { position } = useTransport()
   const song = queue?.current?.song
   const container = useRef<HTMLDivElement>(null)
 

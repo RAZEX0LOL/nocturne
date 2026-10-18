@@ -4,6 +4,7 @@ import android.content.Context
 import app.nocturne.core.NavidromeClient
 import app.nocturne.core.PlaybackQueue
 import app.nocturne.core.Song
+import app.nocturne.core.ListeningSession
 import kotlinx.serialization.json.*
 
 /**
@@ -22,6 +23,8 @@ class QueueSnapshots(context: Context) {
         val positionMillis: Long,
         val startedAt: Long,
         val scrobbled: Boolean,
+        val listening: ListeningSession? = null,
+        val queueState: PlaybackQueue.State? = null,
     )
 
     fun save(snapshot: Snapshot) {
@@ -34,8 +37,17 @@ class QueueSnapshots(context: Context) {
             put("position", snapshot.positionMillis)
             put("startedAt", snapshot.startedAt)
             put("scrobbled", snapshot.scrobbled)
+            snapshot.queueState?.let { state -> put("queueState", buildJsonObject {
+                put("natural", buildJsonArray { state.natural.forEach { entry -> add(buildJsonObject { put("id", entry.id); put("song", NavidromeClient.describe(entry.song)) }) } })
+                put("order", buildJsonArray { state.order.forEach { add(it) } }); state.current?.let { put("current", it) }
+                put("shuffle", state.shuffle); put("repeat", state.repeat.name); put("history", buildJsonArray { state.history.forEach { add(it) } })
+            }) }
+            snapshot.listening?.let { session -> put("listening", buildJsonObject {
+                put("account", session.account); put("songId", session.songId); put("playId", session.playId)
+                put("startedAt", session.startedAt); put("submitted", session.submitted)
+            }) }
         }
-        store.edit().putString(KEY, payload.toString()).apply()
+        store.edit().putString(KEY, payload.toString()).commit()
     }
 
     fun load(): Snapshot? = runCatching {
@@ -52,6 +64,15 @@ class QueueSnapshots(context: Context) {
             positionMillis = payload["position"]?.jsonPrimitive?.longOrNull ?: 0,
             startedAt = payload["startedAt"]?.jsonPrimitive?.longOrNull ?: 0,
             scrobbled = payload["scrobbled"]?.jsonPrimitive?.booleanOrNull ?: false,
+            queueState = payload["queueState"]?.jsonObject?.let { state -> PlaybackQueue.State(
+                state.getValue("natural").jsonArray.map { raw -> val entry = raw.jsonObject; PlaybackQueue.Entry(entry.getValue("id").jsonPrimitive.content, NavidromeClient.song(entry.getValue("song").jsonObject)) },
+                state.getValue("order").jsonArray.map { it.jsonPrimitive.content }, state["current"]?.jsonPrimitive?.contentOrNull,
+                state.getValue("shuffle").jsonPrimitive.boolean, PlaybackQueue.Repeat.valueOf(state.getValue("repeat").jsonPrimitive.content),
+                state.getValue("history").jsonArray.map { it.jsonPrimitive.content }) },
+            listening = payload["listening"]?.jsonObject?.let { session -> ListeningSession(
+                session.getValue("account").jsonPrimitive.content, session.getValue("songId").jsonPrimitive.content,
+                session.getValue("playId").jsonPrimitive.content, session.getValue("startedAt").jsonPrimitive.long,
+                session.getValue("submitted").jsonPrimitive.boolean) },
         )
     }.getOrNull()
 

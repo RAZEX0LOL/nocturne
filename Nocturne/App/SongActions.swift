@@ -73,6 +73,9 @@ struct SongActions: View {
                     Label(songs.count == 1 ? String(localized: "Скачать") : String(localized: "Скачать все"), systemImage: "arrow.down.circle")
                 }
             }
+            if songs.contains(where: { downloads.items[$0.id]?.automatic == true }) {
+                Button { downloads.download(songs) } label: { Label(String(localized: "Сохранить для офлайна"), systemImage: "pin") }
+            }
             if missing.count < songs.count {
                 Button(role: .destructive) { downloads.remove(songs) } label: {
                     Label(songs.count == 1 ? String(localized: "Удалить загрузку") : String(localized: "Удалить загрузки"), systemImage: "trash")

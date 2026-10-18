@@ -47,6 +47,8 @@ pub struct Download {
     song: Value,
     /// Обложка, скачанная вместе с треком: без неё офлайн-библиотека выглядит пустыми квадратами.
     cover: Option<String>,
+    automatic: bool,
+    size: u64,
 }
 
 fn error(context: &str, error: impl std::fmt::Display) -> String {
@@ -59,8 +61,8 @@ pub fn music_folder(app: &AppHandle) -> Result<PathBuf, String> {
     Ok(folder)
 }
 
-fn downloads_folder(app: &AppHandle) -> Result<PathBuf, String> {
-    let folder = app.path().app_local_data_dir().map_err(|e| error("загрузки", e))?.join("downloads");
+fn downloads_folder(app: &AppHandle, account: &str) -> Result<PathBuf, String> {
+    let folder = app.path().app_local_data_dir().map_err(|e| error("загрузки", e))?.join("downloads").join(stable_hash(account));
     fs::create_dir_all(&folder).map_err(|e| error("загрузки", e))?;
     Ok(folder)
 }
@@ -164,8 +166,20 @@ fn read_track(root: &Path, path: &Path, covers: &Path) -> LocalTrack {
 pub async fn local_library(app: AppHandle) -> Result<LocalLibrary, String> {
     let root = music_folder(&app)?;
     let covers = covers_folder(&app)?;
+    let legacy = app.path().app_local_data_dir().map_err(|e| error("загрузки", e))?.join("downloads");
     tauri::async_runtime::spawn_blocking(move || {
-        let tracks = audio_files(&root).iter().map(|path| read_track(&root, path, &covers)).collect();
+        let mut tracks: Vec<LocalTrack> = audio_files(&root).iter().map(|path| read_track(&root, path, &covers)).collect();
+        // Старые файлы доступны как локальные: неизвестному серверу их приписывать нельзя.
+        if legacy.exists() {
+            for download in collect_downloads(&legacy).unwrap_or_default() {
+                let title = download.song.get("title").and_then(Value::as_str).unwrap_or("Music").to_string();
+                tracks.push(LocalTrack { id: format!("local:legacy:{}", stable_hash(&download.path)), path: download.path, title,
+                    artist: download.song.get("artist").and_then(Value::as_str).map(str::to_string),
+                    album: download.song.get("album").and_then(Value::as_str).map(str::to_string),
+                    track: download.song.get("track").and_then(Value::as_u64).map(|n| n as u32),
+                    duration: download.song.get("duration").and_then(Value::as_f64), cover: download.cover });
+            }
+        }
         LocalLibrary { folder: root.to_string_lossy().to_string(), tracks }
     })
     .await
@@ -229,14 +243,19 @@ pub fn remove_local(app: AppHandle, path: String) -> Result<(), String> {
     let root = music_folder(&app)?.canonicalize().map_err(|e| error("папка музыки", e))?;
     let target = PathBuf::from(path).canonicalize().map_err(|e| error("файл", e))?;
     if !target.starts_with(&root) {
-        return Err("файл вне папки музыки".into());
+        let legacy = app.path().app_local_data_dir().map_err(|e| error("загрузки", e))?.join("downloads").canonicalize().map_err(|e| error("загрузки", e))?;
+        // Только файл непосредственно в старом корне; новые аккаунтные папки сюда не входят.
+        if target.parent() != Some(legacy.as_path()) { return Err("файл вне папки музыки".into()); }
+        let stem = target.file_stem().and_then(|stem| stem.to_str()).ok_or("неверный файл")?;
+        return remove_files_of(&legacy, stem);
     }
     fs::remove_file(target).map_err(|e| error("удаление", e))
 }
 
 /// Идентификатор сервера превращаем в безопасное имя файла.
 fn file_stem_for(id: &str) -> String {
-    id.chars().map(|c| if c.is_ascii_alphanumeric() || c == '-' || c == '_' { c } else { '_' }).collect()
+    let label: String = id.chars().take(64).map(|c| if c.is_ascii_alphanumeric() || c == '-' || c == '_' { c } else { '_' }).collect();
+    format!("{}-{label}", stable_hash(id))
 }
 
 fn extension_for(content_type: &str) -> &'static str {
@@ -258,10 +277,17 @@ pub async fn download_track(
     app: AppHandle,
     url: String,
     id: String,
-    song: Value,
+    account: String,
+    mut song: Value,
+    automatic: Option<bool>,
+    limit_bytes: Option<u64>,
     cover_url: Option<String>,
 ) -> Result<Download, String> {
-    let folder = downloads_folder(&app)?;
+    if account.is_empty() { return Err("не указан владелец загрузки".into()); }
+    let automatic = automatic.unwrap_or(false);
+    if automatic && !crate::network::unmetered() { return Err("ожидание неограниченной сети".into()); }
+    if let Some(meta) = song.as_object_mut() { meta.insert("_nocturneAutomatic".into(), Value::Bool(automatic)); }
+    let folder = downloads_folder(&app, &account)?;
     let stem = file_stem_for(&id);
     let response = reqwest::get(&url).await.map_err(|e| error("загрузка", e))?;
     if !response.status().is_success() {
@@ -273,11 +299,25 @@ pub async fn download_track(
         .and_then(|value| value.to_str().ok())
         .unwrap_or("")
         .to_string();
+    if response.content_length().zip(limit_bytes).is_some_and(|(size, limit)| size > limit) {
+        return Err("достигнут лимит места".into());
+    }
     let partial = folder.join(format!("{stem}.part"));
     let mut file = tokio::fs::File::create(&partial).await.map_err(|e| error("файл", e))?;
     let mut body = response.bytes_stream();
+    let mut size = 0u64;
     while let Some(chunk) = body.next().await {
         let chunk = chunk.map_err(|e| error("загрузка", e))?;
+        if automatic && !crate::network::unmetered() {
+            drop(file); let _ = tokio::fs::remove_file(&partial).await;
+            return Err("ожидание неограниченной сети".into());
+        }
+        size += chunk.len() as u64;
+        if limit_bytes.is_some_and(|limit| size > limit) {
+            drop(file);
+            let _ = tokio::fs::remove_file(&partial).await;
+            return Err("достигнут лимит места".into());
+        }
         file.write_all(&chunk).await.map_err(|e| error("запись", e))?;
     }
     file.flush().await.map_err(|e| error("запись", e))?;
@@ -292,7 +332,7 @@ pub async fn download_track(
         Some(address) => save_cover(&folder.join(format!("{stem}.cover")), &address).await,
         None => None,
     };
-    Ok(Download { id, path: target.to_string_lossy().to_string(), song, cover })
+    Ok(Download { id, path: target.to_string_lossy().to_string(), song, cover, automatic, size })
 }
 
 /// Обложка — украшение: не дошла, и ничего страшного, трек всё равно скачан.
@@ -307,18 +347,12 @@ async fn save_cover(target: &Path, url: &str) -> Option<String> {
 }
 
 #[tauri::command]
-pub fn downloads(app: AppHandle) -> Result<Vec<Download>, String> {
-    collect_downloads(&downloads_folder(&app)?)
+pub fn downloads(app: AppHandle, account: String) -> Result<Vec<Download>, String> {
+    collect_downloads(&downloads_folder(&app, &account)?)
 }
 
 fn collect_downloads(folder: &Path) -> Result<Vec<Download>, String> {
-    // Приложение могли закрыть посреди загрузки: такой огрызок никому не нужен и место занимает.
-    for leftover in fs::read_dir(folder).into_iter().flatten().flatten() {
-        let path = leftover.path();
-        if path.extension().is_some_and(|extension| extension == "part") {
-            let _ = fs::remove_file(path);
-        }
-    }
+    // Чтение списка не удаляет .part: в этот момент другой запрос может писать файл.
     let mut result = Vec::new();
     let entries = fs::read_dir(folder).map_err(|e| error("загрузки", e))?;
     let files: Vec<PathBuf> = entries.flatten().map(|entry| entry.path()).collect();
@@ -333,14 +367,16 @@ fn collect_downloads(folder: &Path) -> Result<Vec<Download>, String> {
         let Some(path) = audio.iter().find(|p| p.file_stem().is_some_and(|s| s.to_string_lossy() == stem)) else { continue };
         let cover = folder.join(format!("{stem}.cover"));
         let cover = cover.exists().then(|| cover.to_string_lossy().to_string());
-        result.push(Download { id, path: path.to_string_lossy().to_string(), song, cover });
+        let automatic = song.get("_nocturneAutomatic").and_then(Value::as_bool).unwrap_or(false);
+        let size = fs::metadata(path).map(|meta| meta.len()).unwrap_or(0);
+        result.push(Download { id, path: path.to_string_lossy().to_string(), song, cover, automatic, size });
     }
     Ok(result)
 }
 
 #[tauri::command]
-pub fn remove_download(app: AppHandle, id: String) -> Result<(), String> {
-    remove_files_of(&downloads_folder(&app)?, &file_stem_for(&id))
+pub fn remove_download(app: AppHandle, id: String, account: String) -> Result<(), String> {
+    remove_files_of(&downloads_folder(&app, &account)?, &file_stem_for(&id))
 }
 
 /// Удаляет трек, его метаданные и обложку. На Windows файл, который сейчас открыт (играет или
@@ -379,7 +415,30 @@ mod tests {
     fn identifiers_are_stable_and_safe() {
         assert_eq!(stable_hash("Album/01 Song.mp3"), stable_hash("Album/01 Song.mp3"));
         assert_ne!(stable_hash("a.mp3"), stable_hash("b.mp3"));
-        assert_eq!(file_stem_for("al-1/../../etc"), "al-1_______etc");
+        assert!(!file_stem_for("al-1/../../etc").contains('/'));
+        assert_ne!(file_stem_for("a/b"), file_stem_for("a_b"));
+    }
+
+    #[test]
+    fn account_folders_and_automatic_metadata_are_independent() {
+        let root = std::env::temp_dir().join(format!("nocturne-accounts-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&root);
+        let a = root.join(stable_hash("alice@https://a"));
+        let b = root.join(stable_hash("alice@https://b"));
+        for (folder, title, automatic) in [(&a, "A", true), (&b, "B", false)] {
+            fs::create_dir_all(folder).unwrap();
+            fs::write(folder.join("same.mp3"), b"audio").unwrap();
+            fs::write(folder.join("same.json"), serde_json::json!({"id":"same", "title":title, "_nocturneAutomatic":automatic}).to_string()).unwrap();
+        }
+        let left = collect_downloads(&a).unwrap();
+        let right = collect_downloads(&b).unwrap();
+        assert_eq!(left[0].song["title"], "A");
+        assert_eq!(right[0].song["title"], "B");
+        assert!(left[0].automatic);
+        assert!(!right[0].automatic);
+        remove_files_of(&a, "same").unwrap();
+        assert_eq!(collect_downloads(&b).unwrap().len(), 1);
+        let _ = fs::remove_dir_all(root);
     }
 
     /// Обложка лежит рядом с треком и не должна сойти за сам трек: расширения у них разные.
@@ -402,7 +461,7 @@ mod tests {
         assert!(found[0].cover.as_ref().is_some_and(|cover| cover.ends_with("t1.cover")));
         assert!(found[1].path.ends_with("t2.mp3"));
         assert_eq!(found[1].cover, None);
-        assert!(!folder.join("t3.part").exists(), "оборванная загрузка должна быть убрана");
+        assert!(folder.join("t3.part").exists(), "чтение списка не должно удалять файл активной загрузки");
         let _ = fs::remove_dir_all(&folder);
     }
 

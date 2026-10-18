@@ -2452,6 +2452,7 @@ name = "nocturne"
 version = "1.0.0"
 dependencies = [
  "base64 0.22.1",
+ "block2",
  "discord-rich-presence",
  "futures-util",
  "image",

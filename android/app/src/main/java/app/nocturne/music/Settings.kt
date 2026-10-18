@@ -77,6 +77,10 @@ class Settings(context: Context) {
         private set
     var fadeSeconds by mutableStateOf(store.getFloat("playback.fade", 0f))
         private set
+    var prepareQueue by mutableStateOf(store.getBoolean("downloads.prepareQueue", false))
+        private set
+    var downloadLimitMB by mutableStateOf(store.getInt("downloads.limitMB", 0))
+        private set
     var downloadOverWifiOnly by mutableStateOf(store.getBoolean("downloads.wifiOnly", false))
         private set
     var downloadFavorites by mutableStateOf(store.getBoolean("downloads.favorites", false))
@@ -103,6 +107,8 @@ class Settings(context: Context) {
     fun chooseAccent(value: AccentTheme) { accent = value; store.edit().putString("accent", value.name).apply() }
     fun chooseFadeSeconds(value: Float) { fadeSeconds = value; store.edit().putFloat("playback.fade", value).apply() }
     fun enableEqualizer(value: Boolean) { equalizerEnabled = value; store.edit().putBoolean("eq.enabled", value).apply() }
+    fun prepareQueue(value: Boolean) { prepareQueue = value; store.edit().putBoolean("downloads.prepareQueue", value).apply() }
+    fun limitDownloadSpace(value: Int) { downloadLimitMB = value; store.edit().putInt("downloads.limitMB", value).apply() }
     fun limitDownloadsToWifi(value: Boolean) { downloadOverWifiOnly = value; store.edit().putBoolean("downloads.wifiOnly", value).apply() }
     fun chooseCorners(value: Corners) { corners = value; store.edit().putString("appearance.corners", value.name).apply() }
     fun choosePlayerBackground(value: PlayerBackground) { playerBackground = value; store.edit().putString("appearance.playerBackground", value.name).apply() }

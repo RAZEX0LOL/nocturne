@@ -8,6 +8,16 @@
 export type Language = 'auto' | 'ru' | 'en'
 
 const english: Record<string, string> = {
+  'Сохранить для офлайна': 'Keep for offline playback',
+  'Готовить очередь для офлайна': 'Prepare the queue for offline playback',
+  'До трёх следующих треков на неограниченной сети, до 256 МБ. Ручные загрузки не удаляются.': 'Up to three upcoming tracks on an unmetered connection, up to 256 MB. Manual downloads are kept.',
+  'Лимит места': 'Storage limit',
+  'Без лимита': 'Unlimited',
+  'Не удалось сохранить очередь загрузок.': 'Could not save the download queue.',
+  'Не удалось скачать «{title}». Задание сохранено для повтора.': 'Could not download “{title}”. The job is saved for retry.',
+  'Загрузка музыки': 'Downloading music',
+  'Раздел ещё не сохранён для офлайна.': 'This section has not been saved for offline use yet.',
+
   // Вход
   'Твоя музыка.': 'Your music.',
   'Твоё пространство.': 'Your space.',

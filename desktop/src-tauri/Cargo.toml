@@ -39,6 +39,7 @@ discord-rich-presence = "1.1.0"
 # Mac: значки SF Symbols рисует AppKit (см. sf_symbols.rs). Версии — те же, что у Tauri.
 [target."cfg(target_os = \"macos\")".dependencies]
 base64 = "0.22"
+block2 = "0.6"
 objc2 = "0.6"
 objc2-foundation = { version = "0.3", features = ["NSString", "NSDictionary", "NSData", "NSGeometry"] }
 objc2-app-kit = { version = "0.3", features = [
@@ -58,6 +59,7 @@ webview2-com = "0.39"
 windows-version = "0.1"
 windows = { version = "0.62", features = [
   "Foundation",
+  "Networking_Connectivity",
   "Media",
   "Storage",
   "Storage_Streams",

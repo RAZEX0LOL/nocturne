@@ -92,6 +92,7 @@ struct RootView: View {
         }
         .onChange(of: scenePhase) { _, phase in
             guard phase == .active else { player.save(force: true); return }
+            Task { await downloads.resumePending() }
             // Maybe the music went on on a computer meanwhile.
             Task { await player.checkRemoteQueue(client: library.client) }
             // Files may have been added in Finder/Files meanwhile; the server may be back.

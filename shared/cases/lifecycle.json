@@ -1,0 +1,226 @@
+{
+  "cases": [
+    {
+      "name": "перезапуск после отметки не создаёт вторую",
+      "events": [
+        {
+          "op": "start",
+          "account": "a",
+          "songId": "s1",
+          "playId": "p1",
+          "startedAt": 1000000
+        },
+        {
+          "op": "check",
+          "account": "a",
+          "duration": 300,
+          "position": 150
+        },
+        {
+          "op": "restart"
+        },
+        {
+          "op": "check",
+          "account": "a",
+          "duration": 300,
+          "position": 150
+        }
+      ],
+      "expected": [
+        "a:p1:1000000"
+      ]
+    },
+    {
+      "name": "перезапуск до порога продолжает начало",
+      "events": [
+        {
+          "op": "start",
+          "account": "a",
+          "songId": "s1",
+          "playId": "p1",
+          "startedAt": 1000000
+        },
+        {
+          "op": "check",
+          "account": "a",
+          "duration": 300,
+          "position": 100
+        },
+        {
+          "op": "restart"
+        },
+        {
+          "op": "check",
+          "account": "a",
+          "duration": 300,
+          "position": 150
+        }
+      ],
+      "expected": [
+        "a:p1:1000000"
+      ]
+    },
+    {
+      "name": "пауза не создаёт нового прослушивания",
+      "events": [
+        {
+          "op": "start",
+          "account": "a",
+          "songId": "s1",
+          "playId": "p1",
+          "startedAt": 1000000
+        },
+        {
+          "op": "restart"
+        },
+        {
+          "op": "check",
+          "account": "a",
+          "duration": 300,
+          "position": 150
+        },
+        {
+          "op": "check",
+          "account": "a",
+          "duration": 300,
+          "position": 150
+        }
+      ],
+      "expected": [
+        "a:p1:1000000"
+      ]
+    },
+    {
+      "name": "другой аккаунт не получает отметку",
+      "events": [
+        {
+          "op": "start",
+          "account": "a",
+          "songId": "s1",
+          "playId": "p1",
+          "startedAt": 1000000
+        },
+        {
+          "op": "check",
+          "account": "b",
+          "duration": 300,
+          "position": 150
+        },
+        {
+          "op": "check",
+          "account": "a",
+          "duration": 300,
+          "position": 150
+        }
+      ],
+      "expected": [
+        "a:p1:1000000"
+      ]
+    },
+    {
+      "name": "короткий трек не скробблится",
+      "events": [
+        {
+          "op": "start",
+          "account": "a",
+          "songId": "s1",
+          "playId": "p1",
+          "startedAt": 1000000
+        },
+        {
+          "op": "check",
+          "account": "a",
+          "duration": 30,
+          "position": 30
+        }
+      ],
+      "expected": []
+    },
+    {
+      "name": "длинный трек учитывается на четырёх минутах",
+      "events": [
+        {
+          "op": "start",
+          "account": "a",
+          "songId": "s1",
+          "playId": "p1",
+          "startedAt": 1000000
+        },
+        {
+          "op": "check",
+          "account": "a",
+          "duration": 1200,
+          "position": 240
+        }
+      ],
+      "expected": [
+        "a:p1:1000000"
+      ]
+    },
+    {
+      "name": "повтор создаёт новое прослушивание",
+      "events": [
+        {
+          "op": "start",
+          "account": "a",
+          "songId": "s1",
+          "playId": "p1",
+          "startedAt": 1000000
+        },
+        {
+          "op": "check",
+          "account": "a",
+          "duration": 300,
+          "position": 150
+        },
+        {
+          "op": "start",
+          "account": "a",
+          "songId": "s1",
+          "playId": "p2",
+          "startedAt": 2000000
+        },
+        {
+          "op": "check",
+          "account": "a",
+          "duration": 300,
+          "position": 150
+        }
+      ],
+      "expected": [
+        "a:p1:1000000",
+        "a:p2:2000000"
+      ]
+    },
+    {
+      "name": "авария после outbox до снимка не повторяет отметку",
+      "events": [
+        {
+          "op": "start",
+          "account": "a",
+          "songId": "s1",
+          "playId": "p1",
+          "startedAt": 1000000
+        },
+        {
+          "op": "queueOnly",
+          "account": "a",
+          "duration": 300,
+          "position": 150
+        },
+        {
+          "op": "restart"
+        },
+        {
+          "op": "check",
+          "account": "a",
+          "duration": 300,
+          "position": 151
+        }
+      ],
+      "expected": [
+        "a:p1:1000000"
+      ]
+    }
+  ]
+}

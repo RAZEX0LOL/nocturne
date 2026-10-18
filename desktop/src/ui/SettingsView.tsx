@@ -211,6 +211,18 @@ export function SettingsView() {
         </div>
       </Group>
 
+      <Group title={t('Загрузки')}>
+        <SettingsCard icon="download" title={t('Готовить очередь для офлайна')} description={t('До трёх следующих треков на неограниченной сети, до 256 МБ. Ручные загрузки не удаляются.')}>
+          <Toggle checked={settings.prepareQueue} onChange={(prepareQueue) => store.update({ prepareQueue })} label={t('Готовить очередь для офлайна')} />
+        </SettingsCard>
+        <SettingsCard icon="download" title={t('Лимит места')}>
+          <select className="select" value={settings.downloadLimitMB} onChange={(event) => store.update({ downloadLimitMB: Number(event.target.value) })}>
+            <option value={0}>{t('Без лимита')}</option>
+            {[1024, 2048, 5120, 10240].map((value) => <option key={value} value={value}>{value / 1024} GB</option>)}
+          </select>
+        </SettingsCard>
+      </Group>
+
       <Group title={t('Текст песни')}>
         <SettingsCard
           icon="lyrics"

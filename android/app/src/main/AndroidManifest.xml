@@ -4,6 +4,7 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <!-- Обновление без переустановки: новый APK ставится поверх через системный установщик. -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <!-- Обычный HTTP разрешён платформой, но само приложение пускает его только в домашнюю сеть:
@@ -12,6 +13,7 @@
         <activity android:name=".MainActivity" android:exported="true">
             <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
         </activity>
+        <service android:name=".DownloadService" android:foregroundServiceType="dataSync" android:exported="false" />
         <receiver android:name=".UpdateStatusReceiver" android:exported="false" />
         <!-- Доступ проверяется в onGetSession: только приложение и доверенные системные контроллеры. -->
         <service android:name=".PlaybackService" android:foregroundServiceType="mediaPlayback" android:exported="true" tools:ignore="ExportedService">

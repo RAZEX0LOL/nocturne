@@ -1,6 +1,9 @@
 {
   "description": "Повторные попытки запроса. Чтения у Subsonic идемпотентны, поэтому оборванную связь имеет смысл переспросить; ответ самого сервера (неверный пароль, 500) повторять бессмысленно — он не изменится.",
-  "delaysSeconds": [0.5, 2],
+  "delaysSeconds": [
+    0.5,
+    2
+  ],
   "maxAttempts": 3,
   "cases": [
     {
@@ -35,6 +38,14 @@
       "name": "ошибку сервера не переспрашиваем",
       "failure": "http500",
       "failures": 99,
+      "attempts": 1,
+      "succeeds": false
+    },
+    {
+      "name": "изменяющий запрос не повторяется после потерянного ответа",
+      "endpoint": "scrobble",
+      "failure": "network",
+      "failures": 1,
       "attempts": 1,
       "succeeds": false
     }

@@ -10,6 +10,16 @@ import java.util.Locale
  * Подстановки помечаются фигурными скобками: `tr("Треков: {n}", "n" to 12)`.
  */
 private val english = mapOf(
+    "Сохранить для офлайна" to "Keep for offline playback",
+    "Готовить очередь для офлайна" to "Prepare the queue for offline playback",
+    "До трёх следующих треков на неограниченной сети, до 256 МБ. Ручные загрузки не удаляются." to "Up to three upcoming tracks on an unmetered connection, up to 256 MB. Manual downloads are kept.",
+    "Лимит места" to "Storage limit",
+    "Без лимита" to "Unlimited",
+    "Не удалось сохранить очередь загрузок." to "Could not save the download queue.",
+    "Не удалось скачать «{title}». Задание сохранено для повтора." to "Could not download “{title}”. The job is saved for retry.",
+    "Загрузка музыки" to "Downloading music",
+    "Раздел ещё не сохранён для офлайна." to "This section has not been saved for offline use yet.",
+
     // Вход
     "Твоя музыка.\nТвоё пространство." to "Your music.\nYour space.",
     "Подключи Navidrome и забери любимую музыку с собой." to "Connect Navidrome and take your favourite music with you.",

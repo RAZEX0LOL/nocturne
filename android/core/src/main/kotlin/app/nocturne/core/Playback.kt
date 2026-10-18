@@ -72,12 +72,13 @@ class PlaybackQueue(songs: List<Song>, startAt: Int, shuffle: Boolean) {
         val added = songs.map { Entry(newId(it), it) }
         entries = entries.toMutableList().apply { addAll(min(position + 1, size), added) }
         if (!shuffle) naturalEntries = entries
+        else { val at = naturalEntries.indexOfFirst { it.id == current?.id } + 1; naturalEntries = naturalEntries.take(at) + added + naturalEntries.drop(at) }
     }
 
     fun append(songs: List<Song>) {
         val added = songs.map { Entry(newId(it), it) }
         entries = entries + added
-        if (!shuffle) naturalEntries = entries
+        naturalEntries = if (shuffle) naturalEntries + added else entries
     }
 
     /** Играющий трек удалить нельзя: иначе непонятно, что должно зазвучать вместо него. */
@@ -85,7 +86,7 @@ class PlaybackQueue(songs: List<Song>, startAt: Int, shuffle: Boolean) {
         val index = entries.indexOfFirst { it.id == id }
         if (index < 0 || index == position) return
         entries = entries.filterIndexed { i, _ -> i != index }
-        if (!shuffle) naturalEntries = entries
+        naturalEntries = naturalEntries.filterNot { it.id == id }
         if (index < position) position -= 1
         history.remove(id)
     }
@@ -101,8 +102,22 @@ class PlaybackQueue(songs: List<Song>, startAt: Int, shuffle: Boolean) {
         if (!shuffle) naturalEntries = entries
     }
 
-    private var counter = 0
-    private fun newId(song: Song) = "n${counter++}:${song.id}"
+    data class State(val natural: List<Entry>, val order: List<String>, val current: String?, val shuffle: Boolean, val repeat: Repeat, val history: List<String>)
+    fun snapshot() = State(naturalEntries, entries.map { it.id }, current?.id, shuffle, repeatMode, history.toList())
+    companion object {
+        fun restore(state: State): PlaybackQueue {
+            val natural = state.natural.associateBy { it.id }
+            require(natural.size == state.natural.size && state.order.size == natural.size && state.order.toSet() == natural.keys)
+            return PlaybackQueue(emptyList(), 0, false).apply {
+                naturalEntries = state.natural
+                entries = state.order.map { natural.getValue(it) }
+                position = entries.indexOfFirst { it.id == state.current }.coerceAtLeast(0)
+                shuffle = state.shuffle; repeatMode = state.repeat
+                history.addAll(state.history.filter { it in natural })
+            }
+        }
+    }
+    private fun newId(song: Song) = "${java.util.UUID.randomUUID()}:${song.id}"
 }
 
 /** Профили потока. Оригинал отдаётся без перекодирования, остальные — MP3 с заданным потолком. */

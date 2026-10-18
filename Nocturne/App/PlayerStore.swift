@@ -68,11 +68,13 @@ final class PlayerStore {
     @ObservationIgnored private var remoteClient: NavidromeClient?
     /// When this device last saved the queue on the server (or declined another device's one).
     @ObservationIgnored private var queueSyncedAt: Date {
-        get { Date(timeIntervalSince1970: UserDefaults.standard.double(forKey: "queue.syncedAt")) }
-        set { UserDefaults.standard.set(newValue.timeIntervalSince1970, forKey: "queue.syncedAt") }
+        get { Date(timeIntervalSince1970: UserDefaults.standard.double(forKey: "queue.syncedAt.\(client?.credentials.account ?? Self.onDeviceAccount)")) }
+        set { UserDefaults.standard.set(newValue.timeIntervalSince1970, forKey: "queue.syncedAt.\(client?.credentials.account ?? Self.onDeviceAccount)") }
     }
     /// Queue entry already submitted as a play, so a track is scrobbled at most once per play.
-    @ObservationIgnored private var scrobbledEntry: PlaybackQueue.Entry.ID?
+    @ObservationIgnored private var listening: ListeningSession?
+    @ObservationIgnored private var listeningEntry: PlaybackQueue.Entry.ID?
+    @ObservationIgnored private var flushingScrobbles = false
 
     private static let snapshotURL = URL.applicationSupportDirectory.appendingPathComponent("queue.json")
 
@@ -224,10 +226,10 @@ final class PlayerStore {
         guard current != nil else { return }
         let finished = duration > 0 && elapsed >= duration - 0.5
         guard let currentItem, currentItem.status != .failed, player.currentItem === currentItem else {
-            startCurrent(at: finished ? 0 : elapsed, autoplay: true)
+            startCurrent(at: finished ? 0 : elapsed, autoplay: true, continueListening: !finished)
             return
         }
-        if finished { seek(0) }
+        if finished { listening = nil; listeningEntry = nil; ensureListening(); seek(0) }
         isPlaying = true
         activateAndPlay()
         updateNowPlaying()
@@ -278,6 +280,7 @@ final class PlayerStore {
         player.pause(); player.removeAllItems()
         artworkTask?.cancel()
         currentItem = nil; nextItem = nil; itemObservations = [:]
+        listening = nil; listeningEntry = nil
         queue = PlaybackQueue(); elapsed = 0; duration = 0; client = nil; artwork = nil
         MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
         publishWidget()
@@ -291,7 +294,11 @@ final class PlayerStore {
     /// downloaded" until something played — on a fresh install no track could be started from a list.
     func use(_ client: NavidromeClient?) {
         guard self.client?.credentials.account != client?.credentials.account else { return }
+        serverSyncTask?.cancel()
+        remoteQueue = nil; remoteClient = nil; lastRemoteCheck = .distantPast
+        listening = nil; listeningEntry = nil
         self.client = client
+        flushPendingScrobbles()
     }
 
     /// Brings back the last queue (paused) if it belongs to the same account.
@@ -303,8 +310,15 @@ final class PlayerStore {
               !restored.song.id.hasPrefix("radio-") else { return }
         self.client = client
         queue = snapshot.queue
+        listening = snapshot.listening
+        listening?.recover(pending: pendingScrobbles)
+        listeningEntry = queue.current?.id
+        if let listening, listening.submitted, let song = queue.current?.song {
+            StatsStore.shared.record(song, seconds: song.duration ?? 0, playId: listening.playId, account: listening.account)
+        }
         duration = current?.duration ?? 0
         elapsed = min(snapshot.elapsed, duration)
+        persistSnapshot()
     }
 
     /// Snapshot owner when playing without a server.
@@ -316,16 +330,27 @@ final class PlayerStore {
               let snapshot = try? JSONDecoder().decode(QueueSnapshot.self, from: data),
               snapshot.account == Self.onDeviceAccount, snapshot.queue.current != nil else { return }
         queue = snapshot.queue
+        listening = snapshot.listening
+        listening?.recover(pending: pendingScrobbles)
+        listeningEntry = queue.current?.id
+        if let listening, listening.submitted, let song = queue.current?.song {
+            StatsStore.shared.record(song, seconds: song.duration ?? 0, playId: listening.playId, account: listening.account)
+        }
         duration = current?.duration ?? 0
         elapsed = min(snapshot.elapsed, duration)
+        persistSnapshot()
     }
 
     func save(force: Bool = false) {
         guard !queue.isEmpty, force || Date().timeIntervalSince(lastSaved) > 10 else { return }
         lastSaved = Date()
         syncToServer(soon: force)
+        persistSnapshot()
+    }
+
+    private func persistSnapshot() {
         let account = client?.credentials.account ?? Self.onDeviceAccount
-        let snapshot = QueueSnapshot(account: account, queue: queue, elapsed: elapsed)
+        let snapshot = QueueSnapshot(account: account, queue: queue, elapsed: elapsed, listening: listening)
         guard let data = try? JSONEncoder().encode(snapshot) else { return }
         try? FileManager.default.createDirectory(at: Self.snapshotURL.deletingLastPathComponent(), withIntermediateDirectories: true)
         try? data.write(to: Self.snapshotURL, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
@@ -348,7 +373,7 @@ final class PlayerStore {
             guard !Task.isCancelled else { return }
             do {
                 try await client.savePlayQueue(songIDs: songs.map(\.id), current: current, position: position)
-                self?.queueSyncedAt = Date()
+                if self?.client?.credentials.account == client.credentials.account { self?.queueSyncedAt = Date() }
             } catch { Log.player.notice("Queue not saved on the server: \(error.localizedDescription, privacy: .public)") }
         }
     }
@@ -358,7 +383,7 @@ final class PlayerStore {
     func checkRemoteQueue(client: NavidromeClient?) async {
         guard let client, Date().timeIntervalSince(lastRemoteCheck) > 15 else { return }
         lastRemoteCheck = Date()
-        guard let remote = try? await client.playQueue(), remote.changedBy != NavidromeClient.clientName,
+        guard let remote = try? await client.playQueue(), self.client?.credentials.account == client.credentials.account, remote.changedBy != NavidromeClient.clientName,
               let changed = remote.changedAt, changed > queueSyncedAt.addingTimeInterval(2) else { return }
         // Already at the same spot — nothing to offer.
         if current?.id == remote.current, abs(elapsed - remote.positionSeconds) < 10 { return }
@@ -384,7 +409,7 @@ final class PlayerStore {
 
     // MARK: - Items
 
-    private func startCurrent(at time: Double, autoplay: Bool, isRetry: Bool = false) {
+    private func startCurrent(at time: Double, autoplay: Bool, isRetry: Bool = false, continueListening: Bool = false) {
         guard let song = current, let item = makeItem(for: song) else { return }
         Log.player.notice("Start \(song.id, privacy: .public) at \(time, privacy: .public)s, retry \(isRetry, privacy: .public)")
         if !isRetry { retryCount = 0 }
@@ -400,8 +425,12 @@ final class PlayerStore {
         duration = song.duration ?? 0
         isPlaying = autoplay
         if autoplay { activateAndPlay() }
+        if !isRetry && !continueListening {
+            listening = nil; listeningEntry = nil
+        }
         if !isRetry { artwork = nil; loadArtwork(for: song); reportNowPlaying() }
         prepareNext()
+        DownloadStore.shared.prepare(Array(queue.upcoming).map(\.song), currentID: current?.id)
         updateNowPlaying()
         save(force: true)
     }
@@ -475,6 +504,7 @@ final class PlayerStore {
     }
 
     private func queueDidChange() {
+        DownloadStore.shared.prepare(Array(queue.upcoming).map(\.song), currentID: current?.id)
         prepareNext()
         save(force: true)
     }
@@ -497,12 +527,14 @@ final class PlayerStore {
             elapsed = 0
             duration = current?.duration ?? 0
             if let song = current { artwork = nil; loadArtwork(for: song) }
+            listening = nil; listeningEntry = nil
             reportNowPlaying()
             if sleepAtTrackEnd {
                 sleepAtTrackEnd = false
                 pause()
             }
             prepareNext()
+            DownloadStore.shared.prepare(Array(queue.upcoming).map(\.song), currentID: current?.id)
             updateNowPlaying()
             save(force: true)
         } else if actual == nil, currentItem != nil {
@@ -565,23 +597,41 @@ final class PlayerStore {
 
     // Last.fm rules: a play counts after half the track or 4 minutes, and only for tracks longer than 30 s.
     private func submitScrobbleIfNeeded() {
-        guard let entry = queue.current, scrobbledEntry != entry.id, !isLive, duration > 30,
-              elapsed >= min(duration / 2, 240) else { return }
-        scrobbledEntry = entry.id
-        StatsStore.shared.record(entry.song, seconds: duration)
-        // On-device files aren't on the server; server tracks played offline are sent later.
-        guard !LocalLibrary.isLocal(entry.song.id) else { return }
-        let play = ScrobblePlay(id: entry.song.id, time: Date().timeIntervalSince1970)
-        guard let client, !offlineOnly else { pendingScrobbles = Scrobbles.keep(pendingScrobbles, play); return }
-        Task {
-            do { try await client.scrobble(songID: play.id, submission: true) }
-            catch { pendingScrobbles = Scrobbles.keep(pendingScrobbles, play) }
+        guard let entry = queue.current, !isLive else { return }
+        let local = LocalLibrary.isLocal(entry.song.id)
+        let account = client?.credentials.account ?? Self.onDeviceAccount
+        ensureListening()
+        var claimed = listening
+        guard let play = claimed?.claim(account: account, duration: duration, position: elapsed) else { return }
+        // Сначала надёжная очередь, затем снимок: авария между записями безопасна благодаря playId.
+        if !local {
+            guard client != nil, storePending(Scrobbles.keep(pendingScrobbles, play)) else { return }
+        }
+        listening = claimed
+        StatsStore.shared.record(entry.song, seconds: duration, playId: play.playId, account: play.account)
+        save(force: true)
+        if !local { flushPendingScrobbles() }
+    }
+
+    private func ensureListening() {
+        guard let entry = queue.current else { return }
+        let account = client?.credentials.account ?? Self.onDeviceAccount
+        if listening == nil || listeningEntry != entry.id || listening?.account != account {
+            listening = ListeningSession(account: account, songId: entry.song.id)
+            listeningEntry = entry.id
         }
     }
 
     private static let pendingURL = URL.applicationSupportDirectory.appendingPathComponent("pending-scrobbles.json")
-    @ObservationIgnored private var pendingScrobbles: [ScrobblePlay] = PlayerStore.loadPending() {
-        didSet { if let data = try? JSONEncoder().encode(pendingScrobbles) { try? data.write(to: Self.pendingURL, options: .atomic) } }
+    @ObservationIgnored private var pendingScrobbles: [ScrobblePlay] = PlayerStore.loadPending()
+
+    @discardableResult private func storePending(_ plays: [ScrobblePlay]) -> Bool {
+        do {
+            try FileManager.default.createDirectory(at: Self.pendingURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try JSONEncoder().encode(plays).write(to: Self.pendingURL, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+            pendingScrobbles = plays
+            return true
+        } catch { return false }
     }
 
     /// Старый формат отметок (`songID` и дата) читается тоже: очередь, собранная прошлой версией,
@@ -597,25 +647,31 @@ final class PlayerStore {
 
     /// Sends plays collected offline with their original time, oldest first; the rest keep waiting.
     func flushPendingScrobbles() {
-        guard let client, !pendingScrobbles.isEmpty else { return }
-        let batch = Scrobbles.ordered(pendingScrobbles)
+        guard let client, !offlineOnly, !flushingScrobbles else { return }
+        let batch = Scrobbles.ordered(pendingScrobbles.filter { $0.account == client.credentials.account })
+        guard !batch.isEmpty else { return }
+        flushingScrobbles = true
         Task {
-            var sent: [ScrobblePlay] = []
+            defer {
+                flushingScrobbles = false
+                if self.client?.credentials.account != client.credentials.account { flushPendingScrobbles() }
+            }
             for play in batch {
+                guard self.client?.credentials.account == client.credentials.account else { break }
                 do {
-                    try await client.scrobble(songID: play.id, submission: true, time: Date(timeIntervalSince1970: play.time))
-                    sent.append(play)
+                    try await client.scrobble(songID: play.id, submission: true, time: Date(timeIntervalSince1970: play.time / 1000))
+                    guard storePending(Scrobbles.remaining(pendingScrobbles, sent: [play])) else { break }
                 } catch { break }
             }
-            if !sent.isEmpty { pendingScrobbles = Scrobbles.remaining(pendingScrobbles, sent: sent) }
         }
     }
 
     private func reportNowPlaying() {
+        ensureListening()
         applyReplayGain()
         publishWidget(resetCover: true)
         guard let client, let id = current?.id, !isLive, !LocalLibrary.isLocal(id), !offlineOnly else { return }
-        scrobbledEntry = nil
+        ensureListening()
         Task { try? await client.scrobble(songID: id, submission: false) }
     }
 

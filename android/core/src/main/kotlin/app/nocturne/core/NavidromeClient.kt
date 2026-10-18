@@ -46,13 +46,22 @@ class Credentials(server: String, username: String, val password: String) {
     }
 }
 
+interface ResponseCache {
+    fun read(key: String): JsonObject?
+    fun write(key: String, response: JsonObject)
+}
+
 class NavidromeClient(
     val credentials: Credentials,
     private val http: OkHttpClient = OkHttpClient.Builder()
         .callTimeout(java.time.Duration.ofSeconds(25)).followRedirects(false).followSslRedirects(false).build(),
     /** Паузы перед повторами; в тестах их обнуляют, чтобы не ждать по-настоящему. */
     private val retryDelaysSeconds: List<Double> = listOf(0.5, 2.0),
+    private val cache: ResponseCache? = null,
 ) {
+    var cacheOnly = false
+    private val cachedReads = setOf("getAlbumList2", "getAlbum", "getArtists", "getArtist", "getPlaylists", "getPlaylist", "getStarred2", "getGenres", "getArtistInfo2", "getAlbumInfo2")
+
     /** `repeated` — параметры, которые встречаются несколько раз, например songId в createPlaylist. */
     fun url(
         endpoint: String,
@@ -84,12 +93,17 @@ class NavidromeClient(
         parameters: Map<String, String> = emptyMap(),
         repeated: List<Pair<String, String>> = emptyList(),
     ): JsonObject {
+        val key = endpoint + parameters.toSortedMap().toString() + repeated.toString()
+        val cached = if (endpoint in cachedReads) cache else null
+        if (cacheOnly && cached != null) return cached.read(key) ?: throw MusicException("Раздел ещё не сохранён для офлайна.", MusicException.Kind.network)
         var attempt = 0
         while (true) {
             try {
-                return perform(endpoint, parameters, repeated)
+                val response = perform(endpoint, parameters, repeated)
+                cached?.write(key, response)
+                return response
             } catch (failure: NetworkFailure) {
-                if (attempt >= retryDelaysSeconds.size) throw MusicException("Не удалось связаться с сервером. Проверь сеть и адрес Navidrome.", MusicException.Kind.network)
+                if (attempt >= retryDelaysSeconds.size || !(endpoint == "ping" || endpoint.startsWith("get") || endpoint.startsWith("search"))) return cached?.read(key) ?: throw MusicException("Не удалось связаться с сервером. Проверь сеть и адрес Navidrome.", MusicException.Kind.network)
                 delay((retryDelaysSeconds[attempt] * 1000).toLong())
                 attempt += 1
             }

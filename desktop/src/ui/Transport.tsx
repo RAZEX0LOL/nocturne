@@ -1,4 +1,4 @@
-import { store, useStore } from '../state/store'
+import { store, useStore, useTransport } from '../state/store'
 import { Icon } from './Icon'
 import { Slider } from './Slider'
 import { t } from '../i18n'
@@ -65,7 +65,8 @@ export function Transport({ large = false }: { large?: boolean }) {
 
 /** Перемотка с прошедшим и общим временем по краям. */
 export function SeekBar({ onDark = false, className = '' }: { onDark?: boolean; className?: string }) {
-  const { queue, position, duration } = useStore()
+  const { queue } = useStore()
+  const { position, duration } = useTransport()
   const song = queue?.current?.song
   const total = duration || song?.duration || 0
   const label = `w-10 text-xs tabular-nums ${onDark ? 'text-white/70' : 'text-secondary'}`

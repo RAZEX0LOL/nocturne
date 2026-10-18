@@ -23,7 +23,7 @@ if [[ "${1:-}" == "mac-upload" ]]; then
   rm -rf "$OUT" && mkdir -p "$OUT"
   xcodebuild -project Nocturne.xcodeproj -scheme Nocturne -configuration Release \
     -destination 'generic/platform=macOS,variant=Mac Catalyst' -archivePath "$OUT/Nocturne.xcarchive" \
-    CURRENT_PROJECT_VERSION="$BUILD_NUMBER" -allowProvisioningUpdates "${AUTH[@]}" archive
+    CURRENT_PROJECT_VERSION="$BUILD_NUMBER" MARKETING_VERSION="1.1.$BUILD_NUMBER" -allowProvisioningUpdates "${AUTH[@]}" archive
   sed 's|<string>export</string>|<string>upload</string>|' scripts/ExportOptions.plist > "$OUT/ExportOptions.plist"
   xcodebuild -exportArchive -archivePath "$OUT/Nocturne.xcarchive" -exportPath "$OUT" \
     -exportOptionsPlist "$OUT/ExportOptions.plist" -allowProvisioningUpdates "${AUTH[@]}"
@@ -36,7 +36,7 @@ if [[ "${1:-}" == "mac" ]]; then
   rm -rf "$OUT/Nocturne.app" && mkdir -p "$OUT"
   xcodebuild -project Nocturne.xcodeproj -scheme Nocturne -configuration Release \
     -destination 'platform=macOS,arch=arm64,variant=Mac Catalyst' -derivedDataPath build/mac \
-    CURRENT_PROJECT_VERSION="$BUILD_NUMBER" -allowProvisioningUpdates "${AUTH[@]}" build
+    CURRENT_PROJECT_VERSION="$BUILD_NUMBER" MARKETING_VERSION="1.1.$BUILD_NUMBER" -allowProvisioningUpdates "${AUTH[@]}" build
   cp -R build/mac/Build/Products/Release-maccatalyst/Nocturne.app "$OUT/"
   echo "Mac build $BUILD_NUMBER ready: $OUT/Nocturne.app — drag it into Applications"
   exit 0
@@ -47,7 +47,7 @@ OUT=build/release
 rm -rf "$OUT" && mkdir -p "$OUT"
 xcodebuild -project Nocturne.xcodeproj -scheme Nocturne -configuration Release \
   -destination 'generic/platform=iOS' -archivePath "$OUT/Nocturne.xcarchive" \
-  CURRENT_PROJECT_VERSION="$BUILD_NUMBER" -allowProvisioningUpdates "${AUTH[@]}" archive
+  CURRENT_PROJECT_VERSION="$BUILD_NUMBER" MARKETING_VERSION="1.1.$BUILD_NUMBER" -allowProvisioningUpdates "${AUTH[@]}" archive
 if [[ "${1:-}" == "upload" ]]; then
   sed 's|<string>export</string>|<string>upload</string>|' scripts/ExportOptions.plist > "$OUT/ExportOptions.plist"
 else

@@ -12,6 +12,8 @@ final class StatsStore {
         var album: String
         var seconds: Double
         var date: Date
+        var playId: String? = nil
+        var account: String? = nil
     }
 
     private(set) var plays: [Play] = []
@@ -22,9 +24,10 @@ final class StatsStore {
         if let data = try? Data(contentsOf: Self.url), let saved = try? JSONDecoder().decode([Play].self, from: data) { plays = saved }
     }
 
-    func record(_ song: Song, seconds: Double) {
+    func record(_ song: Song, seconds: Double, playId: String? = nil, account: String? = nil) {
+        if let playId, plays.contains(where: { $0.playId == playId && $0.account == account }) { return }
         plays.append(Play(songID: song.id, title: song.title, artist: song.artist ?? String(localized: "Неизвестный исполнитель"),
-                          album: song.album ?? "", seconds: seconds, date: Date()))
+                          album: song.album ?? "", seconds: seconds, date: Date(), playId: playId, account: account))
         if plays.count > Self.limit { plays.removeFirst(plays.count - Self.limit) }
         save()
     }

@@ -9,13 +9,14 @@ export interface Entry {
   song: Song
 }
 
+export interface QueueState { natural: Entry[]; order: string[]; current?: string; shuffle: boolean; repeat: RepeatMode; history: string[] }
+
 export class PlaybackQueue {
   private entries: Entry[]
   /** Порядок до перемешивания: по нему восстанавливается список при выключении shuffle. */
   private naturalEntries: Entry[]
   /** Треки, которые в самом деле играли: по ним работает «назад». */
   private history: string[] = []
-  private counter = 0
 
   position: number
   repeatMode: RepeatMode = 'off'
@@ -95,11 +96,16 @@ export class PlaybackQueue {
     const added = songs.map((song) => ({ id: this.newId(song), song }))
     this.entries = [...this.entries.slice(0, this.position + 1), ...added, ...this.entries.slice(this.position + 1)]
     if (!this.shuffled) this.naturalEntries = this.entries
+    else {
+      const at = this.naturalEntries.findIndex((entry) => entry.id === this.current?.id) + 1
+      this.naturalEntries = [...this.naturalEntries.slice(0, at), ...added, ...this.naturalEntries.slice(at)]
+    }
   }
 
   append(songs: Song[]) {
-    this.entries = [...this.entries, ...songs.map((song) => ({ id: this.newId(song), song }))]
-    if (!this.shuffled) this.naturalEntries = this.entries
+    const added = songs.map((song) => ({ id: this.newId(song), song }))
+    this.entries = [...this.entries, ...added]
+    this.naturalEntries = this.shuffled ? [...this.naturalEntries, ...added] : this.entries
   }
 
   /** Играющий трек удалить нельзя: иначе непонятно, что должно зазвучать вместо него. */
@@ -107,7 +113,7 @@ export class PlaybackQueue {
     const index = this.entries.findIndex((entry) => entry.id === id)
     if (index < 0 || index === this.position) return
     this.entries = this.entries.filter((_, i) => i !== index)
-    if (!this.shuffled) this.naturalEntries = this.entries
+    this.naturalEntries = this.naturalEntries.filter((entry) => entry.id !== id)
     if (index < this.position) this.position -= 1
     this.history = this.history.filter((entry) => entry !== id)
   }
@@ -123,7 +129,24 @@ export class PlaybackQueue {
     if (!this.shuffled) this.naturalEntries = this.entries
   }
 
+  snapshot(): QueueState {
+    return { natural: this.naturalEntries, order: this.entries.map((entry) => entry.id), current: this.current?.id, shuffle: this.shuffled, repeat: this.repeatMode, history: this.history }
+  }
+
+  static restore(state: QueueState): PlaybackQueue {
+    const natural = new Map(state.natural.map((entry) => [entry.id, entry]))
+    if (natural.size !== state.natural.length || state.order.length !== natural.size || new Set(state.order).size !== natural.size || state.order.some((id) => !natural.has(id))) throw new Error('Invalid queue snapshot')
+    const queue = new PlaybackQueue([], 0, false)
+    queue.naturalEntries = state.natural
+    queue.entries = state.order.map((id) => natural.get(id)!)
+    queue.position = Math.max(queue.entries.findIndex((entry) => entry.id === state.current), 0)
+    queue.shuffled = state.shuffle
+    queue.repeatMode = state.repeat
+    queue.history = state.history.filter((id) => natural.has(id))
+    return queue
+  }
+
   private newId(song: Song) {
-    return `n${this.counter++}:${song.id}`
+    return `${crypto.randomUUID()}:${song.id}`
   }
 }

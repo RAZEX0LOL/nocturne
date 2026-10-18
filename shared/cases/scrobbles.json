@@ -3,26 +3,167 @@
   "cases": [
     {
       "name": "одно и то же прослушивание не копится дважды",
-      "keep": [{ "id": "s1", "time": 100 }, { "id": "s1", "time": 100 }],
-      "expected": [{ "id": "s1", "time": 100 }]
+      "keep": [
+        {
+          "id": "s1",
+          "time": 100
+        },
+        {
+          "id": "s1",
+          "time": 100
+        }
+      ],
+      "expected": [
+        {
+          "id": "s1",
+          "time": 100
+        }
+      ]
     },
     {
       "name": "два разных прослушивания одного трека — две отметки",
-      "keep": [{ "id": "s1", "time": 100 }, { "id": "s1", "time": 200 }],
-      "expected": [{ "id": "s1", "time": 100 }, { "id": "s1", "time": 200 }]
+      "keep": [
+        {
+          "id": "s1",
+          "time": 100
+        },
+        {
+          "id": "s1",
+          "time": 200
+        }
+      ],
+      "expected": [
+        {
+          "id": "s1",
+          "time": 100
+        },
+        {
+          "id": "s1",
+          "time": 200
+        }
+      ]
     },
     {
       "name": "уходят по возрастанию времени, как их слушали",
-      "keep": [{ "id": "b", "time": 300 }, { "id": "a", "time": 100 }, { "id": "c", "time": 200 }],
-      "expected": [{ "id": "a", "time": 100 }, { "id": "c", "time": 200 }, { "id": "b", "time": 300 }]
+      "keep": [
+        {
+          "id": "b",
+          "time": 300
+        },
+        {
+          "id": "a",
+          "time": 100
+        },
+        {
+          "id": "c",
+          "time": 200
+        }
+      ],
+      "expected": [
+        {
+          "id": "a",
+          "time": 100
+        },
+        {
+          "id": "c",
+          "time": 200
+        },
+        {
+          "id": "b",
+          "time": 300
+        }
+      ]
+    },
+    {
+      "name": "одинаковый трек разных аккаунтов не склеивается",
+      "keep": [
+        {
+          "id": "s1",
+          "time": 100,
+          "account": "a",
+          "playId": "p1"
+        },
+        {
+          "id": "s1",
+          "time": 100,
+          "account": "b",
+          "playId": "p1"
+        }
+      ],
+      "expected": [
+        {
+          "id": "s1",
+          "time": 100,
+          "account": "a",
+          "playId": "p1"
+        },
+        {
+          "id": "s1",
+          "time": 100,
+          "account": "b",
+          "playId": "p1"
+        }
+      ]
+    },
+    {
+      "name": "повторная постановка того же playId после аварии безопасна",
+      "keep": [
+        {
+          "id": "s1",
+          "time": 100,
+          "account": "a",
+          "playId": "p1"
+        },
+        {
+          "id": "s1",
+          "time": 101,
+          "account": "a",
+          "playId": "p1"
+        }
+      ],
+      "expected": [
+        {
+          "id": "s1",
+          "time": 100,
+          "account": "a",
+          "playId": "p1"
+        }
+      ]
     }
   ],
   "afterSending": [
     {
       "name": "дошедшие исчезают, недошедшие ждут дальше",
-      "kept": [{ "id": "a", "time": 1 }, { "id": "b", "time": 2 }, { "id": "c", "time": 3 }],
-      "sent": [{ "id": "a", "time": 1 }, { "id": "c", "time": 3 }],
-      "remaining": [{ "id": "b", "time": 2 }]
+      "kept": [
+        {
+          "id": "a",
+          "time": 1
+        },
+        {
+          "id": "b",
+          "time": 2
+        },
+        {
+          "id": "c",
+          "time": 3
+        }
+      ],
+      "sent": [
+        {
+          "id": "a",
+          "time": 1
+        },
+        {
+          "id": "c",
+          "time": 3
+        }
+      ],
+      "remaining": [
+        {
+          "id": "b",
+          "time": 2
+        }
+      ]
     }
   ]
 }

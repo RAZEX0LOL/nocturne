@@ -114,4 +114,42 @@ final class NocturneUITests: XCTestCase {
         attachment.lifetime = .keepAlways
         add(attachment)
     }
+    @MainActor func testOfflinePreparationSettingSurvivesRelaunch() {
+        let app = XCUIApplication()
+        app.launchArguments = ["--demo"]
+        func openSetting() -> XCUIElement {
+            let settings = app.buttons["Настройки"]
+            XCTAssertTrue(settings.waitForExistence(timeout: 20))
+            settings.tap()
+            let toggle = app.switches["Готовить очередь для офлайна"]
+            for _ in 0..<8 {
+                if toggle.exists && toggle.isHittable && toggle.frame.maxY < app.frame.maxY - 80 { break }
+                app.swipeUp()
+            }
+            XCTAssertTrue(toggle.exists)
+            return toggle
+        }
+        app.launch()
+        let toggle = openSetting()
+        let initial = toggle.value as? String
+        toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        let expected = initial == "1" ? "0" : "1"
+        let switched = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", expected), object: toggle)
+        XCTAssertEqual(XCTWaiter.wait(for: [switched], timeout: 5), .completed)
+        let changed = toggle.value as? String
+        XCTAssertNotEqual(initial, changed)
+        app.terminate()
+        app.launch()
+        let restored = openSetting()
+        XCTAssertEqual(restored.value as? String, changed)
+        let attachment = XCTAttachment(screenshot: app.screenshot())
+        attachment.name = "Offline preparation settings"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+        // Возвращаем настройку выделенного симулятора к исходному значению.
+        restored.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        let reverted = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", initial ?? "0"), object: restored)
+        XCTAssertEqual(XCTWaiter.wait(for: [reverted], timeout: 5), .completed)
+    }
+
 }

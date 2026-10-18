@@ -13,7 +13,9 @@ bun run tauri build    # установщик для текущей систем
 
 Нужны Bun и Rust (`rustup`). На Linux ещё WebKitGTK:
 `sudo apt install libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf`.
-Установщики под Windows и Linux собирает CI (`.github/workflows/desktop.yml`) — с Mac их не собрать.
+Windows собирается с Mac через cargo-xwin и NSIS. Linux требует Linux-окружения.
+CI описан в `.github/workflows/desktop.yml`, но сейчас недоступен из-за биллинга; рабочий выпуск
+выполняется локальными скриптами (см. `docs/release.md`).
 
 ## Проверки
 
@@ -61,9 +63,17 @@ MSI так не собрать (нужен WiX), он собирается в CI
 ```sh
 python3 ../shared/mock-server/mock_navidrome.py &
 bun run tauri build --debug --bundles app
-NOCTURNE_DEV_CREDENTIALS='{"server":"http://127.0.0.1:4533","username":"test","password":"test"}' \
+NOCTURNE_DEV_CREDENTIALS='{"server":"http://127.0.0.1:4533","username":"test","password":"demo"}' \
   src-tauri/target/debug/bundle/macos/Nocturne.app/Contents/MacOS/nocturne
 ```
 
 В релизной сборке этого пути нет. Там же, в отладочной сборке, в терминал пишется журнал событий
 звука, включая уровень сигнала на выходе эквалайзера: по нему видно, что играет не тишина.
+
+## Устойчивость
+
+Каталог, очередь, сеансы и задания загрузки разделены по серверу и пользователю. Каталог
+сначала читается с диска, затем обновляется из сети. Запоздалые ответы прежнего подключения
+игнорируются. Задания сохраняют метаданные и качество без подписанных URL и возобновляются
+при следующем запуске. Автоподготовка выключена по умолчанию; ограничения и миграция описаны
+в [`docs/reliability.md`](../docs/reliability.md).

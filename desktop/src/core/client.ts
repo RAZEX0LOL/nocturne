@@ -153,7 +153,7 @@ export class NavidromeClient {
         return NavidromeClient.decode(await response.text())
       } catch (error) {
         if (error instanceof MusicError) throw error
-        if (attempt >= this.retryDelaysSeconds.length) {
+        if (attempt >= this.retryDelaysSeconds.length || !(endpoint === 'ping' || endpoint.startsWith('get') || endpoint.startsWith('search'))) {
           throw new MusicError(t('Не удалось связаться с сервером. Проверь сеть и адрес Navidrome.'), 'network')
         }
         await new Promise((resolve) => setTimeout(resolve, this.retryDelaysSeconds[attempt]! * 1000))

@@ -1,5 +1,8 @@
 # Проверка Nocturne — 18 сентября 2026
 
+Это исторический отчёт первоначальной iOS-версии. Текущая команда проверки —
+`python3 scripts/verify.py`; изменения устойчивости описаны в [`../reliability.md`](../reliability.md).
+
 Среда: Xcode 27.0, Swift 6.4, iPhone 17 Pro Simulator / iOS 26.4.
 
 ## Core

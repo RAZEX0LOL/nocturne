@@ -195,7 +195,7 @@ final class ContractTests: XCTestCase {
                                          session: URLSession(configuration: configuration), retryDelays: [0, 0])
             var succeeded = false
             do {
-                _ = try await client.request("ping")
+                _ = try await client.request(item["endpoint"] as? String ?? "ping")
                 succeeded = true
             } catch {
                 XCTAssertTrue(error is MusicError || error is URLError, "\(name): ошибка понятна человеку")
@@ -238,7 +238,7 @@ final class ContractTests: XCTestCase {
     }
 
     private func plays(_ raw: [String: Any]) -> ScrobblePlay {
-        ScrobblePlay(id: raw["id"] as? String ?? "", time: raw["time"] as? Double ?? 0)
+        ScrobblePlay(id: raw["id"] as? String ?? "", time: raw["time"] as? Double ?? 0, account: raw["account"] as? String, playId: raw["playId"] as? String)
     }
 
     // MARK: - queue.json
@@ -254,6 +254,7 @@ final class ContractTests: XCTestCase {
 
             for step in item["steps"] as? [[String: Any]] ?? [] {
                 switch step["op"] as? String {
+                case "roundTrip": queue = try JSONDecoder().decode(PlaybackQueue.self, from: JSONEncoder().encode(queue))
                 case "jump": queue.jump(to: step["pos"] as? Int ?? 0)
                 case "jumpNext":
                     let next = try XCTUnwrap(queue.nextPosition(automatic: false), "\(name): no next position")
@@ -301,4 +302,38 @@ final class ContractTests: XCTestCase {
             }
         }
     }
+    func testListeningLifecycle() throws {
+        for item in try cases("lifecycle.json") {
+            var session: ListeningSession?
+            var marks: [String] = []
+            var pending: [ScrobblePlay] = []
+            for event in item["events"] as? [[String: Any]] ?? [] {
+                switch event["op"] as? String {
+                case "start":
+                    session = ListeningSession(account: event["account"] as! String, songId: event["songId"] as! String,
+                                               playId: event["playId"] as! String, startedAt: event["startedAt"] as! Double)
+                case "restart":
+                    session = try JSONDecoder().decode(ListeningSession.self, from: JSONEncoder().encode(XCTUnwrap(session)))
+                    session?.recover(pending: pending)
+                case "check", "queueOnly":
+                    var working = session
+                    if let mark = working?.claim(account: event["account"] as! String, duration: event["duration"] as! Double, position: event["position"] as! Double) {
+                        pending.append(mark)
+                        marks.append("\(mark.account!):\(mark.playId!):\(Int(mark.time))")
+                    }
+                    if event["op"] as? String == "check" { session = working }
+                default: XCTFail("Unknown lifecycle event")
+                }
+            }
+            XCTAssertEqual(marks, item["expected"] as? [String], item["name"] as? String ?? "")
+        }
+    }
+
+    func testOfflinePreparation() throws {
+        for item in try cases("preparation.json") {
+            let songs = try JSONDecoder().decode([Song].self, from: JSONSerialization.data(withJSONObject: (item["songs"] as! [[String: Any]]).map { $0.merging(["title": $0["id"]!]) { a, _ in a } }))
+            XCTAssertEqual(OfflinePreparation.songs(songs, enabled: item["enabled"] as! Bool, online: item["online"] as! Bool, unmetered: item["unmetered"] as! Bool).map(\.id), item["expected"] as? [String], item["name"] as? String ?? "")
+        }
+    }
+
 }

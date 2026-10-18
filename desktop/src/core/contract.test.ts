@@ -5,8 +5,8 @@ import { Credentials, NavidromeClient, streamParameters, type StreamQuality } fr
 import { MusicError, type Song } from './models'
 import { PlaybackQueue, type RepeatMode } from './queue'
 import { replayGainVolume, type ReplayGainMode } from './replaygain'
-import { chooseSource } from './source'
-import { keepScrobble, orderedScrobbles, qualityForNetwork, remainingScrobbles, type ScrobblePlay } from './scrobbles'
+import { chooseSource, offlinePreparation } from './source'
+import { recoverListening, claimListening, type ListeningSession, keepScrobble, orderedScrobbles, qualityForNetwork, remainingScrobbles, type ScrobblePlay } from './scrobbles'
 
 /**
  * Общий контракт из shared/cases. Те же файлы исполняют iOS и Android,
@@ -145,11 +145,12 @@ describe('queue', () => {
   for (const item of load('queue.json').cases) {
     test(item.name, () => {
       const songs: Song[] = item.songs.map((id: string) => ({ id, title: id }))
-      const queue = new PlaybackQueue(songs, item.startAt ?? 0, item.shuffle ?? false)
+      let queue = new PlaybackQueue(songs, item.startAt ?? 0, item.shuffle ?? false)
       const remembered: Record<string, string | undefined> = {}
 
       for (const step of item.steps ?? []) {
         switch (step.op) {
+          case 'roundTrip': queue = PlaybackQueue.restore(JSON.parse(JSON.stringify(queue.snapshot()))); break
           case 'jump': queue.jump(step.pos); break
           case 'jumpNext': {
             const next = queue.nextPosition(false)
@@ -217,7 +218,7 @@ describe('retries', () => {
       try {
         // Паузы в тесте нулевые: проверяем число попыток, а не терпение.
         const client = new NavidromeClient(new Credentials('https://host', 'test', 'test-only'), [0, 0])
-        const outcome = await client.ping().then(() => true).catch((error) => {
+        const outcome = await (item.endpoint === 'scrobble' ? client.scrobble('s1', 1000) : client.ping()).then(() => true).catch((error) => {
           expect(error).toBeInstanceOf(MusicError)
           return false
         })
@@ -237,4 +238,29 @@ describe('source', () => {
       expect(chooseSource(item.id, availability)).toBe(item.expected)
     })
   }
+})
+
+describe('listening lifecycle', () => {
+  for (const item of load('lifecycle.json').cases) {
+    test(item.name, () => {
+      let session: ListeningSession | undefined
+      const marks: string[] = []
+      const pending: ScrobblePlay[] = []
+      for (const event of item.events) {
+        if (event.op === 'start') session = { ...event, submitted: false }
+        else if (event.op === 'restart') { session = JSON.parse(JSON.stringify(session)) as ListeningSession; recoverListening(session, pending) }
+        else if ((event.op === 'check' || event.op === 'queueOnly') && session) {
+          const mark = claimListening(event.op === 'queueOnly' ? { ...session } : session, event.account, event.duration, event.position)
+          if (mark) { pending.push(mark); marks.push(`${mark.account}:${mark.playId}:${mark.time}`) }
+        }
+      }
+      expect(marks).toEqual(item.expected)
+    })
+  }
+})
+
+describe('offline preparation', () => {
+  for (const item of load('preparation.json').cases) test(item.name, () => {
+    expect(offlinePreparation(item.songs, item.enabled, item.online, item.unmetered).map((song: { id: string }) => song.id)).toEqual(item.expected)
+  })
 })

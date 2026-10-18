@@ -22,6 +22,8 @@ export interface LocalTrack {
   track?: number
   duration?: number
   cover?: string
+  automatic?: boolean
+  size?: number
 }
 
 export interface DownloadedTrack {
@@ -30,6 +32,8 @@ export interface DownloadedTrack {
   song: Song
   /** Обложка, сохранённая рядом с треком: она открывается и без сети. */
   cover?: string
+  automatic?: boolean
+  size?: number
 }
 
 /** Адрес, по которому окно может прочитать файл с диска (протокол asset). */
@@ -71,17 +75,17 @@ export async function openFolder(path: string) {
   await openPath(path)
 }
 
-export async function downloadTrack(url: string, song: Song, coverUrl?: string): Promise<DownloadedTrack> {
-  return invoke('download_track', { url, id: song.id, song, coverUrl })
+export async function downloadTrack(url: string, song: Song, account: string, coverUrl?: string, automatic = false, limitBytes?: number): Promise<DownloadedTrack> {
+  return invoke('download_track', { url, id: song.id, song, account, coverUrl, automatic, limitBytes })
 }
 
-export async function downloads(): Promise<DownloadedTrack[]> {
+export async function downloads(account: string): Promise<DownloadedTrack[]> {
   if (!isDesktop()) return []
-  return invoke('downloads')
+  return invoke('downloads', { account })
 }
 
-export async function removeDownload(id: string) {
-  await invoke('remove_download', { id })
+export async function removeDownload(id: string, account: string) {
+  await invoke('remove_download', { id, account })
 }
 
 /** Цвета обложки считает Rust: картинка с сервера не обязана разрешать окну читать свои пиксели. */
@@ -171,4 +175,8 @@ export async function navidromeApi<T>(login: NavidromeLogin, method: string, pat
   if (!response.ok) throw new Error(`Navidrome ${response.status}`)
   const text = await response.text()
   return (text ? JSON.parse(text) : null) as T
+}
+
+export async function unmeteredNetwork(): Promise<boolean> {
+  return isDesktop() ? invoke<boolean>('network_unmetered') : false
 }

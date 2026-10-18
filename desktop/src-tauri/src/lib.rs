@@ -2,6 +2,7 @@
 #[cfg_attr(not(windows), allow(dead_code))]
 mod glyphs;
 mod library;
+mod network;
 mod palette;
 mod nd_api;
 #[cfg(desktop)]
@@ -202,6 +203,7 @@ pub fn run() {
             }
         })
         .invoke_handler(tauri::generate_handler![
+            network::network_unmetered,
             save_credentials,
             load_credentials,
             delete_credentials,

@@ -150,7 +150,7 @@ class ContractTest {
                     Credentials(server.url("/").toString(), "test", "test-only"),
                     retryDelaysSeconds = delays,
                 )
-                val outcome = runCatching { kotlinx.coroutines.runBlocking { client.request("ping") } }
+                val outcome = runCatching { kotlinx.coroutines.runBlocking { client.request(case.str("endpoint") ?: "ping") } }
                 assertEquals(case.bool("succeeds"), outcome.isSuccess, "$name: исход")
                 assertEquals(case.int("attempts"), server.requestCount, "$name: число попыток")
                 if (outcome.isFailure) assertTrue(outcome.exceptionOrNull() is MusicException, "$name: ошибка понятна человеку")
@@ -209,17 +209,18 @@ class ContractTest {
         }
     }
 
-    private fun play(raw: JsonObject) = ScrobblePlay(raw.str("id")!!, raw["time"]!!.jsonPrimitive.long)
+    private fun play(raw: JsonObject) = ScrobblePlay(raw.str("id")!!, raw["time"]!!.jsonPrimitive.long, raw.str("account"), raw.str("playId"))
 
     @Test fun queue() {
         for (case in cases("queue.json")) {
             val name = case.str("name") ?: "?"
             val songs = case["songs"]!!.jsonArray.map { Song(it.jsonPrimitive.content, it.jsonPrimitive.content) }
-            val queue = PlaybackQueue(songs, case.int("startAt") ?: 0, case.bool("shuffle") ?: false)
+            var queue = PlaybackQueue(songs, case.int("startAt") ?: 0, case.bool("shuffle") ?: false)
             val remembered = mutableMapOf<String, String?>()
 
             for (step in case["steps"]!!.jsonArray.map { it.jsonObject }) {
                 when (step.str("op")) {
+                    "roundTrip" -> queue = PlaybackQueue.restore(queue.snapshot())
                     "jump" -> queue.jump(step.int("pos") ?: 0)
                     "jumpNext" -> queue.jump(assertNotNull(queue.nextPosition(false), "$name: нет следующей позиции"))
                     "jumpPrevious" -> queue.jump(assertNotNull(queue.previousPosition(), "$name: нет предыдущей позиции"))
@@ -256,4 +257,42 @@ class ContractTest {
             }
         }
     }
+    @Test fun listeningLifecycle() {
+        for (case in cases("lifecycle.json")) {
+            var session: ListeningSession? = null
+            val marks = mutableListOf<String>()
+            val pending = mutableListOf<ScrobblePlay>()
+            for (raw in case["events"]!!.jsonArray) {
+                val event = raw.jsonObject
+                when (event.str("op")) {
+                    "start" -> session = ListeningSession(event.str("account")!!, event.str("songId")!!, event.str("playId")!!, event["startedAt"]!!.jsonPrimitive.long)
+                    "restart" -> {
+                        val old = session!!
+                        val json = Json.parseToJsonElement(buildJsonObject {
+                            put("account", old.account); put("songId", old.songId); put("playId", old.playId)
+                            put("startedAt", old.startedAt); put("submitted", old.submitted)
+                        }.toString()).jsonObject
+                        session = ListeningSession(json.str("account")!!, json.str("songId")!!, json.str("playId")!!, json["startedAt"]!!.jsonPrimitive.long, json.bool("submitted")!!)
+                        session.recover(pending)
+                    }
+                    "check", "queueOnly" -> {
+                        val working = if (event.str("op") == "queueOnly") session?.copy() else session
+                        working?.claim(event.str("account")!!, event["duration"]!!.jsonPrimitive.double, event["position"]!!.jsonPrimitive.double)?.let {
+                            pending += it
+                            marks += "${it.account}:${it.playId}:${it.time}"
+                        }
+                    }
+                }
+            }
+            assertEquals(case["expected"]!!.jsonArray.map { it.jsonPrimitive.content }, marks, case.str("name"))
+        }
+    }
+
+    @Test fun offlinePreparation() {
+        for (case in cases("preparation.json")) {
+            val songs = case["songs"]!!.jsonArray.map { raw -> val song = raw.jsonObject; Song(song.str("id")!!, song.str("id")!!, duration = song["duration"]?.jsonPrimitive?.doubleOrNull) }
+            assertEquals(case["expected"]!!.jsonArray.map { it.jsonPrimitive.content }, OfflinePreparation.songs(songs, case.bool("enabled")!!, case.bool("online")!!, case.bool("unmetered")!!).map { it.id }, case.str("name"))
+        }
+    }
+
 }

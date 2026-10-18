@@ -1,17 +1,20 @@
 # Nocturne
 
-Два отдельных нативных клиента Navidrome:
+Три клиента Navidrome/OpenSubsonic с общим контрактом поведения:
 
 - **iPhone, iPad и Mac:** Swift 6, SwiftUI, AVPlayer, MediaPlayer, Keychain. Одна сборка на все три платформы: iOS/iPadOS 17 и macOS 14 (Mac Catalyst). Внешних зависимостей нет.
 - **Android:** Kotlin, Jetpack Compose, Media3 ExoPlayer, Android Keystore. Минимальная версия — Android 8. Проект и инструкция — в [`android/`](android/README.md).
 
-Ниже описана iOS-версия. Приложения используют один протокол Navidrome, но имеют отдельные интерфейсы и нативные аудиодвижки.
+- **Mac, Windows и Linux:** Tauri 2, React/TypeScript и Web Audio; файлы и системные интеграции на Rust. Инструкция — в [`desktop/`](desktop/README.md).
+
+Сайт и чейнджлог — в `site/`, общий контракт — в [`shared/`](shared/README.md).
+Ниже описана iOS-версия. Приложения используют один протокол Navidrome, но имеют отдельные интерфейсы и аудиодвижки.
 
 ## Запуск
 
 Открой `Nocturne.xcodeproj` в Xcode, выбери схему **Nocturne** и iPhone Simulator, нажми Run. На первом экране можно подключить сервер или открыть демоверсию. Демоверсия содержит вымышленные альбомы и процедурные обложки, аудиофайлов в ней нет.
 
-Для установки на iPhone выбери свою команду Apple Developer в **Signing & Capabilities → Team**, при необходимости замени Bundle Identifier на уникальный, подключи устройство и нажми Run. У приложения пока нет релизной иконки и метаданных App Store; это сборка для разработки.
+Для установки на iPhone выбери свою команду Apple Developer в **Signing & Capabilities → Team**, при необходимости замени Bundle Identifier на уникальный, подключи устройство и нажми Run. Локальная сборка предназначена для разработки; схема выпуска описана в `docs/release.md`.
 
 На iPad — та же схема, просто выбери iPad в списке устройств: сетки перестраиваются под ширину экрана.
 
@@ -49,7 +52,22 @@ zsh scripts/release.sh mac
 - Кнопка «+» на главной и в медиатеке: файлы, папка целиком, скачивание по прямой ссылке и встроенный браузер, который сохраняет в «На iPhone» любые аудиофайлы, открытые пользователем.
 - Иконка приложения, логирование через `os.Logger` (Console.app, subsystem `app.nocturne.music`; URL и токены не пишутся).
 
-## Проверка
+## Полная локальная проверка
+
+```sh
+python3 scripts/verify.py
+# Также нативные UI на выделенных симуляторах/эмуляторах без сохранённого аккаунта:
+python3 scripts/verify.py --ios-ui --android-ui
+```
+
+Команда ждёт готовности мока, проверяет три ядра, TypeScript, Rust, Android APK, сайт и desktop e2e.
+Логи и `summary.json` — в `build/verification/<дата-время>/`. Занятые порты 4533/1431 не использует;
+свои процессы останавливает и при ошибке. Для Android установи JDK 24: он закреплён в
+`android/.java-version` и критериях Gradle daemon.
+
+Правила устойчивости и миграции — в [`docs/reliability.md`](docs/reliability.md).
+
+## Проверка iOS
 
 ```sh
 swift test

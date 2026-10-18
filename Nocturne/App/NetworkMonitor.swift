@@ -7,6 +7,7 @@ final class NetworkMonitor {
     private(set) var isOnline = true
     /// Cellular or personal hotspot: stream quality switches to the cellular preset.
     private(set) var isExpensive = false
+    private(set) var isConstrained = false
     @ObservationIgnored var onReconnect: (() -> Void)?
     /// Extra listeners for any path change (downloads wait for Wi-Fi).
     @ObservationIgnored var onChange: [() -> Void] = []
@@ -24,14 +25,16 @@ final class NetworkMonitor {
         { [weak monitor] path in
             let online = path.status == .satisfied
             let expensive = path.isExpensive
-            Task { @MainActor in monitor?.update(online: online, expensive: expensive) }
+            let constrained = path.isConstrained
+            Task { @MainActor in monitor?.update(online: online, expensive: expensive, constrained: constrained) }
         }
     }
 
-    private func update(online: Bool, expensive: Bool) {
+    private func update(online: Bool, expensive: Bool, constrained: Bool) {
         let reconnected = online && !isOnline
         isOnline = online
         isExpensive = expensive
+        isConstrained = constrained
         if reconnected { onReconnect?() }
         onChange.forEach { $0() }
     }

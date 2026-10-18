@@ -165,19 +165,28 @@ struct QueueSnapshot: Codable, Equatable, Sendable {
     var account: String
     var queue: PlaybackQueue
     var elapsed: Double
+    var listening: ListeningSession? = nil
 }
 
 /// Одно прослушивание — одна отметка. Правила проверяются shared/cases/scrobbles.json.
 struct ScrobblePlay: Codable, Hashable, Sendable {
     var id: String
-    /// Время начала прослушивания в секундах эпохи: по нему сервер строит историю.
+    /// Время начала прослушивания в миллисекундах эпохи: по нему сервер строит историю.
     var time: Double
+    var account: String? = nil
+    var playId: String? = nil
 }
 
 enum Scrobbles {
+    static func same(_ a: ScrobblePlay, _ b: ScrobblePlay) -> Bool {
+        guard a.account == b.account else { return false }
+        if let left = a.playId, let right = b.playId { return left == right }
+        return a.id == b.id && a.time == b.time
+    }
+
     /// Повторную отметку того же прослушивания не добавляем: сервер засчитал бы его дважды.
     static func keep(_ queue: [ScrobblePlay], _ play: ScrobblePlay) -> [ScrobblePlay] {
-        queue.contains(play) ? queue : queue + [play]
+        queue.contains(where: { same($0, play) }) ? queue : queue + [play]
     }
 
     static func ordered(_ queue: [ScrobblePlay]) -> [ScrobblePlay] {
@@ -185,7 +194,7 @@ enum Scrobbles {
     }
 
     static func remaining(_ queue: [ScrobblePlay], sent: [ScrobblePlay]) -> [ScrobblePlay] {
-        queue.filter { !sent.contains($0) }
+        queue.filter { play in !sent.contains(where: { same($0, play) }) }
     }
 }
 
@@ -197,5 +206,38 @@ extension StreamQuality {
     /// Дорогая сеть — мобильная: там по умолчанию экономнее.
     static func forNetwork(expensive: Bool, wifi: StreamQuality, cellular: StreamQuality) -> StreamQuality {
         expensive ? cellular : wifi
+    }
+}
+
+struct ListeningSession: Codable, Equatable, Sendable {
+    var account: String
+    var songId: String
+    var playId: String = UUID().uuidString
+    var startedAt: Double = Date().timeIntervalSince1970 * 1000
+    var submitted = false
+
+    mutating func recover(pending: [ScrobblePlay]) {
+        submitted = submitted || pending.contains { $0.account == account && $0.playId == playId }
+    }
+
+    mutating func claim(account: String, duration: Double, position: Double) -> ScrobblePlay? {
+        guard self.account == account, !submitted, duration.isFinite, duration > 30,
+              position >= min(duration / 2, 240) else { return nil }
+        submitted = true
+        return ScrobblePlay(id: songId, time: startedAt, account: account, playId: playId)
+    }
+}
+
+enum OfflinePreparation {
+    static func songs(_ songs: [Song], enabled: Bool, online: Bool, unmetered: Bool) -> [Song] {
+        guard enabled, online, unmetered else { return [] }
+        var wanted: [Song] = [], seconds = 0.0
+        for song in songs {
+            if song.id.hasPrefix("local:") || song.id.hasPrefix("radio:") || song.id.hasPrefix("radio-") { continue }
+            let duration = song.duration.flatMap { $0.isFinite && $0 > 0 ? $0 : nil } ?? 300
+            guard wanted.count < 3, seconds + duration <= 900 else { break }
+            wanted.append(song); seconds += duration
+        }
+        return wanted
     }
 }

@@ -103,6 +103,7 @@ export function songMenu(songs: Song[], options: { onRemove?: () => void; remove
         text: t('Скачать для прослушивания без сети'),
         action: () => void store.download(server),
       },
+    server.some((song) => store.isAutomatic(song)) && { text: t('Сохранить для офлайна'), action: () => void store.download(server) },
     options.onRemove && 'separator',
     options.onRemove && { text: options.removeLabel ?? t('Удалить'), action: options.onRemove },
   ]

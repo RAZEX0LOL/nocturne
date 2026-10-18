@@ -15,6 +15,7 @@ struct SettingsView: View {
     @AppStorage(PlaybackSettings.endlessKey) private var endless = true
     @AppStorage(DownloadStore.wifiOnlyKey) private var wifiOnly = false
     @AppStorage(DownloadStore.autoFavoritesKey) private var autoFavorites = false
+    @AppStorage(DownloadStore.prepareQueueKey) private var prepareQueue = false
     @AppStorage(DownloadStore.limitKey) private var limitGB = 0.0
     @State private var cacheSize: Int?
     @State private var connection = false
@@ -72,6 +73,7 @@ struct SettingsView: View {
                     Toggle(String(localized: "Только по Wi-Fi"), isOn: $wifiOnly)
                     #endif
                     Toggle(String(localized: "Скачивать любимые треки"), isOn: $autoFavorites)
+                    Toggle(String(localized: "Готовить очередь для офлайна"), isOn: $prepareQueue)
                     Picker(String(localized: "Лимит места"), selection: $limitGB) {
                         Text(String(localized: "Без лимита")).tag(0.0)
                         ForEach([1.0, 2, 5, 10, 20], id: \.self) { Text(String(localized: "\(Int($0)) ГБ")).tag($0) }
@@ -79,7 +81,7 @@ struct SettingsView: View {
                     LabeledContent(String(localized: "Скачано"), value: "\(downloads.items.count) · \(ByteCountFormatter.string(fromByteCount: Int64(downloads.totalSize), countStyle: .file))")
                     Button(String(localized: "Удалить все загрузки"), role: .destructive) { confirmRemoveDownloads = true }.disabled(downloads.items.isEmpty)
                 } header: { Text(String(localized: "Загрузки")) } footer: {
-                    Text(String(localized: "Скачанные треки играют без сети и не расходуют трафик. Загрузка идёт, пока приложение открыто или играет музыка."))
+                    Text(String(localized: "Скачанные треки играют без сети. Подготовка очереди сохраняет до трёх следующих треков на неограниченной сети, до 256 МБ. Ручные загрузки не удаляются."))
                 }
                 Section {
                     NavigationLink { EqualizerView() } label: { Label(String(localized: "Эквалайзер"), systemImage: "slider.vertical.3") }

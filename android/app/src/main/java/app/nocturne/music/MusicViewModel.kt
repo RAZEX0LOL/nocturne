@@ -82,7 +82,7 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
 
     private val vault = CredentialVault(application)
     private val localLibrary = LocalLibrary(application)
-    private val downloads = DownloadStore(application)
+    private val downloads = DownloadStore.get(application)
     private val scrobbles = PendingScrobbles(application)
     private val snapshots = QueueSnapshots(application)
     private val syncPrefs = application.getSharedPreferences("sync", android.content.Context.MODE_PRIVATE)
@@ -102,16 +102,37 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
     private var sleepJob: Job? = null
     private var startedAt = 0L
     private var scrobbled = false
+    private var listening: ListeningSession? = null
+    private var restoringQueue = false
+    private var restoringSession: ListeningSession? = null
+    private var flushingScrobbles = false
     private var controller: MediaController? = null
     private val controllerFuture = MediaController.Builder(application, SessionToken(application, ComponentName(application, PlaybackService::class.java))).buildAsync()
 
+    private fun newClient(credentials: Credentials) = NavidromeClient(credentials, cache = CatalogCache(getApplication(), credentials.account))
+
     init {
         UpdateEvents.listener = { message -> error = message; updateProgress = null }
-        try { client = vault.load()?.let(::NavidromeClient) }
+        try { if (!vault.prefersOnDevice()) client = vault.load()?.let(::newClient) }
         catch (_: Exception) { error = tr("Не удалось прочитать сохранённый вход. Подключи сервер заново.") }
         onDeviceOnly = client == null && vault.prefersOnDevice()
+        downloads.use(client?.credentials?.account)
+        viewModelScope.launch {
+            downloads.changes.collect {
+                val api = client
+                downloading = downloads.jobs(api?.credentials?.account).map { it.song.id }.toSet()
+                val songs = downloads.load()
+                if (client === api) { downloaded = songs; coverFiles = downloads.coverFiles() }
+            }
+        }
+        if (downloads.jobs().isNotEmpty()) DownloadService.resume(application)
         viewModelScope.launch { reloadOnDisk() }
-        if (client != null) viewModelScope.launch { reconnect() }
+        if (client != null) {
+            client?.cacheOnly = true
+            offline = true
+            refresh()
+            viewModelScope.launch { reconnect() }
+        }
         controllerFuture.addListener({
             try {
                 controller = controllerFuture.get().apply {
@@ -259,13 +280,16 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
         viewModelScope.launch {
             try {
                 val credentials = Credentials(server, username, password)
-                val candidate = NavidromeClient(credentials)
+                val candidate = newClient(credentials)
                 candidate.request("ping")
-                withContext(Dispatchers.IO) { vault.save(credentials) }
+                withContext(Dispatchers.IO) { vault.save(credentials); vault.rememberOnDevice(false) }
                 resetSession(); client = candidate; demo = false; offline = false; onDeviceOnly = false
+                downloads.use(candidate.credentials.account)
+                reloadOnDisk()
                 refresh(); onSuccess()
                 // Только что вошли — может, на этом сервере уже играло что-то на компьютере.
                 checkRemoteQueue()
+                flushScrobbles()
             } catch (error: Exception) { report(error) }
             finally { connecting = false }
         }
@@ -306,16 +330,24 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
         val api = client ?: return
         try {
             api.request("ping")
+            if (client !== api) return
+            api.cacheOnly = false
             offline = false
             refresh()
             flushScrobbles()
             checkRemoteQueue()
-        } catch (_: Exception) {
+        } catch (failure: Exception) {
+            if (client !== api) return
+            if (failure is MusicException && failure.kind == MusicException.Kind.auth) report(failure)
+            api.cacheOnly = true
             offline = true
+            refresh()
         }
     }
 
     private fun resetSession() {
+        syncJob?.cancel(); remoteQueue = null; listening = null; restored = false
+        downloads.use(null)
         sessionVersion++; detailJob?.cancel(); searchJob?.cancel(); controller?.stop(); controller?.clearMediaItems()
         queue = null
         albums = emptyList(); favorites = emptyList(); starred = emptyList(); artists = emptyList(); playlists = emptyList()
@@ -337,23 +369,22 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
                 } else {
                     val results = coroutineScope {
                         val recent = async { api.albums() }
-                        val starredAlbums = async { api.albums("starred") }
-                        val people = async { api.artists() }
-                        val lists = async { api.playlists() }
-                        val songs = async { api.starredSongs() }
+                        val starredAlbums = async { runCatching { api.albums("starred") }.getOrDefault(favorites) }
+                        val people = async { runCatching { api.artists() }.getOrDefault(artists) }
+                        val lists = async { runCatching { api.playlists() }.getOrDefault(playlists) }
+                        val songs = async { runCatching { api.starredSongs() }.getOrDefault(starred) }
                         LibraryResult(recent.await(), starredAlbums.await(), people.await(), lists.await(), songs.await())
                     }
                     if (version == sessionVersion) {
                         albums = results.albums; favorites = results.favorites; artists = results.artists
                         playlists = results.playlists; starred = results.starred
                         hasMore = albums.size == 40
-                        offline = false
                         if (settings.downloadFavorites) download(results.starred.filter { !downloads.isDownloaded(it.id) })
                     }
                 }
             } catch (error: Exception) {
                 if (version == sessionVersion) {
-                    if (error is MusicException && error.kind == MusicException.Kind.auth) report(error) else offline = true
+                    if (error is MusicException && error.kind == MusicException.Kind.network) offline = true else report(error)
                 }
             }
             finally { if (version == sessionVersion) loading = false }
@@ -463,8 +494,11 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
     // MARK: - Своя музыка и загрузки
 
     suspend fun reloadOnDisk() {
-        local = runCatching { localLibrary.scan() }.getOrDefault(emptyList())
+        val api = client
+        downloads.use(api?.credentials?.account)
+        local = runCatching { localLibrary.scan() + downloads.legacySongs() }.getOrDefault(emptyList())
         downloaded = runCatching { downloads.load() }.getOrDefault(emptyList())
+        if (client !== api) return
         coverFiles = downloads.coverFiles()
         // Что играбельно, теперь известно — можно вернуть сохранённую очередь.
         restoreQueue()
@@ -485,29 +519,27 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
 
     fun removeLocal(song: Song) {
         viewModelScope.launch {
-            withContext(Dispatchers.IO) { localLibrary.remove(song) }
+            withContext(Dispatchers.IO) { if (song.id.startsWith("local:legacy:")) downloads.removeLegacy(song.id) else localLibrary.remove(song) }
             reloadOnDisk()
         }
     }
 
     fun download(songs: List<Song>) {
         val api = client ?: return
-        val wanted = songs.filter { !isLocalId(it.id) && !downloads.isDownloaded(it.id) && it.id !in downloading }
-        if (wanted.isEmpty()) { notice = tr("Уже скачано"); return }
-        if (settings.downloadOverWifiOnly && !onWifi) { error = tr("Загрузка только по Wi-Fi — включи Wi-Fi или измени настройку."); return }
-        downloading = downloading + wanted.map { it.id }
+        downloads.use(api.credentials.account)
+        downloads.enqueue(api.credentials.account, songs, settings.quality(onWifi))
+        DownloadService.resume(getApplication())
+    }
+
+    private fun prepareOffline() {
+        val api = client ?: return
+        val prepared = queue ?: return
+        if (!settings.prepareQueue || offline) return
+        val upcoming = prepared.upcoming.map { it.song }
+        val currentId = prepared.current?.song?.id
         viewModelScope.launch {
-            var done = 0
-            for (song in wanted) {
-                // Обложку забираем вместе с треком: без сети серверный адрес уже не откроется.
-                val cover = song.coverArt?.let { api.cover(it) }
-                val ok = runCatching { downloads.download(api.stream(song.id, settings.quality(onWifi)), song, cover) }.getOrDefault(false)
-                if (ok) done++ else error = tr("Не удалось скачать «{title}»", "title" to song.title)
-                downloading = downloading - song.id
-                downloaded = runCatching { downloads.load() }.getOrDefault(downloaded)
-                coverFiles = downloads.coverFiles()
-            }
-            if (done > 0) notice = if (done == 1) tr("Трек скачан") else tr("Скачано треков: {n}", "n" to done)
+            downloads.prepare(api, upcoming, currentId, settings)
+            if (client === api && downloads.jobs().isNotEmpty()) DownloadService.resume(getApplication())
         }
     }
 
@@ -519,6 +551,7 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
         }
     }
 
+    fun isAutomatic(song: Song) = downloads.isAutomatic(song.id)
     fun isDownloaded(song: Song) = downloads.isDownloaded(song.id)
 
     private val online: Boolean get() = (client != null && !offline) || demo
@@ -588,6 +621,7 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
         val items = prepared.items.map { entry -> mediaItem(entry.song, api) }
         // Место старта задаём вместе со списком: отдельная перемотка сразу после setMediaItems теряется.
         val position = if (keepPosition) player.currentPosition else startAtMillis
+        if (keepPosition) restoringSession = listening?.copy()
         player.setMediaItems(items, prepared.position, position)
         player.repeatMode = when (prepared.repeatMode) {
             PlaybackQueue.Repeat.off -> Player.REPEAT_MODE_OFF
@@ -600,11 +634,12 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
         // Восстановленную при запуске очередь (play = false) сразу на сервер не шлём: там может
         // лежать более свежая с другого устройства, и её сначала надо предложить.
         saveQueue(soon = play)
+        prepareOffline()
     }
 
     private fun mediaItem(song: Song, api: NavidromeClient?): MediaItem {
         val uri = when (sourceOf(song)) {
-            SourceKind.local -> localLibrary.pathOf(song.id)?.let { Uri.fromFile(File(it)).toString() }
+            SourceKind.local -> (localLibrary.pathOf(song.id) ?: downloads.legacyPath(song.id))?.let { Uri.fromFile(File(it)).toString() }
             SourceKind.download -> downloads.pathOf(song.id)?.let { Uri.fromFile(File(it)).toString() }
             SourceKind.stream -> api?.stream(song.id, settings.quality(onWifi))
             SourceKind.unavailable -> null
@@ -722,6 +757,8 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
                 positionMillis = playback.position,
                 startedAt = startedAt,
                 scrobbled = scrobbled,
+                listening = listening,
+                queueState = prepared.snapshot(),
             )
         )
     }
@@ -730,8 +767,8 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
 
     /** Когда это устройство последний раз сохранило очередь на сервер (или отказалось от чужой). */
     private var queueSyncedAt: Long
-        get() = syncPrefs.getLong("queueSyncedAt", 0)
-        set(value) { syncPrefs.edit().putLong("queueSyncedAt", value).apply() }
+        get() = syncPrefs.getLong("queueSyncedAt.$queueOwner", 0)
+        set(value) { syncPrefs.edit().putLong("queueSyncedAt.$queueOwner", value).apply() }
 
     /**
      * Сохраняет очередь на сервер: сразу после смены трека, правки очереди или паузы, а во время
@@ -749,7 +786,7 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
         syncJob?.cancel()
         syncJob = viewModelScope.launch {
             if (soon) delay(1500)
-            runCatching { api.savePlayQueue(songs.map { it.id }, current, position) }.onSuccess { queueSyncedAt = System.currentTimeMillis() }
+            runCatching { api.savePlayQueue(songs.map { it.id }, current, position) }.onSuccess { if (client === api) queueSyncedAt = System.currentTimeMillis() }
         }
     }
 
@@ -838,24 +875,38 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
         restored = true
         if (snapshot.account != owner) return
         val index = snapshot.natural.indexOfFirst { it.id == snapshot.currentId }.coerceAtLeast(0)
-        val prepared = PlaybackQueue(snapshot.natural, index, snapshot.shuffle)
+        val prepared = runCatching { snapshot.queueState?.let(PlaybackQueue::restore) ?: PlaybackQueue(snapshot.natural, index, snapshot.shuffle) }.getOrNull() ?: return
         prepared.repeatMode = snapshot.repeat
         if (prepared.current?.song?.let(::isPlayable) != true) return
         queue = prepared
+        listening = snapshot.listening ?: prepared.current?.song?.let { ListeningSession(owner, it.id, startedAt = snapshot.startedAt, submitted = snapshot.scrobbled) }
+        listening?.recover(scrobbles.all(owner))
+        startedAt = listening?.startedAt ?: snapshot.startedAt
+        scrobbled = listening?.submitted ?: snapshot.scrobbled
+        restoringSession = listening?.copy()
+        restoringQueue = true
         pushQueue(prepared, play = false, startAtMillis = snapshot.positionMillis.coerceAtLeast(0))
-        startedAt = snapshot.startedAt
-        scrobbled = snapshot.scrobbled
+        restoringQueue = false
         updatePlayback()
     }
 
     private fun onTrackChanged() {
+        if (restoringQueue) return
         val player = controller ?: return
+        restoringSession?.let { session ->
+            restoringSession = null
+            if (session.songId == player.currentMediaItem?.mediaId) {
+                listening = session; startedAt = session.startedAt; scrobbled = session.submitted
+                return
+            }
+        }
         queue?.let { prepared ->
             if (player.currentMediaItemIndex != prepared.position) prepared.jump(player.currentMediaItemIndex)
         }
         extendWithSimilar()
         startedAt = System.currentTimeMillis()
         scrobbled = false
+        listening = queue?.current?.song?.let { ListeningSession(queueOwner ?: "on-device", it.id, startedAt = startedAt) }
         lyrics = null
         // Таймер «в конце трека»: дослушали — и тишина, следующий трек уже не играем.
         if (sleepAtTrackEnd) {
@@ -864,6 +915,7 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
             notice = tr("Таймер сна: музыка остановлена")
         }
         saveQueue(soon = true)
+        prepareOffline()
     }
 
     private fun updatePlayback() {
@@ -898,25 +950,30 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
     private fun checkScrobble() {
         if (scrobbled || demo || onDeviceOnly) return
         val song = playback.current ?: return
+        val owner = queueOwner ?: return
         if (isLocalId(song.id)) return
-        val duration = playback.duration
-        if (duration <= 0 || playback.position < minOf(duration / 2, 240_000)) return
+        if (listening?.songId != song.id || listening?.account != owner) listening = ListeningSession(owner, song.id, startedAt = startedAt)
+        val mark = listening?.claim(owner, playback.duration / 1000.0, playback.position / 1000.0) ?: return
+        if (!scrobbles.keep(mark)) { listening?.submitted = false; return }
         scrobbled = true
-        val moment = startedAt.takeIf { it > 0 } ?: System.currentTimeMillis()
-        viewModelScope.launch {
-            val api = client
-            if (api == null || offline) return@launch scrobbles.keep(song.id, moment)
-            runCatching { api.scrobble(song.id, moment) }.onFailure { scrobbles.keep(song.id, moment) }
-        }
+        saveQueue()
+        viewModelScope.launch { flushScrobbles() }
     }
 
-    /** Накопленные без сети отметки уходят по порядку: сервер строит историю по времени. */
     private suspend fun flushScrobbles() {
         val api = client ?: return
-        val pending = scrobbles.all()
-        if (pending.isEmpty()) return
-        val sent = pending.filter { play -> runCatching { api.scrobble(play.id, play.time) }.isSuccess }
-        scrobbles.keepOnly(sent)
+        if (offline || flushingScrobbles) return
+        flushingScrobbles = true
+        try {
+            for (play in scrobbles.all(api.credentials.account)) {
+                if (client !== api) break
+                try { api.scrobble(play.id, play.time) } catch (_: Exception) { break }
+                scrobbles.remove(listOf(play))
+            }
+        } finally {
+            flushingScrobbles = false
+            if (client !== api) viewModelScope.launch { flushScrobbles() }
+        }
     }
 
     private fun report(error: Exception) {

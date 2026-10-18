@@ -116,9 +116,9 @@ final class LibraryStore {
         defer { if generation == requestGeneration { isLoading = false } }
         do {
             async let newest = client.albums()
-            async let starred = client.starred()
-            async let people = client.request("getArtists")
-            async let lists = client.request("getPlaylists")
+            async let starred = try? client.starred()
+            async let people = try? client.request("getArtists")
+            async let lists = try? client.request("getPlaylists")
             // Personal sections are optional: an older server without play stats shouldn't break the home screen.
             async let played = try? client.albums(type: "recent", size: 12)
             async let often = try? client.albums(type: "frequent", size: 12)
@@ -127,10 +127,10 @@ final class LibraryStore {
             let personal = await (played, often, random)
             guard generation == requestGeneration else { return }
             albums = result.0
-            favorites = result.1.album ?? []; starredSongs = result.1.song ?? []
-            artists = result.2.artists?.index?.flatMap { $0.artist ?? [] } ?? []
-            playlists = result.3.playlists?.playlist ?? []
-            recentlyPlayed = personal.0 ?? []; frequent = personal.1 ?? []; discover = personal.2 ?? []
+            if let starred = result.1 { favorites = starred.album ?? []; starredSongs = starred.song ?? [] }
+            if let people = result.2 { artists = people.artists?.index?.flatMap { $0.artist ?? [] } ?? [] }
+            if let lists = result.3 { playlists = lists.playlists?.playlist ?? [] }
+            recentlyPlayed = personal.0 ?? recentlyPlayed; frequent = personal.1 ?? frequent; discover = personal.2 ?? discover
             if serverUnreachable { PlayerStore.shared.flushPendingScrobbles() }
             serverUnreachable = false
             saveCache()

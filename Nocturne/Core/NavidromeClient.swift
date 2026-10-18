@@ -80,7 +80,7 @@ struct NavidromeClient: Sendable {
         var attempt = 0
         while true {
             do { return try await perform(endpoint, parameters: parameters, repeated: repeated) }
-            catch let error as URLError where attempt < retryDelays.count && Self.isTransient(error) {
+            catch let error as URLError where (endpoint == "ping" || endpoint.hasPrefix("get") || endpoint.hasPrefix("search")) && attempt < retryDelays.count && Self.isTransient(error) {
                 try await Task.sleep(for: .seconds(retryDelays[attempt]))
                 attempt += 1
             }

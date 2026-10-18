@@ -1,6 +1,29 @@
 {
   "sourceLanguage": "ru",
   "strings": {
+    "Сохранить для офлайна": {
+      "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Keep for offline playback" } } }
+    },
+    "Готовить очередь для офлайна": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prepare the queue for offline playback"
+          }
+        }
+      }
+    },
+    "Скачанные треки играют без сети. Подготовка очереди сохраняет до трёх следующих треков на неограниченной сети, до 256 МБ. Ручные загрузки не удаляются.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloaded tracks play offline. Queue preparation saves up to three upcoming tracks on an unmetered connection, up to 256 MB. Manual downloads are kept."
+          }
+        }
+      }
+    },
     "Острые": {
       "localizations": {
         "en": {

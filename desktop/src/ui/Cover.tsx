@@ -17,22 +17,25 @@ export function Cover({
   /** Во всю ширину плитки, квадратом: в сетке альбомов ширина колонки меняется вместе с окном. */
   fluid?: boolean
 }) {
-  const { client, offline } = useStore()
-  const [url, setUrl] = useState<string | undefined>(id ? cache.get(id) : undefined)
+  const { client, offline, coverFiles } = useStore()
+  const key = `${client?.credentials.account ?? "on-device"}:${id}:${size}:${coverFiles[id ?? ""] ?? ""}`
+  const [url, setUrl] = useState<string | undefined>(id ? cache.get(key) : undefined)
 
   useEffect(() => {
-    if (!id || cache.has(id)) return
+    setUrl(cache.get(key))
+    if (!id || cache.has(key)) return
     let cancelled = false
     // Свои обложки лежат на диске и доступны всегда, серверные — только при связи.
     void coverUrl(id, offline ? undefined : client, size > 200 ? 600 : 300).then((address) => {
       if (!address || cancelled) return
-      cache.set(id, address)
+      cache.set(key, address)
+      if (cache.size > 512) cache.delete(cache.keys().next().value!)
       setUrl(address)
     })
     return () => {
       cancelled = true
     }
-  }, [id, client, offline, size])
+  }, [id, key, client, offline, size])
 
   if (!url) {
     return (

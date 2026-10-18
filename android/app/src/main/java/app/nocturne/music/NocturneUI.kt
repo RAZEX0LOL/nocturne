@@ -556,6 +556,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.downloadsSection(vm: 
                         text = { Text(if (vm.isStarred(song)) tr("Убрать из избранного") else tr("В избранное")) },
                         onClick = { menu = false; vm.toggleStar(song) },
                     )
+                    if (vm.isAutomatic(song)) DropdownMenuItem(text = { Text(tr("Сохранить для офлайна")) }, onClick = { menu = false; vm.download(listOf(song)) })
                     if (!vm.isDownloaded(song)) DropdownMenuItem(text = { Text(tr("Скачать")) }, onClick = { menu = false; vm.download(listOf(song)) })
                 }
                 if (vm.isDownloaded(song)) DropdownMenuItem(text = { Text(tr("Удалить загрузку")) }, onClick = { menu = false; vm.removeDownload(song) })
@@ -800,6 +801,18 @@ private fun androidx.compose.foundation.lazy.LazyListScope.downloadsSection(vm: 
             Switch(checked = settings.downloadFavorites, onCheckedChange = { settings.autoDownloadFavorites(it) })
         }
 
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(tr("Готовить очередь для офлайна"), Modifier.weight(1f))
+            Switch(checked = settings.prepareQueue, onCheckedChange = { settings.prepareQueue(it) }, modifier = Modifier.testTag("offline-preparation"))
+        }
+        Text(tr("До трёх следующих треков на неограниченной сети, до 256 МБ. Ручные загрузки не удаляются."), style = MaterialTheme.typography.bodySmall)
+        Text(tr("Лимит места"), style = MaterialTheme.typography.titleSmall)
+        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            listOf(0, 1024, 2048, 5120, 10240).forEach { value ->
+                FilterChip(selected = settings.downloadLimitMB == value, onClick = { settings.limitDownloadSpace(value) }, label = { Text(if (value == 0) tr("Без лимита") else "${value / 1024} GB") })
+            }
+        }
+
         SectionTitle(tr("Оформление"))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
             ThemeMode.entries.forEach { theme ->
@@ -973,6 +986,7 @@ private fun timeLabel(milliseconds: Long): String {
 /** Обложка своего файла лежит на диске, скачанная — рядом с треком, серверная — по подписанному адресу. */
 private fun coverSource(id: String?, client: NavidromeClient?, saved: Map<String, String>): Any? = when {
     id == null -> null
+    id.startsWith("file://") -> android.net.Uri.parse(id)
     id.startsWith(LocalLibrary.FILE_COVER_PREFIX) -> File(id.removePrefix(LocalLibrary.FILE_COVER_PREFIX))
     saved[id] != null -> File(saved.getValue(id))
     else -> client?.cover(id)

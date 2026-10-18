@@ -1,0 +1,122 @@
+{
+  "cases": [
+    {
+      "name": "только три ближайших серверных трека",
+      "enabled": true,
+      "online": true,
+      "unmetered": true,
+      "songs": [
+        {
+          "id": "s0",
+          "duration": 60
+        },
+        {
+          "id": "s1",
+          "duration": 60
+        },
+        {
+          "id": "s2",
+          "duration": 60
+        },
+        {
+          "id": "s3",
+          "duration": 60
+        },
+        {
+          "id": "s4",
+          "duration": 60
+        }
+      ],
+      "expected": [
+        "s0",
+        "s1",
+        "s2"
+      ]
+    },
+    {
+      "name": "подготовка выключена по умолчанию",
+      "enabled": false,
+      "online": true,
+      "unmetered": true,
+      "songs": [
+        {
+          "id": "s1",
+          "duration": 60
+        }
+      ],
+      "expected": []
+    },
+    {
+      "name": "мобильная сеть не расходуется",
+      "enabled": true,
+      "online": true,
+      "unmetered": false,
+      "songs": [
+        {
+          "id": "s1",
+          "duration": 60
+        }
+      ],
+      "expected": []
+    },
+    {
+      "name": "без связи подготовка ждёт",
+      "enabled": true,
+      "online": false,
+      "unmetered": true,
+      "songs": [
+        {
+          "id": "s1",
+          "duration": 60
+        }
+      ],
+      "expected": []
+    },
+    {
+      "name": "горизонт ограничен пятнадцатью минутами",
+      "enabled": true,
+      "online": true,
+      "unmetered": true,
+      "songs": [
+        {
+          "id": "a",
+          "duration": 600
+        },
+        {
+          "id": "b",
+          "duration": 301
+        }
+      ],
+      "expected": [
+        "a"
+      ]
+    },
+    {
+      "name": "свои файлы и радио не скачиваются",
+      "enabled": true,
+      "online": true,
+      "unmetered": true,
+      "songs": [
+        {
+          "id": "local:a",
+          "duration": 9999
+        },
+        {
+          "id": "radio:x",
+          "duration": 60
+        },
+        {
+          "id": "radio-x",
+          "duration": 60
+        },
+        {
+          "id": "s1",
+          "duration": 60
+        }
+      ],
+      "expected": [
+        "s1"
+      ]
+    }
+  ]
+}

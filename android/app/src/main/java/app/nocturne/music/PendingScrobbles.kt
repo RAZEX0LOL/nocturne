@@ -3,31 +3,28 @@ package app.nocturne.music
 import android.content.Context
 import app.nocturne.core.ScrobblePlay
 import app.nocturne.core.Scrobbles
+import kotlinx.serialization.json.*
 
-/**
- * Отметки о прослушивании, которые не удалось отправить: без сети они ждут на диске и уходят,
- * когда сервер снова доступен (shared/spec/api.md).
- */
+/** Старые записи без владельца остаются в прежнем ключе: угадывать сервер для них нельзя. */
 class PendingScrobbles(context: Context) {
     private val store = context.getSharedPreferences("scrobbles", Context.MODE_PRIVATE)
 
-    fun keep(id: String, startedAt: Long) = write(Scrobbles.keep(stored(), ScrobblePlay(id, startedAt)))
+    @Synchronized fun keep(play: ScrobblePlay): Boolean = write(Scrobbles.keep(stored(), play))
+    @Synchronized fun all(account: String): List<ScrobblePlay> = Scrobbles.ordered(stored().filter { it.account == account })
+    @Synchronized fun remove(sent: List<ScrobblePlay>) = write(Scrobbles.remaining(stored(), sent))
 
-    /** По возрастанию времени: сервер строит историю прослушиваний по нему. */
-    fun all(): List<ScrobblePlay> = Scrobbles.ordered(stored())
-
-    /** Оставляет те, что не дошли. */
-    fun keepOnly(sent: List<ScrobblePlay>) = write(Scrobbles.remaining(stored(), sent))
-
-    private fun stored(): List<ScrobblePlay> = store.getStringSet(KEY, emptySet()).orEmpty()
-        .mapNotNull { line ->
-            val time = line.substringAfterLast('|').toLongOrNull() ?: return@mapNotNull null
-            ScrobblePlay(line.substringBeforeLast('|'), time)
+    private fun stored(): List<ScrobblePlay> = runCatching {
+        Json.parseToJsonElement(store.getString("owned.v2", "[]")!!).jsonArray.map { raw ->
+            val item = raw.jsonObject
+            ScrobblePlay(item.getValue("id").jsonPrimitive.content, item.getValue("time").jsonPrimitive.long,
+                item.getValue("account").jsonPrimitive.content, item["playId"]?.jsonPrimitive?.contentOrNull)
         }
+    }.getOrDefault(emptyList())
 
-    private fun write(items: List<ScrobblePlay>) {
-        store.edit().putStringSet(KEY, items.map { "${it.id}|${it.time}" }.toSet()).apply()
-    }
-
-    private companion object { const val KEY = "pending" }
+    private fun write(items: List<ScrobblePlay>): Boolean = store.edit().putString("owned.v2", buildJsonArray {
+        items.forEach { play -> add(buildJsonObject {
+            put("id", play.id); put("time", play.time); put("account", play.account)
+            play.playId?.let { put("playId", it) }
+        }) }
+    }.toString()).commit()
 }
