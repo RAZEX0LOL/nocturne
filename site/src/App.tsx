@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { PLATFORMS, detectPlatform, downloadUrl, loadRelease, megabytes, type ChangelogEntry, type Platform, type PlatformId, type ReleaseInfo } from './downloads'
+import { BASE, PLATFORMS, detectPlatform, downloadUrl, loadRelease, megabytes, type ChangelogEntry, type Platform, type PlatformId, type ReleaseInfo } from './downloads'
 import bundledChangelog from '../changelog.json'
 
 /** Логотип — те же пять полосок звука, что на экране входа в приложении. */
@@ -257,6 +257,11 @@ function Download({ main, release }: { main?: PlatformId; release: ReleaseInfo }
                 </a>
               ) : (
                 <span className="mt-6 rounded-xl border border-dashed border-line px-4 py-3 text-center text-sm font-semibold text-muted">{platform.action}</span>
+              )}
+              {platform.alt && (
+                <a href={`${BASE}/${platform.alt.file}`} className="mt-2 rounded-xl border border-line px-4 py-2.5 text-center text-sm font-semibold text-muted hover:border-accent/60 hover:text-ink">
+                  {platform.alt.action}
+                </a>
               )}
             </article>
           )

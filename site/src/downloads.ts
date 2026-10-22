@@ -4,7 +4,7 @@
  * не нужно пересобирать — кнопки всегда ведут на последнюю сборку.
  */
 const REPO = 'RAZEX0LOL/nocturne-releases'
-const BASE = `https://github.com/${REPO}/releases/download/updates`
+export const BASE = `https://github.com/${REPO}/releases/download/updates`
 
 export type PlatformId = 'mac' | 'windows' | 'android' | 'ios' | 'linux'
 
@@ -12,10 +12,12 @@ export interface Platform {
   id: PlatformId
   name: string
   detail: string
-  /** Файл в релизе; у iPhone — ссылка в TestFlight, у Linux — пока ничего. */
+  /** Файл в релизе; у iPhone вместо него ссылка в TestFlight. */
   file?: string
   href?: string
   action: string
+  /** Второй файл — там, где форматов два (Linux: AppImage и .deb). */
+  alt?: { file: string; action: string }
   /** Что сделать при первой установке — то, на чём люди обычно спотыкаются. */
   note: string
 }
@@ -56,9 +58,11 @@ export const PLATFORMS: Platform[] = [
   {
     id: 'linux',
     name: 'Linux',
-    detail: 'AppImage и .deb',
-    action: 'Скоро',
-    note: 'Сборка для Linux готовится — появится здесь же.',
+    detail: 'x86-64, Ubuntu 22.04 и новее',
+    file: 'Nocturne-linux.AppImage',
+    action: 'Скачать AppImage',
+    alt: { file: 'Nocturne-linux.deb', action: 'Скачать .deb' },
+    note: 'AppImage достаточно сделать исполняемым (chmod +x) и запустить. Для Debian и Ubuntu есть .deb.',
   },
 ]
 
