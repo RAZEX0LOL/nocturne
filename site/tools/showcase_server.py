@@ -7,13 +7,16 @@
 
     <python с Pillow> site/tools/showcase_server.py
 """
-import io, json, math, random, struct, wave
+import io, json, math, os, random, struct, wave
 from array import array
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 from PIL import Image, ImageDraw, ImageFilter
 
-ALBUMS = [
+# NOCTURNE_SHOWCASE_LANG=en — те же альбомы по-английски, для англоязычных скриншотов.
+ENGLISH = os.environ.get("NOCTURNE_SHOWCASE_LANG", "ru") == "en"
+
+ALBUMS_RU = [
     ("Параллели", "Свет внутри", 2025, (0x95, 0x64, 0x7E)),
     ("Тихие дни", "Корали", 2024, (0xC8, 0xAB, 0x78)),
     ("Где-то дальше", "Монолит", 2025, (0x7F, 0xA9, 0xB8)),
@@ -21,12 +24,28 @@ ALBUMS = [
     ("Afterglow", "North Coast", 2025, (0x78, 0x61, 0x9C)),
     ("Сны на повторе", "Каменные реки", 2023, (0x58, 0x92, 0x8A)),
 ]
-TITLES = ["Первый свет", "Между нами", "Тишина", "Afterglow", "Остаться", "Дальний берег", "Неон", "Ночной поезд"]
-LYRICS = [
+ALBUMS_EN = [
+    ("Parallels", "Inner Light", 2025, (0x95, 0x64, 0x7E)),
+    ("Quiet Days", "Corali", 2024, (0xC8, 0xAB, 0x78)),
+    ("Somewhere Further", "Monolith", 2025, (0x7F, 0xA9, 0xB8)),
+    ("Late July", "Sky Nearby", 2024, (0xA6, 0x6B, 0x83)),
+    ("Afterglow", "North Coast", 2025, (0x78, 0x61, 0x9C)),
+    ("Dreams on Repeat", "Stone Rivers", 2023, (0x58, 0x92, 0x8A)),
+]
+ALBUMS = ALBUMS_EN if ENGLISH else ALBUMS_RU
+TITLES = (["First Light", "Between Us", "Silence", "Afterglow", "To Stay", "Far Shore", "Neon", "Night Train"] if ENGLISH
+          else ["Первый свет", "Между нами", "Тишина", "Afterglow", "Остаться", "Дальний берег", "Неон", "Ночной поезд"])
+LYRICS_EN = [
+    "The city fades outside the window", "And we are left, the two of us", "Someone writes to us at night",
+    "You stay silent — so do I", "The light comes from far away", "Through our hands, through centuries",
+    "And if the sky should ever fall", "It will not let us down", "The city fades outside the window", "We stay — and we sing",
+]
+LYRICS_RU = [
     "Город гаснет за окном", "И остаёмся мы вдвоём", "Кто-то пишет нам в ночи",
     "Ты молчишь — и я молчи", "Свет идёт издалека", "Сквозь ладони, сквозь века",
     "Если небо упадёт", "Нас оно не подведёт", "Город гаснет за окном", "Мы остаёмся — и поём",
 ]
+LYRICS = LYRICS_EN if ENGLISH else LYRICS_RU
 
 albums, songs, artists = [], [], {}
 for index, (name, artist, year, color) in enumerate(ALBUMS):
@@ -42,7 +61,8 @@ for index, (name, artist, year, color) in enumerate(ALBUMS):
     artists[artist_id] = {"id": artist_id, "name": artist, "albumCount": 1, "coverArt": album_id}
 SONG = {s["id"]: s for s in songs}
 STARRED = {"al0-1", "al1-0", "al4-2", "al2-3", "al5-1"}
-PLAYLISTS = {"pl1": ("Вечер", ["al0-0", "al1-2", "al4-1", "al3-0", "al5-2"]), "pl2": ("В дорогу", ["al2-0", "al2-1", "al4-3", "al0-4"])}
+PLAYLISTS = ({"pl1": ("Evening", ["al0-0", "al1-2", "al4-1", "al3-0", "al5-2"]), "pl2": ("On the Road", ["al2-0", "al2-1", "al4-3", "al0-4"])} if ENGLISH
+             else {"pl1": ("Вечер", ["al0-0", "al1-2", "al4-1", "al3-0", "al5-2"]), "pl2": ("В дорогу", ["al2-0", "al2-1", "al4-3", "al0-4"])})
 
 
 def cover(index, size=600):
@@ -158,10 +178,10 @@ class Handler(BaseHTTPRequestHandler):
             return self.ok(lyricsList={"structuredLyrics": [{"lang": "rus", "synced": True,
                                                              "line": [{"start": 2000 + i * 4500, "value": line} for i, line in enumerate(LYRICS)]}]})
         if endpoint == "getArtistInfo2":
-            return self.ok(artistInfo2={"biography": "Вымышленный исполнитель из демомедиатеки Nocturne.", "similarArtist": list(artists.values())[:3]})
-        if endpoint == "getAlbumInfo2": return self.ok(albumInfo={"notes": "Альбом из демомедиатеки Nocturne."})
+            return self.ok(artistInfo2={"biography": ("A fictional artist from the Nocturne demo library." if ENGLISH else "Вымышленный исполнитель из демомедиатеки Nocturne."), "similarArtist": list(artists.values())[:3]})
+        if endpoint == "getAlbumInfo2": return self.ok(albumInfo={"notes": ("An album from the Nocturne demo library." if ENGLISH else "Альбом из демомедиатеки Nocturne.")})
         if endpoint == "getInternetRadioStations":
-            return self.ok(internetRadioStations={"internetRadioStation": [{"id": "rd1", "name": "Ночное радио", "streamUrl": "http://127.0.0.1:4533/radio"}]})
+            return self.ok(internetRadioStations={"internetRadioStation": [{"id": "rd1", "name": ("Night Radio" if ENGLISH else "Ночное радио"), "streamUrl": "http://127.0.0.1:4533/radio"}]})
         if endpoint == "getCoverArt": return self.reply(cover_png(q.get("id", "al0"), max(32, min(int(q.get("size", 600)), 1200))), "image/png")
         if endpoint == "stream":
             data = audio(q["id"]) if q.get("id") in SONG else b""

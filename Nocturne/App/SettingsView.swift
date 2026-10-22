@@ -112,6 +112,15 @@ struct SettingsView: View {
                 }
                 Section(String(localized: "О приложении")) {
                     LabeledContent(String(localized: "Версия"), value: Self.version)
+                    // Язык приложения iOS держит у себя: свой список внутри приложения разошёлся бы
+                    // с системным. Ведём человека прямо на нужный экран Настроек.
+                    Button {
+                        if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
+                    } label: {
+                        LabeledContent(String(localized: "Язык"), value: Locale.current.localizedString(forLanguageCode: Locale.current.language.languageCode?.identifier ?? "ru")?.capitalized ?? "")
+                    }
+                    Link(String(localized: "Поддержка"), destination: URL(string: "https://nocturne.razex.online/support")!)
+                    Link(String(localized: "Политика конфиденциальности"), destination: URL(string: "https://nocturne.razex.online/privacy")!)
                     Link("OpenSubsonic API", destination: URL(string: "https://opensubsonic.netlify.app")!)
                 }
             }

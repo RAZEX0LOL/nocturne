@@ -88,6 +88,13 @@ class Settings(context: Context) {
     /** Искать текст в LRCLIB, если у Navidrome его нет: названия треков уходят стороннему сервису. */
     var lrclib by mutableStateOf(store.getBoolean("lyrics.lrclib", false))
         private set
+    var language by mutableStateOf(enum(store.getString("appearance.language", null), AppLanguage.system))
+        private set
+
+    init {
+        // Выбранный язык должен действовать с первой же отрисовки, а не после первого захода в настройки.
+        appLanguage = language
+    }
     var corners by mutableStateOf(enum(store.getString("appearance.corners", null), Corners.normal))
         private set
     var playerBackground by mutableStateOf(enum(store.getString("appearance.playerBackground", null), PlayerBackground.gradient))
@@ -110,6 +117,12 @@ class Settings(context: Context) {
     fun prepareQueue(value: Boolean) { prepareQueue = value; store.edit().putBoolean("downloads.prepareQueue", value).apply() }
     fun limitDownloadSpace(value: Int) { downloadLimitMB = value; store.edit().putInt("downloads.limitMB", value).apply() }
     fun limitDownloadsToWifi(value: Boolean) { downloadOverWifiOnly = value; store.edit().putBoolean("downloads.wifiOnly", value).apply() }
+    fun chooseLanguage(value: AppLanguage) {
+        language = value
+        appLanguage = value
+        store.edit().putString("appearance.language", value.name).apply()
+    }
+
     fun chooseCorners(value: Corners) { corners = value; store.edit().putString("appearance.corners", value.name).apply() }
     fun choosePlayerBackground(value: PlayerBackground) { playerBackground = value; store.edit().putString("appearance.playerBackground", value.name).apply() }
     fun chooseLyricsScale(value: Float) { lyricsScale = value; store.edit().putFloat("lyrics.scale", value).apply() }

@@ -824,6 +824,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.downloadsSection(vm: 
                 FilterChip(selected = settings.accent == theme, onClick = { settings.chooseAccent(theme) }, label = { Text(tr(theme.title)) })
             }
         }
+        ChipRow(tr("Язык"), AppLanguage.entries, settings.language, { tr(it.title) }, settings::chooseLanguage)
         ChipRow(tr("Углы"), Corners.entries, settings.corners, { tr(it.title) }, settings::chooseCorners)
         ChipRow(tr("Фон плеера"), PlayerBackground.entries, settings.playerBackground, { tr(it.title) }, settings::choosePlayerBackground)
         ChipRow(tr("Размер текста песни"), listOf(0.85f, 1f, 1.2f, 1.45f), settings.lyricsScale, {

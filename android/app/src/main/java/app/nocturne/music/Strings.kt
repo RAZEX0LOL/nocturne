@@ -250,12 +250,27 @@ private val english = mapOf(
     "Поделиться" to "Share",
     "Похожих треков не нашлось" to "No similar songs found",
     "Не удалось создать ссылку. Включи «Поделиться» в настройках Navidrome (EnableSharing)." to "Could not create a link. Turn on sharing in Navidrome (EnableSharing).",
+    "Язык" to "Language",
+    "English" to "English",
     "Ранее" to "Earlier",
     "Дальше" to "Up next",
 )
 
-/** Русская система оставляет исходный текст; любая другая получает английский. */
-private val useEnglish: Boolean get() = Locale.getDefault().language != "ru"
+/**
+ * Язык интерфейса. По умолчанию — как в системе: русская система оставляет исходный текст, любая
+ * другая получает английский. Выбор в настройках это переопределяет (на Android 12 и старше
+ * системного выбора языка для приложения нет, а людям он нужен).
+ */
+enum class AppLanguage(val title: String) { system("Как в системе"), ru("Русский"), en("English") }
+
+@Volatile internal var appLanguage: AppLanguage = AppLanguage.system
+
+private val useEnglish: Boolean
+    get() = when (appLanguage) {
+        AppLanguage.ru -> false
+        AppLanguage.en -> true
+        AppLanguage.system -> Locale.getDefault().language != "ru"
+    }
 
 internal fun tr(text: String, vararg values: Pair<String, Any?>): String {
     var result = if (useEnglish) english[text] ?: text else text

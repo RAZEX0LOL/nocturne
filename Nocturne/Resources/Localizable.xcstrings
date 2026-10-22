@@ -1,6 +1,166 @@
 {
   "sourceLanguage": "ru",
   "strings": {
+    "Свет внутри": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inner Light"
+          }
+        }
+      }
+    },
+    "Тихие дни": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quiet Days"
+          }
+        }
+      }
+    },
+    "Корали": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Corali"
+          }
+        }
+      }
+    },
+    "Где-то дальше": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Somewhere Further"
+          }
+        }
+      }
+    },
+    "Монолит": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Monolith"
+          }
+        }
+      }
+    },
+    "Поздний июль": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Late July"
+          }
+        }
+      }
+    },
+    "Небо рядом": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sky Nearby"
+          }
+        }
+      }
+    },
+    "Сны на повторе": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dreams on Repeat"
+          }
+        }
+      }
+    },
+    "Каменные реки": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stone Rivers"
+          }
+        }
+      }
+    },
+    "Первый свет": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "First Light"
+          }
+        }
+      }
+    },
+    "Между нами": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Between Us"
+          }
+        }
+      }
+    },
+    "Тишина": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Silence"
+          }
+        }
+      }
+    },
+    "Остаться": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To Stay"
+          }
+        }
+      }
+    },
+    "Язык": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Language"
+          }
+        }
+      }
+    },
+    "Поддержка": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Support"
+          }
+        }
+      }
+    },
+    "Политика конфиденциальности": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privacy policy"
+          }
+        }
+      }
+    },
     "Сохранить для офлайна": {
       "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Keep for offline playback" } } }
     },
