@@ -2,6 +2,18 @@
   "$comment": "Что нового в каждой версии. Пишется при выпуске: без записи скрипты выпуска версию не опубликуют. Версия = 1.1.<число коммитов>, как номер сборки. kind: new | better | fix. platforms: mac, windows, linux, android, ios; у пункта — если он не для всех платформ версии.",
   "releases": [
     {
+      "version": "1.1.77",
+      "date": "2026-10-22",
+      "platforms": ["android", "ios"],
+      "summary": "Выбор языка и приложение в App Store",
+      "summary_en": "A language picker, and the app on the App Store",
+      "changes": [
+        { "kind": "new", "text": "Язык приложения можно выбрать в настройках: как в системе, русский или английский.", "text_en": "You can pick the app language in settings: match the system, Russian or English.", "platforms": ["android"] },
+        { "kind": "new", "text": "В настройках появились «Язык», «Поддержка» и «Политика конфиденциальности».", "text_en": "Settings now has Language, Support and Privacy policy.", "platforms": ["ios"] },
+        { "kind": "better", "text": "Названия в демомедиатеке переводятся вместе с интерфейсом — на английском устройстве они больше не русские.", "text_en": "The demo library's names are translated along with the interface — on an English device they are no longer Russian." }
+      ]
+    },
+    {
       "version": "1.1.70",
       "date": "2026-10-22",
       "platforms": [
