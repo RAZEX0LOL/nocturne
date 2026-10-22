@@ -18,6 +18,8 @@ export default defineConfig({
       input: {
         index: new URL('./index.html', import.meta.url).pathname,
         start: new URL('./start.html', import.meta.url).pathname,
+        privacy: new URL('./privacy.html', import.meta.url).pathname,
+        support: new URL('./support.html', import.meta.url).pathname,
       },
     },
   },

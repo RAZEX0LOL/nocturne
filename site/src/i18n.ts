@@ -122,8 +122,8 @@ const english: Record<string, string> = {
     'Navidrome is a free server for your own music collection: it runs on a home computer, a NAS or a VPS and serves the music over the network. Nocturne is a player for it. Any other server with the Subsonic API works too.',
   'Поставить за 10 минут': 'Set it up in 10 minutes',
   'Можно без сервера?': 'Can I use it without a server?',
-  'Да. На компьютере и Android можно слушать свои файлы прямо с устройства — сервер не нужен. На iPhone есть демоверсия, чтобы посмотреть плеер.':
-    'Yes. On a computer and on Android you can play files straight from the device — no server needed. On iPhone there is a demo library so you can look around.',
+  'Да, на любой системе. На компьютере, iPhone, iPad и Android можно слушать файлы прямо с устройства: на экране входа выбери «Слушать музыку с этого устройства». Есть и демоверсия — посмотреть плеер, ничего не подключая.':
+    'Yes, on every system. On a computer, iPhone, iPad and Android you can play files straight from the device: pick “Play music from this device” on the sign-in screen. There is also a demo library, so you can look around without connecting anything.',
   'Как подключиться?': 'How do I connect?',
   'Открой приложение, введи адрес сервера, логин и пароль Navidrome. Пароль хранится в системном хранилище — Связке ключей, Keystore или менеджере учётных данных Windows.':
     'Open the app and enter the server address, your Navidrome username and password. The password is kept in the system store — Keychain, Keystore or Windows Credential Manager.',
@@ -200,6 +200,64 @@ const english: Record<string, string> = {
   '. Подробности — в': '. Details are in the',
   'документации Navidrome': 'Navidrome documentation',
   'Скачать Nocturne': 'Download Nocturne',
+
+  // Конфиденциальность и поддержка
+  'Конфиденциальность': 'Privacy',
+  'Политика конфиденциальности': 'Privacy policy',
+  'Коротко: Nocturne не собирает о тебе никаких данных. У приложения нет серверов, аккаунтов, аналитики и рекламы. Музыка и всё, что с ней связано, остаются между твоим устройством и твоим сервером.':
+    'In short: Nocturne collects no data about you. The app has no servers, no accounts, no analytics and no ads. Your music and everything around it stays between your device and your server.',
+  'Действует с 22 октября 2026 года.': 'In effect since 22 October 2026.',
+  'Какие данные мы собираем': 'What data we collect',
+  'Никаких. У Nocturne нет собственного сервера, который мог бы что-то получать: разработчик не видит ни твою медиатеку, ни то, что ты слушаешь, ни адрес твоего сервера.':
+    'None. Nocturne has no server of its own that could receive anything: the developer sees neither your library, nor what you listen to, nor your server’s address.',
+  'Куда приложение обращается': 'Where the app connects',
+  'Твой сервер Navidrome': 'Your Navidrome server',
+  '— адрес, логин и пароль вводишь ты. Туда уходят запросы за музыкой, обложками и плейлистами, а также отметки о прослушивании, оценки и очередь. Этим сервером распоряжаешься ты.':
+    '— you enter the address, username and password yourself. It receives requests for music, covers and playlists, plus scrobbles, ratings and the queue. That server is yours to control.',
+  '— открытая база текстов песен. Приложение обращается к ней, только если ты включил поиск текстов в настройках. Отправляются название трека, исполнитель и длительность — без сведений о тебе и твоём сервере.':
+    '— an open lyrics database. The app contacts it only if you turned lyrics search on in settings. It sends the track title, artist and duration — nothing about you or your server.',
+  '— оттуда скачиваются обновления на компьютере и Android. Это обычная загрузка файла, без учётных записей. В App Store обновления приходят через Apple.':
+    '— updates for the desktop and Android are downloaded from there. It is a plain file download, with no accounts. On the App Store updates come through Apple.',
+  '— только на компьютере и только если ты включил статус. Название трека передаётся запущенному на том же компьютере приложению Discord, напрямую, без интернета.':
+    '— desktop only, and only if you switched the status on. The track title is handed to the Discord app running on the same computer, directly, without the internet.',
+  'Встроенное окно браузера (добавление музыки из интернета) открывает те сайты, которые ты сам в нём открываешь, и ведёт себя как обычный браузер.':
+    'The built-in browser window (for adding music from the web) opens the sites you open in it and behaves like an ordinary browser.',
+  'Что хранится на устройстве': 'What is stored on the device',
+  'Пароль от сервера — в системном хранилище устройства: Связке ключей на Apple, Keystore на Android, менеджере учётных данных на Windows. Скачанная музыка, обложки и настройки лежат в папке приложения. Всё это исчезает вместе с приложением при удалении.':
+    'The server password lives in the device’s system store: Keychain on Apple, Keystore on Android, Credential Manager on Windows. Downloaded music, covers and settings sit in the app’s folder. All of it goes away with the app when you delete it.',
+  'Дети': 'Children',
+  'Приложение не предназначено специально для детей и не собирает данные ни у кого, включая детей.':
+    'The app is not directed at children, and it collects no data from anyone, children included.',
+  'Изменения': 'Changes',
+  'Если что-то в этой политике изменится, новая версия появится на этой странице с новой датой. Приложение не начнёт собирать данные молча.':
+    'If anything in this policy changes, a new version appears on this page with a new date. The app will not start collecting data quietly.',
+  'Связаться': 'Get in touch',
+  'Вопросы о приложении и о приватности — на странице поддержки:': 'Questions about the app and about privacy go to the support page:',
+  'Поддержка': 'Support',
+  'Помощь с Nocturne': 'Nocturne help',
+  'Nocturne — плеер для своего сервера Navidrome. Ниже — ответы на то, с чем люди сталкиваются чаще всего, и способ написать, если ответа здесь нет.':
+    'Nocturne is a player for your own Navidrome server. Below are the things people run into most often, and a way to write in if the answer is not here.',
+  'Первый запуск': 'First launch',
+  'Приложению нужен сервер Navidrome — свой, на домашнем компьютере, NAS или VPS. Если его ещё нет, поставь за десять минут по инструкции:':
+    'The app needs a Navidrome server of your own — on a home computer, a NAS or a VPS. If you do not have one yet, set it up in ten minutes:',
+  'Сервер не обязателен: на экране входа есть «Слушать музыку с этого устройства» — плеер возьмёт файлы, добавленные через «Файлы» или из интернета. И «Посмотреть демоверсию» — осмотреться, ничего не подключая.':
+    'A server is optional: the sign-in screen offers “Play music from this device” — the player picks up files added through Files or from the web. There is also “See the demo” to look around without connecting anything.',
+  'Не подключается к серверу': 'It will not connect to the server',
+  'Проверь адрес целиком, вместе с http:// или https:// и портом, например http://192.168.1.50:4533.':
+    'Check the whole address, including http:// or https:// and the port, for example http://192.168.1.50:4533.',
+  'Телефон и сервер должны быть в одной сети, если адрес внутренний.': 'The phone and the server must be on the same network if the address is a local one.',
+  'Логин и пароль — те же, что на странице Navidrome в браузере.': 'The username and password are the same ones you use on the Navidrome page in a browser.',
+  'Адреса без шифрования разрешены только для домашней сети: 192.168.x.x, 10.x.x.x и имена .local.':
+    'Unencrypted addresses are allowed only on a home network: 192.168.x.x, 10.x.x.x and .local names.',
+  'Нет текста песни': 'No lyrics',
+  'Сначала текст берётся с твоего сервера. Если его там нет, включи «Искать тексты в LRCLIB» в настройках — это открытая база, туда уходят только название и исполнитель трека.':
+    'Lyrics come from your server first. If it has none, switch on “Find lyrics on LRCLIB” in settings — it is an open database, and only the track title and artist are sent.',
+  'Музыка не играет в фоне или пропадает звук': 'Music does not play in the background, or the sound drops',
+  'Проверь, что приложению разрешены уведомления: без них система может остановить воспроизведение в фоне. Если трек не играет вовсе, попробуй другое качество потока в настройках — сервер мог не справиться с перекодированием.':
+    'Check that notifications are allowed for the app: without them the system can stop background playback. If a track does not play at all, try a different stream quality in settings — the server may have failed to transcode it.',
+  'Написать': 'Write in',
+  'Опиши, что происходит, на каком устройстве и какая версия приложения (она написана в настройках). Ответ придёт на почту.':
+    'Describe what happens, on which device, and which version of the app (it is written in settings). The reply comes by email.',
   'Русский': 'Русский',
   'Английский': 'English',
 }
