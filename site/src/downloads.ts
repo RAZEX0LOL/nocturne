@@ -82,6 +82,8 @@ export function detectPlatform(): PlatformId | undefined {
 export interface Change {
   kind: 'new' | 'better' | 'fix'
   text: string
+  /** Английский перевод пункта; нет — на английской версии сайта остаётся русский. */
+  text_en?: string
   platforms?: PlatformId[]
 }
 
@@ -90,8 +92,14 @@ export interface ChangelogEntry {
   date: string
   platforms: PlatformId[]
   summary: string
+  summary_en?: string
   changes: Change[]
 }
+
+declare const __NOCTURNE_VERSION__: string
+
+/** Версия на момент сборки сайта — показывается, пока (или если) GitHub не ответил. */
+export const BUILT_VERSION = __NOCTURNE_VERSION__
 
 export interface ReleaseInfo {
   version?: string

@@ -4,10 +4,17 @@
     {
       "version": "1.1.70",
       "date": "2026-10-22",
-      "platforms": ["linux"],
+      "platforms": [
+        "linux"
+      ],
       "summary": "Nocturne теперь есть и для Linux",
+      "summary_en": "Nocturne is now on Linux too",
       "changes": [
-        { "kind": "new", "text": "Появилась сборка для Linux: AppImage и .deb. Обновления приходят так же, как на других системах." }
+        {
+          "kind": "new",
+          "text": "Появилась сборка для Linux: AppImage и .deb. Обновления приходят так же, как на других системах.",
+          "text_en": "There is now a Linux build: AppImage and .deb. Updates arrive the same way as on every other system."
+        }
       ]
     },
     {
@@ -20,30 +27,37 @@
         "ios"
       ],
       "summary": "Надёжнее без сети и после перезапуска",
+      "summary_en": "Steadier offline and after a restart",
       "changes": [
         {
           "kind": "new",
-          "text": "Подготовка очереди для прослушивания без сети: до трёх треков на безлимитном соединении. Включается в настройках; ручные загрузки сохраняются отдельно."
+          "text": "Подготовка очереди для прослушивания без сети: до трёх треков на безлимитном соединении. Включается в настройках; ручные загрузки сохраняются отдельно.",
+          "text_en": "The queue is prepared for offline playback: up to three tracks on an unmetered connection. Turn it on in settings; manual downloads are kept separately."
         },
         {
           "kind": "better",
-          "text": "Прерванные загрузки продолжаются после следующего запуска. Скачанная музыка остаётся доступной, когда сервер недоступен."
+          "text": "Прерванные загрузки продолжаются после следующего запуска. Скачанная музыка остаётся доступной, когда сервер недоступен.",
+          "text_en": "Interrupted downloads resume on the next launch. Downloaded music stays available while the server is unreachable."
         },
         {
           "kind": "fix",
-          "text": "Каталог, очередь, загрузки и отложенные отметки о прослушивании разделены между аккаунтами. Ответы от предыдущего подключения больше не подменяют текущие данные."
+          "text": "Каталог, очередь, загрузки и отложенные отметки о прослушивании разделены между аккаунтами. Ответы от предыдущего подключения больше не подменяют текущие данные.",
+          "text_en": "The library, queue, downloads and pending scrobbles are kept separate per account. Replies from a previous connection no longer overwrite current data."
         },
         {
           "kind": "fix",
-          "text": "После перезапуска точнее восстанавливаются очередь, перемешивание и сеанс прослушивания; пауза не создаёт повторную отметку о том же прослушивании."
+          "text": "После перезапуска точнее восстанавливаются очередь, перемешивание и сеанс прослушивания; пауза не создаёт повторную отметку о том же прослушивании.",
+          "text_en": "After a restart the queue, shuffle and the listening session are restored more accurately; pausing no longer scrobbles the same play twice."
         },
         {
           "kind": "better",
-          "text": "Ошибка одной подборки не мешает загрузке остальных и не стирает сохранённую медиатеку."
+          "text": "Ошибка одной подборки не мешает загрузке остальных и не стирает сохранённую медиатеку.",
+          "text_en": "A failure in one shelf no longer blocks the others or wipes the saved library."
         },
         {
           "kind": "better",
           "text": "Обновление позиции трека больше не вызывает лишнюю перерисовку остального интерфейса.",
+          "text_en": "Updating the playback position no longer re-renders the rest of the interface.",
           "platforms": [
             "mac",
             "windows"
@@ -54,61 +68,201 @@
     {
       "version": "1.1.65",
       "date": "2026-10-08",
-      "platforms": ["mac", "windows"],
+      "platforms": [
+        "mac",
+        "windows"
+      ],
       "summary": "Статус в Discord одним переключателем",
+      "summary_en": "Discord status with a single switch",
       "changes": [
-        { "kind": "better", "text": "Статус в Discord больше не нужно настраивать: включи «Статус в Discord» в настройках — и друзья увидят «Слушает Nocturne» с треком, исполнителем и временем." },
-        { "kind": "better", "text": "Если Discord запустили уже после Nocturne, статус появится сам через несколько секунд." }
+        {
+          "kind": "better",
+          "text": "Статус в Discord больше не нужно настраивать: включи «Статус в Discord» в настройках — и друзья увидят «Слушает Nocturne» с треком, исполнителем и временем.",
+          "text_en": "The Discord status needs no setup any more: switch on “Discord status” in settings and friends see “Listening to Nocturne” with the song, artist and time."
+        },
+        {
+          "kind": "better",
+          "text": "Если Discord запустили уже после Nocturne, статус появится сам через несколько секунд.",
+          "text_en": "If Discord starts after Nocturne, the status appears by itself within a few seconds."
+        }
       ]
     },
     {
       "version": "1.1.63",
       "date": "2026-10-08",
-      "platforms": ["mac"],
+      "platforms": [
+        "mac"
+      ],
       "summary": "Mac-версия подписана и проверена Apple",
+      "summary_en": "The Mac build is signed and notarized by Apple",
       "changes": [
-        { "kind": "fix", "text": "Скачанное с сайта приложение больше не называется «повреждённым»: оно подписано сертификатом разработчика и прошло проверку Apple, поэтому открывается сразу, без предупреждений." }
+        {
+          "kind": "fix",
+          "text": "Скачанное с сайта приложение больше не называется «повреждённым»: оно подписано сертификатом разработчика и прошло проверку Apple, поэтому открывается сразу, без предупреждений.",
+          "text_en": "The app downloaded from the site is no longer called “damaged”: it is signed with a developer certificate and notarized by Apple, so it opens right away, without warnings."
+        }
       ]
     },
     {
       "version": "1.1.60",
       "date": "2026-10-08",
-      "platforms": ["mac", "windows", "android"],
+      "platforms": [
+        "mac",
+        "windows",
+        "android"
+      ],
       "summary": "Видно, что нового, ещё до обновления",
+      "summary_en": "You can see what's new before updating",
       "changes": [
-        { "kind": "new", "text": "В плашке «Доступно обновление» теперь написано, что изменилось в новой версии." },
-        { "kind": "new", "text": "У Nocturne появился сайт nocturne.razex.online: скачивание для всех систем и история версий." }
+        {
+          "kind": "new",
+          "text": "В плашке «Доступно обновление» теперь написано, что изменилось в новой версии.",
+          "text_en": "The “Update available” banner now says what changed in the new version."
+        },
+        {
+          "kind": "new",
+          "text": "У Nocturne появился сайт nocturne.razex.online: скачивание для всех систем и история версий.",
+          "text_en": "Nocturne now has a website, nocturne.razex.online: downloads for every system and the version history."
+        }
       ]
     },
     {
       "version": "1.1.58",
       "date": "2026-10-08",
-      "platforms": ["ios"],
+      "platforms": [
+        "ios"
+      ],
       "summary": "Поиск снова под рукой",
+      "summary_en": "Search is within reach again",
       "changes": [
-        { "kind": "fix", "text": "Поле поиска видно сразу, как только открываешь вкладку «Поиск», — больше не нужно тянуть список вниз." }
+        {
+          "kind": "fix",
+          "text": "Поле поиска видно сразу, как только открываешь вкладку «Поиск», — больше не нужно тянуть список вниз.",
+          "text_en": "The search field is visible as soon as you open the Search tab — no need to pull the list down any more."
+        }
       ]
     },
     {
       "version": "1.1.55",
       "date": "2026-10-08",
-      "platforms": ["mac", "windows", "android", "ios"],
+      "platforms": [
+        "mac",
+        "windows",
+        "android",
+        "ios"
+      ],
       "summary": "Тексты для любых треков, обновления без переустановки и много настроек вида",
+      "summary_en": "Lyrics for any track, updates without reinstalling, and plenty of appearance settings",
       "changes": [
-        { "kind": "new", "text": "Обновления ставятся поверх установленной версии: приложение само находит новую версию, а настройки, загрузки и вход на сервер остаются.", "platforms": ["mac", "windows", "android"] },
-        { "kind": "better", "text": "Тексты находятся для треков с «мусорным» альбомом (например, «VK»), с пометками feat., Sped Up и Remastered — LRCLIB ищет по названию и исполнителю." },
-        { "kind": "new", "text": "Если текста нет, на том же экране можно сразу включить поиск в LRCLIB." },
-        { "kind": "new", "text": "Размер и выравнивание текста песни, форма углов: острые, обычные или круглые." },
-        { "kind": "new", "text": "Скруглённый шрифт SF Rounded.", "platforms": ["mac", "ios"] },
-        { "kind": "new", "text": "Можно выбрать, какие кнопки показывать в панели плеера.", "platforms": ["mac", "windows"] },
-        { "kind": "new", "text": "Цвет акцента из обложки играющего трека, ещё четыре цвета и выбор фона плеера: градиент, размытая обложка или однотонный.", "platforms": ["android"] },
-        { "kind": "new", "text": "Темы: тёмная, OLED-чёрная, светлая и как в системе; «Микс по треку», «Поделиться» и прошедшие треки в очереди.", "platforms": ["android"] },
-        { "kind": "new", "text": "Скорость воспроизведения от 0,5× до 2×, бесконечное воспроизведение похожей музыкой, плавное затухание таймера сна и ReplayGain «Авто».", "platforms": ["android", "ios"] },
-        { "kind": "fix", "text": "На прошедших строках текста песни больше нет цветных полосок.", "platforms": ["mac"] },
-        { "kind": "fix", "text": "Кнопка ▶ в списке треков стоит по центру и у трёхзначных номеров.", "platforms": ["mac", "windows"] },
-        { "kind": "fix", "text": "Выравнивание громкости ReplayGain теперь действительно работает.", "platforms": ["android"] },
-        { "kind": "fix", "text": "Плашка «Играло на другом устройстве» больше не закрывает кнопку настроек.", "platforms": ["android"] },
-        { "kind": "fix", "text": "На только что установленном приложении треки не играли, пока его не перезапустишь.", "platforms": ["ios"] }
+        {
+          "kind": "new",
+          "text": "Обновления ставятся поверх установленной версии: приложение само находит новую версию, а настройки, загрузки и вход на сервер остаются.",
+          "text_en": "Updates install over the current version: the app finds a new one itself, and settings, downloads and the server sign-in stay.",
+          "platforms": [
+            "mac",
+            "windows",
+            "android"
+          ]
+        },
+        {
+          "kind": "better",
+          "text": "Тексты находятся для треков с «мусорным» альбомом (например, «VK»), с пометками feat., Sped Up и Remastered — LRCLIB ищет по названию и исполнителю.",
+          "text_en": "Lyrics are found for tracks with a junk album name (such as “VK”) and with feat., Sped Up or Remastered tags — LRCLIB searches by title and artist."
+        },
+        {
+          "kind": "new",
+          "text": "Если текста нет, на том же экране можно сразу включить поиск в LRCLIB.",
+          "text_en": "When there are no lyrics, you can turn on the LRCLIB search right on that screen."
+        },
+        {
+          "kind": "new",
+          "text": "Размер и выравнивание текста песни, форма углов: острые, обычные или круглые.",
+          "text_en": "Lyrics size and alignment, and corner style: sharp, normal or round."
+        },
+        {
+          "kind": "new",
+          "text": "Скруглённый шрифт SF Rounded.",
+          "text_en": "The rounded SF Rounded font.",
+          "platforms": [
+            "mac",
+            "ios"
+          ]
+        },
+        {
+          "kind": "new",
+          "text": "Можно выбрать, какие кнопки показывать в панели плеера.",
+          "text_en": "You can choose which buttons the player bar shows.",
+          "platforms": [
+            "mac",
+            "windows"
+          ]
+        },
+        {
+          "kind": "new",
+          "text": "Цвет акцента из обложки играющего трека, ещё четыре цвета и выбор фона плеера: градиент, размытая обложка или однотонный.",
+          "text_en": "An accent colour taken from the current cover, four more colours, and a choice of player background: gradient, blurred cover or solid.",
+          "platforms": [
+            "android"
+          ]
+        },
+        {
+          "kind": "new",
+          "text": "Темы: тёмная, OLED-чёрная, светлая и как в системе; «Микс по треку», «Поделиться» и прошедшие треки в очереди.",
+          "text_en": "Themes: dark, OLED black, light and match-system; “Mix by track”, “Share” and past tracks in the queue.",
+          "platforms": [
+            "android"
+          ]
+        },
+        {
+          "kind": "new",
+          "text": "Скорость воспроизведения от 0,5× до 2×, бесконечное воспроизведение похожей музыкой, плавное затухание таймера сна и ReplayGain «Авто».",
+          "text_en": "Playback speed from 0.5× to 2×, endless playback with similar music, a gentle sleep-timer fade and ReplayGain “Auto”.",
+          "platforms": [
+            "android",
+            "ios"
+          ]
+        },
+        {
+          "kind": "fix",
+          "text": "На прошедших строках текста песни больше нет цветных полосок.",
+          "text_en": "Past lyric lines no longer show coloured stripes.",
+          "platforms": [
+            "mac"
+          ]
+        },
+        {
+          "kind": "fix",
+          "text": "Кнопка ▶ в списке треков стоит по центру и у трёхзначных номеров.",
+          "text_en": "The ▶ button in the track list stays centred even with three-digit numbers.",
+          "platforms": [
+            "mac",
+            "windows"
+          ]
+        },
+        {
+          "kind": "fix",
+          "text": "Выравнивание громкости ReplayGain теперь действительно работает.",
+          "text_en": "ReplayGain volume levelling actually works now.",
+          "platforms": [
+            "android"
+          ]
+        },
+        {
+          "kind": "fix",
+          "text": "Плашка «Играло на другом устройстве» больше не закрывает кнопку настроек.",
+          "text_en": "The “Playing on another device” banner no longer covers the settings button.",
+          "platforms": [
+            "android"
+          ]
+        },
+        {
+          "kind": "fix",
+          "text": "На только что установленном приложении треки не играли, пока его не перезапустишь.",
+          "text_en": "On a freshly installed app, tracks would not play until it was restarted.",
+          "platforms": [
+            "ios"
+          ]
+        }
       ]
     }
   ]

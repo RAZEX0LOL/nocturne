@@ -25,6 +25,8 @@ fi
 if [[ -z "${TAURI_SIGNING_PRIVATE_KEY:-}" && -n "${TAURI_SIGNING_PRIVATE_KEY_PATH:-}" ]]; then
   export TAURI_SIGNING_PRIVATE_KEY="$(cat "$TAURI_SIGNING_PRIVATE_KEY_PATH")"
 fi
+# «signer sign» отказывается работать, если видит и ключ, и путь к нему: оставляем только ключ.
+unset TAURI_SIGNING_PRIVATE_KEY_PATH
 
 HOST=${NOCTURNE_LINUX_HOST:-razex-home}
 REMOTE=${NOCTURNE_LINUX_DIR:-/home/razex/nocturne-build}
@@ -50,7 +52,9 @@ echo "{\"version\":\"$VERSION\",\"bundle\":{\"createUpdaterArtifacts\":false}}" 
 
 echo "==> Сборка в контейнере (несколько минут)"
 # Файлы в контейнере создаёт root; на выходе отдаём их хозяину каталога, иначе их потом не забрать.
-ssh "$HOST" "docker run --rm -v $REMOTE/src:/src -v $REMOTE/out:/out -w /src $IMAGE bash -lc '
+# --dns обязателен: на домашнем сервере resolv.conf указывает на локальный stub (127.0.0.53),
+# внутри контейнера его нет, и bun не может скачать зависимости (DNSResolveFailed).
+ssh "$HOST" "docker run --rm --dns 1.1.1.1 --dns 8.8.8.8 -v $REMOTE/src:/src -v $REMOTE/out:/out -w /src $IMAGE bash -lc '
   set -e
   bun install --frozen-lockfile
   bunx tauri build --config src-tauri/tauri.linux.json --bundles deb,appimage

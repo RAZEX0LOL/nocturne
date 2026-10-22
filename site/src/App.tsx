@@ -1,29 +1,15 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { BASE, PLATFORMS, detectPlatform, downloadUrl, loadRelease, megabytes, type ChangelogEntry, type Platform, type PlatformId, type ReleaseInfo } from './downloads'
+import { BASE, BUILT_VERSION, PLATFORMS, detectPlatform, downloadUrl, loadRelease, megabytes, type ChangelogEntry, type Platform, type PlatformId, type ReleaseInfo } from './downloads'
 import bundledChangelog from '../changelog.json'
-
-/** Логотип — те же пять полосок звука, что на экране входа в приложении. */
-function Logo({ size = 28 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden="true">
-      {[
-        [4, 13, 6],
-        [10, 8, 16],
-        [16, 3, 26],
-        [22, 8, 16],
-        [28, 13, 6],
-      ].map(([x, y, h]) => (
-        <rect key={x} x={x! - 1.6} y={y} width="3.2" height={h} rx="1.6" fill="#a78bfa" />
-      ))}
-    </svg>
-  )
-}
+import { Logo } from './Logo'
+import { LanguageSwitch } from './LanguageSwitch'
+import { language, t } from './i18n'
 
 function Section({ id, eyebrow, title, lead, children }: { id: string; eyebrow: string; title: string; lead?: string; children: ReactNode }) {
   return (
     <section id={id} className="mx-auto max-w-6xl scroll-mt-20 px-4 py-20 sm:px-6 sm:py-28">
-      <p className="text-sm font-semibold uppercase tracking-[0.2em] text-accent">{eyebrow}</p>
-      <h2 className="mt-3 max-w-3xl text-3xl font-extrabold tracking-tight sm:text-5xl">{title}</h2>
+      <p className="text-sm font-semibold uppercase tracking-[0.2em] text-accent">{t(eyebrow)}</p>
+      <h2 className="mt-3 max-w-3xl text-3xl font-extrabold tracking-tight sm:text-5xl">{t(title)}</h2>
       {lead && <p className="mt-4 max-w-2xl text-lg text-muted">{lead}</p>}
       <div className="mt-12">{children}</div>
     </section>
@@ -39,14 +25,16 @@ function Header() {
           <span className="text-sm">NOCTURNE</span>
         </a>
         <nav className="hidden items-center gap-8 text-sm text-muted md:flex">
-          <a href="#features" className="hover:text-ink">Возможности</a>
-          <a href="#screens" className="hover:text-ink">Скриншоты</a>
-          <a href="#download" className="hover:text-ink">Скачать</a>
-          <a href="#changelog" className="hover:text-ink">Что нового</a>
-          <a href="#faq" className="hover:text-ink">Вопросы</a>
+          <a href="#features" className="hover:text-ink">{t('Возможности')}</a>
+          <a href="#screens" className="hover:text-ink">{t('Скриншоты')}</a>
+          <a href="/start" className="hover:text-ink">{t('С чего начать')}</a>
+          <a href="#download" className="hover:text-ink">{t('Скачать')}</a>
+          <a href="#changelog" className="hover:text-ink">{t('Что нового')}</a>
+          <a href="#faq" className="hover:text-ink">{t('Вопросы')}</a>
         </nav>
+        <LanguageSwitch />
         <a href="#download" className="rounded-full bg-accent px-4 py-2 text-sm font-bold text-night hover:bg-[#b9a3fb]">
-          Скачать
+          {t('Скачать')}
         </a>
       </div>
     </header>
@@ -61,32 +49,31 @@ function Hero({ main, release }: { main?: Platform; release: ReleaseInfo }) {
         <div className="rise mx-auto max-w-3xl text-center">
           <p className="inline-flex items-center gap-2 rounded-full border border-line bg-panel/70 px-3 py-1 text-xs font-semibold text-muted">
             <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-            {release.version ? `Версия ${release.version}` : 'Mac · Windows · iPhone · Android'}
+            {release.version ? t('Версия {version}', { version: release.version }) : 'Mac · Windows · iPhone · Android'}
           </p>
           <h1 className="mt-6 text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-7xl">
-            Твоя музыка.
+            {t('Твоя музыка.')}
             <br />
-            <span className="bg-gradient-to-r from-[#c4b5fd] via-accent to-[#e3c7a0] bg-clip-text text-transparent">Твоё пространство.</span>
+            <span className="bg-gradient-to-r from-[#c4b5fd] via-accent to-[#e3c7a0] bg-clip-text text-transparent">{t('Твоё пространство.')}</span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-muted sm:text-xl">
-            Nocturne — плеер для своего сервера Navidrome. Красивый, быстрый и родной на каждой системе: начни слушать на компьютере
-            и продолжи с того же места на телефоне.
+            {t('Nocturne — плеер для своего сервера Navidrome. Красивый, быстрый и родной на каждой системе: начни слушать на компьютере и продолжи с того же места на телефоне.')}
           </p>
           <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
             {main && href ? (
               <a href={href} className="w-full rounded-2xl bg-accent px-7 py-4 text-base font-bold text-night shadow-[0_10px_40px_-10px_rgb(167_139_250/0.7)] hover:bg-[#b9a3fb] sm:w-auto">
-                {main.id === 'ios' ? 'Установить через TestFlight' : `Скачать для ${main.name}`}
+                {main.id === 'ios' ? t('Установить через TestFlight') : t('Скачать для {name}', { name: main.name })}
               </a>
             ) : (
               <a href="#download" className="w-full rounded-2xl bg-accent px-7 py-4 text-base font-bold text-night hover:bg-[#b9a3fb] sm:w-auto">
-                Скачать
+                {t('Скачать')}
               </a>
             )}
             <a href="#download" className="w-full rounded-2xl border border-line bg-panel/60 px-7 py-4 text-base font-semibold hover:border-accent/60 sm:w-auto">
-              Все платформы
+              {t('Все платформы')}
             </a>
           </div>
-          <p className="mt-4 text-sm text-muted">Бесплатно · без рекламы · без аккаунтов, кроме твоего сервера</p>
+          <p className="mt-4 text-sm text-muted">{t('Бесплатно · без рекламы · без аккаунтов, кроме твоего сервера')}</p>
         </div>
 
         {/* Компьютер и телефон рядом — один и тот же трек играет и там, и там. */}
@@ -97,9 +84,25 @@ function Hero({ main, release }: { main?: Platform; release: ReleaseInfo }) {
               <span className="h-3 w-3 rounded-full bg-[#febc2e]" />
               <span className="h-3 w-3 rounded-full bg-[#28c840]" />
             </div>
-            <img src="/shots/desktop-nowplaying.webp" alt="Nocturne на Mac: полноэкранный плеер с синхронным текстом песни" width={1600} height={1000} className="block w-full" />
+            {/* Запись настоящего приложения: оно само «показывает себя» лучше шести скриншотов.
+                Без звука и без управления — это иллюстрация, а не плеер; poster виден, пока видео качается. */}
+            <video
+              src="/shots/demo.webm"
+              poster="/shots/demo-poster.webp"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              aria-label={t('Nocturne на компьютере: альбом, полноэкранный плеер с текстом песни и светлая тема')}
+              className="block w-full"
+            >
+              <source src="/shots/demo.webm" type="video/webm" />
+              <source src="/shots/demo.mp4" type="video/mp4" />
+              <img src="/shots/desktop-nowplaying.webp" alt={t('Nocturne на Mac: полноэкранный плеер с синхронным текстом песни')} width={1600} height={1000} className="block w-full" />
+            </video>
           </div>
-          <Phone src="/shots/ios-player.webp" alt="Nocturne на iPhone: плеер" className="absolute -bottom-2 right-2 w-[24%] min-w-[110px] sm:right-[-2%]" />
+          <Phone src="/shots/ios-player.webp" alt={t('Nocturne на iPhone: плеер')} className="absolute -bottom-2 right-2 w-[24%] min-w-[110px] sm:right-[-2%]" />
         </div>
       </div>
     </div>
@@ -131,7 +134,7 @@ function Features() {
       id="features"
       eyebrow="Возможности"
       title="Всё, что нужно от плеера — и ничего лишнего"
-      lead="Nocturne подключается к Navidrome (и любому Subsonic-совместимому серверу) и превращает домашнюю медиатеку в музыкальный сервис, который принадлежит тебе."
+      lead={t('Nocturne подключается к Navidrome (и любому Subsonic-совместимому серверу) и превращает домашнюю медиатеку в музыкальный сервис, который принадлежит тебе.')}
     >
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {FEATURES.map((feature) => (
@@ -139,8 +142,8 @@ function Features() {
             <div className="grid h-11 w-11 place-items-center rounded-xl bg-accent/15 text-xl text-accent" aria-hidden="true">
               {feature.icon}
             </div>
-            <h3 className="mt-5 text-lg font-bold">{feature.title}</h3>
-            <p className="mt-2 text-[15px] leading-relaxed text-muted">{feature.text}</p>
+            <h3 className="mt-5 text-lg font-bold">{t(feature.title)}</h3>
+            <p className="mt-2 text-[15px] leading-relaxed text-muted">{t(feature.text)}</p>
           </article>
         ))}
       </div>
@@ -154,11 +157,14 @@ const SCREEN_TABS: Array<{ id: 'desktop' | 'iphone' | 'android'; label: string }
   { id: 'android', label: 'Android' },
 ]
 
-function Screens() {
-  const [tab, setTab] = useState<(typeof SCREEN_TABS)[number]['id']>('desktop')
+function Screens({ main }: { main?: PlatformId }) {
+  // На телефоне первыми показываем снимки телефона: снимки компьютера на узком экране нечитаемы.
+  const [tab, setTab] = useState<(typeof SCREEN_TABS)[number]['id']>(
+    main === 'ios' ? 'iphone' : main === 'android' ? 'android' : 'desktop',
+  )
   return (
-    <Section id="screens" eyebrow="Скриншоты" title="Один плеер — три характера" lead="Интерфейс подстраивается под систему, а возможности везде одинаковые.">
-      <div role="tablist" aria-label="Платформа" className="inline-flex rounded-full border border-line bg-panel p-1">
+    <Section id="screens" eyebrow="Скриншоты" title="Один плеер — три характера" lead={t('Интерфейс подстраивается под систему, а возможности везде одинаковые.')}>
+      <div role="tablist" aria-label={t('Платформа')} className="inline-flex rounded-full border border-line bg-panel p-1">
         {SCREEN_TABS.map((one) => (
           <button
             key={one.id}
@@ -167,7 +173,7 @@ function Screens() {
             onClick={() => setTab(one.id)}
             className={`rounded-full px-5 py-2 text-sm font-semibold transition ${tab === one.id ? 'bg-accent text-night' : 'text-muted hover:text-ink'}`}
           >
-            {one.label}
+            {t(one.label)}
           </button>
         ))}
       </div>
@@ -181,8 +187,8 @@ function Screens() {
               ['desktop-settings-light', 'Светлая тема и настройки оформления'],
             ].map(([name, caption]) => (
               <figure key={name}>
-                <img src={`/shots/${name}.webp`} alt={caption} loading="lazy" width={1600} height={1000} className="w-full rounded-xl border border-line" />
-                <figcaption className="mt-3 text-sm text-muted">{caption}</figcaption>
+                <img src={`/shots/${name}.webp`} alt={t(caption!)} loading="lazy" width={1600} height={1000} className="w-full rounded-xl border border-line" />
+                <figcaption className="mt-3 text-sm text-muted">{t(caption!)}</figcaption>
               </figure>
             ))}
           </div>
@@ -203,8 +209,8 @@ function Screens() {
                 ]
             ).map(([name, caption]) => (
               <figure key={name}>
-                <Phone src={`/shots/${name}.webp`} alt={caption!} />
-                <figcaption className="mt-3 text-center text-sm text-muted">{caption}</figcaption>
+                <Phone src={`/shots/${name}.webp`} alt={t(caption!)} />
+                <figcaption className="mt-3 text-center text-sm text-muted">{t(caption!)}</figcaption>
               </figure>
             ))}
           </div>
@@ -231,7 +237,7 @@ function PlatformIcon({ id }: { id: PlatformId }) {
 
 function Download({ main, release }: { main?: PlatformId; release: ReleaseInfo }) {
   return (
-    <Section id="download" eyebrow="Скачать" title="Поставь на все свои устройства" lead={release.version ? `Сейчас актуальна версия ${release.version}. Дальше приложение обновится само.` : 'Дальше приложение обновится само.'}>
+    <Section id="download" eyebrow="Скачать" title="Поставь на все свои устройства" lead={release.version ? t('Сейчас актуальна версия {version}. Дальше приложение обновится само.', { version: release.version }) : t('Дальше приложение обновится само.')}>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {PLATFORMS.map((platform) => {
           const href = downloadUrl(platform)
@@ -245,22 +251,22 @@ function Download({ main, release }: { main?: PlatformId; release: ReleaseInfo }
                 </span>
                 <div>
                   <h3 className="text-lg font-bold">{platform.name}</h3>
-                  <p className="text-sm text-muted">{platform.detail}</p>
+                  <p className="text-sm text-muted">{t(platform.detail)}</p>
                 </div>
-                {highlighted && <span className="ml-auto shrink-0 whitespace-nowrap rounded-full bg-accent/15 px-2.5 py-1 text-xs font-semibold text-accent">Твоя система</span>}
+                {highlighted && <span className="ml-auto shrink-0 whitespace-nowrap rounded-full bg-accent/15 px-2.5 py-1 text-xs font-semibold text-accent">{t('Твоя система')}</span>}
               </div>
-              <p className="mt-4 flex-1 text-sm leading-relaxed text-muted">{platform.note}</p>
+              <p className="mt-4 flex-1 text-sm leading-relaxed text-muted">{t(platform.note)}</p>
               {href ? (
                 <a href={href} className={`mt-6 rounded-xl px-4 py-3 text-center text-sm font-bold ${highlighted ? 'bg-accent text-night hover:bg-[#b9a3fb]' : 'border border-line hover:border-accent/60'}`}>
-                  {platform.action}
+                  {t(platform.action)}
                   {size ? <span className="font-medium opacity-70"> · {megabytes(size)}</span> : null}
                 </a>
               ) : (
-                <span className="mt-6 rounded-xl border border-dashed border-line px-4 py-3 text-center text-sm font-semibold text-muted">{platform.action}</span>
+                <span className="mt-6 rounded-xl border border-dashed border-line px-4 py-3 text-center text-sm font-semibold text-muted">{t(platform.action)}</span>
               )}
               {platform.alt && (
                 <a href={`${BASE}/${platform.alt.file}`} className="mt-2 rounded-xl border border-line px-4 py-2.5 text-center text-sm font-semibold text-muted hover:border-accent/60 hover:text-ink">
-                  {platform.alt.action}
+                  {t(platform.alt.action)}
                 </a>
               )}
             </article>
@@ -268,17 +274,20 @@ function Download({ main, release }: { main?: PlatformId; release: ReleaseInfo }
         })}
       </div>
       <p className="mt-6 text-sm text-muted">
-        Все файлы — на{' '}
+        {t('Все файлы — на')}{' '}
         <a className="text-accent underline-offset-4 hover:underline" href="https://github.com/RAZEX0LOL/nocturne-releases/releases/tag/updates">
           GitHub
         </a>
-        . Каждое обновление подписано: приложение не поставит файл, который подменили по дороге.
+        {t('. Каждое обновление подписано: приложение не поставит файл, который подменили по дороге.')}
       </p>
     </Section>
   )
 }
 
 const KIND_LABEL = { new: 'Новое', better: 'Лучше', fix: 'Исправлено' } as const
+
+/** Текст записи: по-английски берём перевод, если он есть, иначе показываем оригинал. */
+const text = (ru: string, en?: string) => (language === 'en' && en ? en : ru)
 const KIND_STYLE = {
   new: 'bg-accent/15 text-accent',
   better: 'bg-[#5eead4]/12 text-[#5eead4]',
@@ -287,7 +296,7 @@ const KIND_STYLE = {
 const PLATFORM_LABEL: Record<PlatformId, string> = { mac: 'Mac', windows: 'Windows', linux: 'Linux', android: 'Android', ios: 'iPhone' }
 
 const dateLabel = (date: string) =>
-  new Date(`${date}T12:00:00`).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
+  new Date(`${date}T12:00:00`).toLocaleDateString(language === 'en' ? 'en-GB' : 'ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
 
 /** Что нового в каждой версии: последние раскрыты, фильтр — по своей платформе. */
 function Changelog({ entries, main }: { entries: ChangelogEntry[]; main?: PlatformId }) {
@@ -299,8 +308,8 @@ function Changelog({ entries, main }: { entries: ChangelogEntry[]; main?: Platfo
     .filter((entry) => entry.changes.length)
   const visible = all ? shown : shown.slice(0, 3)
   return (
-    <Section id="changelog" eyebrow="Что нового" title="История версий" lead="Каждое обновление — что появилось, что стало лучше и что исправлено.">
-      <div role="radiogroup" aria-label="Платформа" className="flex flex-wrap gap-2">
+    <Section id="changelog" eyebrow="Что нового" title="История версий" lead={t('Каждое обновление — что появилось, что стало лучше и что исправлено.')}>
+      <div role="radiogroup" aria-label={t('Платформа')} className="flex flex-wrap gap-2">
         {(['all', ...platforms] as const).map((id) => (
           <button
             key={id}
@@ -311,8 +320,8 @@ function Changelog({ entries, main }: { entries: ChangelogEntry[]; main?: Platfo
               filter === id ? 'border-accent bg-accent text-night' : 'border-line text-muted hover:text-ink'
             }`}
           >
-            {id === 'all' ? 'Все' : PLATFORM_LABEL[id]}
-            {id === main && <span className="ml-1.5 opacity-70">· твоя</span>}
+            {id === 'all' ? t('Все') : PLATFORM_LABEL[id]}
+            {id === main && <span className="ml-1.5 opacity-70">{language === 'en' ? '· yours' : '· твоя'}</span>}
           </button>
         ))}
       </div>
@@ -323,18 +332,18 @@ function Changelog({ entries, main }: { entries: ChangelogEntry[]; main?: Platfo
             <article className="card rounded-2xl p-6">
               <header className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                 <h3 className="text-xl font-extrabold">{entry.version}</h3>
-                {index === 0 && filter === 'all' && <span className="rounded-full bg-accent/15 px-2 py-0.5 text-xs font-semibold text-accent">Последняя</span>}
+                {index === 0 && filter === 'all' && <span className="rounded-full bg-accent/15 px-2 py-0.5 text-xs font-semibold text-accent">{t('Последняя')}</span>}
                 <span className="text-sm text-muted">
                   {dateLabel(entry.date)} · {entry.platforms.map((id) => PLATFORM_LABEL[id]).join(', ')}
                 </span>
               </header>
-              <p className="mt-2 font-semibold">{entry.summary}</p>
+              <p className="mt-2 font-semibold">{text(entry.summary, entry.summary_en)}</p>
               <ul className="mt-4 space-y-2.5">
                 {entry.changes.map((change) => (
                   <li key={change.text} className="flex gap-3 text-[15px] leading-relaxed">
-                    <span className={`mt-0.5 h-fit shrink-0 rounded-md px-2 py-0.5 text-xs font-semibold ${KIND_STYLE[change.kind]}`}>{KIND_LABEL[change.kind]}</span>
+                    <span className={`mt-0.5 h-fit shrink-0 rounded-md px-2 py-0.5 text-xs font-semibold ${KIND_STYLE[change.kind]}`}>{t(KIND_LABEL[change.kind])}</span>
                     <span className="text-muted">
-                      {change.text}
+                      {text(change.text, change.text_en)}
                       {change.platforms && filter === 'all' && (
                         <span className="ml-1.5 whitespace-nowrap text-xs text-muted/70">· {change.platforms.map((id) => PLATFORM_LABEL[id]).join(', ')}</span>
                       )}
@@ -348,7 +357,7 @@ function Changelog({ entries, main }: { entries: ChangelogEntry[]; main?: Platfo
       </ol>
       {shown.length > visible.length && (
         <button onClick={() => setAll(true)} className="mt-8 rounded-xl border border-line px-5 py-3 text-sm font-semibold hover:border-accent/60">
-          Показать все версии ({shown.length})
+          {t('Показать все версии ({n})', { n: shown.length })}
         </button>
       )}
     </Section>
@@ -361,8 +370,8 @@ const FAQ: Array<[string, ReactNode]> = [
     <>
       Navidrome — бесплатный сервер для своей музыкальной коллекции: ставится на домашний компьютер, NAS или VPS и раздаёт музыку по сети.
       Nocturne — плеер к нему. Подойдёт и любой другой сервер с API Subsonic.{' '}
-      <a className="text-accent underline-offset-4 hover:underline" href="https://www.navidrome.org/docs/installation/">
-        Как поставить Navidrome
+      <a className="text-accent underline-offset-4 hover:underline" href="/start">
+        Поставить за 10 минут
       </a>
     </>,
   ],
@@ -380,7 +389,7 @@ function Faq() {
         {FAQ.map(([question, answer]) => (
           <details key={question} className="group bg-panel/40 open:bg-panel/80">
             <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-6 py-5 text-left font-semibold">
-              {question}
+              {t(question)}
               <span className="text-xl text-muted transition group-open:rotate-45" aria-hidden="true">
                 +
               </span>
@@ -394,7 +403,7 @@ function Faq() {
 }
 
 export function App() {
-  const [release, setRelease] = useState<ReleaseInfo>({ sizes: {} })
+  const [release, setRelease] = useState<ReleaseInfo>({ version: BUILT_VERSION, sizes: {} })
   const [platform] = useState(detectPlatform)
   useEffect(() => {
     loadRelease().then(setRelease, () => undefined)
@@ -406,7 +415,7 @@ export function App() {
       <main>
         <Hero main={main} release={release} />
         <Features />
-        <Screens />
+        <Screens main={main?.id} />
         <Download main={main?.id} release={release} />
         <Changelog entries={release.changelog ?? (bundledChangelog.releases as ChangelogEntry[])} main={main?.id} />
         <Faq />
@@ -415,9 +424,9 @@ export function App() {
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 py-10 text-sm text-muted sm:flex-row sm:px-6">
           <div className="flex items-center gap-2.5">
             <Logo size={22} />
-            <span>Nocturne — плеер для Navidrome</span>
+            <span>{t('Nocturne — плеер для Navidrome')}</span>
           </div>
-          <span>Сделано для своей музыки · {new Date().getFullYear()}</span>
+          <span>{t('Сделано для своей музыки · {year}', { year: new Date().getFullYear() })}</span>
         </div>
       </footer>
     </>
