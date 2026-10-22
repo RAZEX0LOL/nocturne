@@ -17,7 +17,7 @@
 | `Nocturne/`, `NocturneWidget/`, `Tests/`, `UITests/` | iPhone/iPad и Mac (Catalyst) | Swift 6, SwiftUI, AVQueuePlayer |
 | `android/` | Android: `core/` (логика, тесты на JVM) + `app/` (UI) | Kotlin, Compose Material3, Media3 |
 | `desktop/` | Mac/Windows/Linux «файлом» | Tauri 2 (Rust) + React 19 + TypeScript + Tailwind 4, Web Audio |
-| `site/` | сайт https://nocturne.razex.online + чейнджлог `site/changelog.json` | Vite + React + Tailwind |
+| `site/` | сайт https://nocturne.razex.online (две страницы: главная и `/start`) + чейнджлог `site/changelog.json` | Vite + React + Tailwind |
 | `shared/` | общие кейсы (`cases/*.json`), мок-сервер, спецификация API | Python, JSON |
 | `scripts/` | выпуски и чейнджлог | zsh, bun |
 
@@ -85,7 +85,9 @@ Debug-вход: `adb shell am start -n app.nocturne.music/.MainActivity -e serve
 
 **Версия = `1.1.<число коммитов>`** везде (`git rev-list --count HEAD`), iOS-сборка = то же число.
 
-**Чейнджлог `site/changelog.json` пишется к каждому выпуску, по-русски, человеческим языком.**
+**Чейнджлог `site/changelog.json` пишется к каждому выпуску, по-русски, человеческим языком, плюс
+английский перевод в `summary_en` и `text_en` — сайт двуязычный, без перевода на английской версии
+останется русский текст.**
 Скрипты выпуска без записи не пустят (`bun scripts/changelog.ts check`). Порядок:
 1. закоммитить изменения → `N` коммитов;
 2. добавить запись с версией `1.1.<N+1>` и закоммитить **одним коммитом**;
@@ -95,6 +97,7 @@ Debug-вход: `adb shell am start -n app.nocturne.music/.MainActivity -e serve
 |---|---|---|
 | Android | `scripts/release-android.sh publish` | релиз `updates` в публичном `RAZEX0LOL/nocturne-releases` |
 | Mac + Windows | `scripts/release-desktop.sh publish --windows` | туда же; Mac подписывается Developer ID и нотаризуется |
+| Linux | `scripts/release-linux.sh publish` | собирается в контейнере на `razex-home`, подписывается здесь |
 | iPhone | `set -a; source ~/.config/razex-panel/asc.env; set +a; zsh scripts/release.sh upload` | TestFlight, «Что тестировать» заполняется из чейнджлога |
 | Mac в TestFlight | `zsh scripts/release.sh mac-upload` | TestFlight (Catalyst) |
 | Сайт | `site/deploy/deploy.sh` (`--nginx` — ещё и конфиг) | nl, `/var/www/nocturne` |

@@ -53,6 +53,19 @@ scripts/release-android.sh publish  # и выложить: установлен�
 (`versionCode`, `url`, `sha256`, `notes`). Приложение скачивает APK, сверяет сумму и подпись и
 ставит поверх через системный установщик.
 
+## Linux
+
+```
+scripts/release-linux.sh          # AppImage и .deb в build/linux-release
+scripts/release-linux.sh publish  # и выложить
+```
+
+Tauri для Linux нужен сам Linux, поэтому исходники уезжают на домашний сервер (`razex-home`) и
+собираются там в контейнере `razex-builder` — том же, которым пользуется razex-panel. Сборка идёт
+без подписи; AppImage подписывает уже Mac, когда файл вернулся, так что ключ обновлений никуда не
+уходит. Контейнеру нужны явные `--dns`: на домашнем сервере `resolv.conf` указывает на локальный
+stub, которого внутри контейнера нет.
+
 ## Mac, Windows (файлом)
 
 ```
