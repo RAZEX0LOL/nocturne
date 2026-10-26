@@ -1,4 +1,5 @@
 import XCTest
+import AVFoundation
 @testable import NocturneCore
 
 /// Runs the cross-platform contract from `shared/cases` against this implementation.
@@ -51,6 +52,35 @@ final class ContractTests: XCTestCase {
 
     private func cases(_ file: String, _ key: String = "cases") throws -> [[String: Any]] {
         try XCTUnwrap(load(file)[key] as? [[String: Any]], "\(file) has no \(key)")
+    }
+
+    func testDemoAudioResourcesAreDecodableAndMatchCatalog() async throws {
+        let assets = Self.casesFolder.deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Nocturne/Resources/Assets.xcassets")
+        var checked = Set<String>()
+        for album in DemoLibrary.albums {
+            let songs = DemoLibrary.songs(for: album)
+            XCTAssertEqual(album.songCount, songs.count)
+            for song in songs {
+                let asset = try XCTUnwrap(DemoLibrary.audioAsset(for: song.id))
+                guard checked.insert(asset).inserted else { continue }
+                let url = assets.appendingPathComponent("\(asset).dataset/sample.m4a")
+                let tracks = try await AVURLAsset(url: url).loadTracks(withMediaType: .audio)
+                XCTAssertEqual(tracks.count, 1)
+                if asset == "DemoAudio4" { XCTAssertEqual(tracks.first?.trackID, 7) }
+                let file = try AVAudioFile(forReading: url)
+                let duration = Double(file.length) / file.processingFormat.sampleRate
+                XCTAssertEqual(duration, try XCTUnwrap(song.duration), accuracy: 0.1)
+                let buffer = try XCTUnwrap(AVAudioPCMBuffer(pcmFormat: file.processingFormat, frameCapacity: 22050))
+                try file.read(into: buffer)
+                let samples = try XCTUnwrap(buffer.floatChannelData?[0])
+                let energy = (0..<Int(buffer.frameLength)).reduce(0.0) { $0 + Double(samples[$1] * samples[$1]) }
+                XCTAssertGreaterThan(energy / Double(buffer.frameLength), 0.001, "\(asset) не должен быть тишиной")
+            }
+        }
+        XCTAssertEqual(checked.count, 5)
+        XCTAssertNil(DemoLibrary.audioAsset(for: "demo-0"))
+        XCTAssertNil(DemoLibrary.audioAsset(for: "demo-0-5"))
+        XCTAssertNil(DemoLibrary.audioAsset(for: "server-track"))
     }
 
     // MARK: - credentials.json

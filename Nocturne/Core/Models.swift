@@ -158,17 +158,27 @@ enum DemoLibrary {
     // Названия демомедиатеки переводятся вместе с интерфейсом: на английском устройстве русские
     // альбомы выглядели бы чужими — и в App Store тоже.
     static let albums: [Album] = [
-        Album(id: "demo-0", name: String(localized: "Параллели"), artist: String(localized: "Свет внутри"), coverArt: "demo-0", songCount: 8, year: 2025),
-        Album(id: "demo-1", name: String(localized: "Тихие дни"), artist: String(localized: "Корали"), coverArt: "demo-1", songCount: 10, year: 2024),
-        Album(id: "demo-2", name: String(localized: "Где-то дальше"), artist: String(localized: "Монолит"), coverArt: "demo-2", songCount: 6, year: 2025),
-        Album(id: "demo-3", name: String(localized: "Поздний июль"), artist: String(localized: "Небо рядом"), coverArt: "demo-3", songCount: 9, year: 2024),
-        Album(id: "demo-4", name: "Afterglow", artist: "North Coast", coverArt: "demo-4", songCount: 7, year: 2025),
-        Album(id: "demo-5", name: String(localized: "Сны на повторе"), artist: String(localized: "Каменные реки"), coverArt: "demo-5", songCount: 12, year: 2023)
+        Album(id: "demo-0", name: String(localized: "Параллели"), artist: String(localized: "Свет внутри"), coverArt: "demo-0", songCount: 5, year: 2025),
+        Album(id: "demo-1", name: String(localized: "Тихие дни"), artist: String(localized: "Корали"), coverArt: "demo-1", songCount: 5, year: 2024),
+        Album(id: "demo-2", name: String(localized: "Где-то дальше"), artist: String(localized: "Монолит"), coverArt: "demo-2", songCount: 5, year: 2025),
+        Album(id: "demo-3", name: String(localized: "Поздний июль"), artist: String(localized: "Небо рядом"), coverArt: "demo-3", songCount: 5, year: 2024),
+        Album(id: "demo-4", name: "Afterglow", artist: "North Coast", coverArt: "demo-4", songCount: 5, year: 2025),
+        Album(id: "demo-5", name: String(localized: "Сны на повторе"), artist: String(localized: "Каменные реки"), coverArt: "demo-5", songCount: 5, year: 2023)
     ]
+    /// Только реальные элементы демокаталога: серверный ID с похожим префиксом не подходит.
+    static func audioAsset(for songID: String) -> String? {
+        for album in albums {
+            for track in 0..<5 where songID == "\(album.id)-\(track)" {
+                return "DemoAudio\(track)"
+            }
+        }
+        return nil
+    }
+
     static func songs(for album: Album) -> [Song] {
         [String(localized: "Первый свет"), String(localized: "Между нами"), String(localized: "Тишина"), "Afterglow", String(localized: "Остаться")].enumerated().map {
             Song(id: "\(album.id)-\($0.offset)", title: $0.element, artist: album.artist,
-                 album: album.name, coverArt: album.coverArt, duration: Double(210 + $0.offset * 17), track: $0.offset + 1)
+                 album: album.name, coverArt: album.coverArt, duration: 24, track: $0.offset + 1)
         }
     }
 }

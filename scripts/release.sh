@@ -19,6 +19,7 @@ fi
 if [[ "${1:-}" == "mac-upload" ]]; then
   # The Mac build ships under the same App Store Connect record as iOS (same bundle id),
   # as its macOS platform, so its build numbers are counted separately from the iOS ones.
+  bun scripts/changelog.ts check "1.1.$BUILD_NUMBER" mac
   OUT=build/release-mac
   rm -rf "$OUT" && mkdir -p "$OUT"
   xcodebuild -project Nocturne.xcodeproj -scheme Nocturne -configuration Release \
@@ -27,6 +28,7 @@ if [[ "${1:-}" == "mac-upload" ]]; then
   sed 's|<string>export</string>|<string>upload</string>|' scripts/ExportOptions.plist > "$OUT/ExportOptions.plist"
   xcodebuild -exportArchive -archivePath "$OUT/Nocturne.xcarchive" -exportPath "$OUT" \
     -exportOptionsPlist "$OUT/ExportOptions.plist" -allowProvisioningUpdates "${AUTH[@]}"
+  bun scripts/changelog.ts testflight "$BUILD_NUMBER" mac
   echo "Mac build $BUILD_NUMBER sent to App Store Connect"
   exit 0
 fi

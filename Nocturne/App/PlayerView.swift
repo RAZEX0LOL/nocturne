@@ -17,6 +17,7 @@ struct MiniPlayer: View {
                         Spacer(minLength: 0)
                     }.contentShape(Rectangle())
                 }.buttonStyle(.plain).accessibilityLabel(String(localized: "Открыть плеер: \(song.title)"))
+                    .accessibilityIdentifier("player.open")
                 Button { player.toggle() } label: {
                     if player.isBuffering { ProgressView().frame(width: 44, height: 44) }
                     else { Image(systemName: player.isPlaying ? "pause.fill" : "play.fill").frame(width: 44, height: 44) }
@@ -113,6 +114,7 @@ struct PlayerView: View {
                     HStack(alignment: .center) {
                         VStack(alignment: .leading, spacing: 7) {
                             Text(player.current?.title ?? String(localized: "Ничего не играет")).font(.title2.bold()).lineLimit(2)
+                                .accessibilityIdentifier("player.title")
                             Text(player.current?.artist ?? "").font(.title3).foregroundStyle(Theme.secondary).lineLimit(1)
                         }
                         Spacer()
@@ -147,6 +149,7 @@ struct PlayerView: View {
                         }.accessibilityLabel(String(localized: "Позиция воспроизведения"))
                         HStack {
                             Text(timeLabel(scrubbing ? position : player.elapsed))
+                                .accessibilityIdentifier("player.elapsed")
                             Spacer()
                             Text("−" + timeLabel(max(0, player.duration - (scrubbing ? position : player.elapsed))))
                         }.font(.caption.monospacedDigit()).foregroundStyle(Theme.secondary)
@@ -165,8 +168,9 @@ struct PlayerView: View {
                                 else { Image(systemName: player.isPlaying ? "pause.fill" : "play.fill").font(.system(size: 31)) }
                             }
                         }.accessibilityLabel(player.isPlaying ? String(localized: "Пауза") : String(localized: "Воспроизвести"))
+                            .accessibilityIdentifier("player.toggle")
                         Spacer()
-                        Button { player.advance() } label: { Image(systemName: "forward.end.fill").font(.title).frame(width: 44, height: 44) }.accessibilityLabel(String(localized: "Следующий трек"))
+                        Button { player.advance() } label: { Image(systemName: "forward.end.fill").font(.title).frame(width: 44, height: 44) }.accessibilityLabel(String(localized: "Следующий трек")).accessibilityIdentifier("player.next")
                         Spacer()
                         Button { player.cycleRepeat() } label: {
                             Image(systemName: player.repeatMode == .one ? "repeat.1" : "repeat").frame(width: 44, height: 44).foregroundStyle(player.repeatMode == .off ? Theme.primary : Theme.accent)

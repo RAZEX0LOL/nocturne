@@ -511,7 +511,7 @@ struct AlbumRow: View {
                 }
                 Spacer(minLength: 0)
                 Image(systemName: "chevron.right").font(.caption).foregroundStyle(Theme.secondary)
-            }.padding(.vertical, 4)
+            }.padding(.vertical, 4).contentShape(Rectangle())
         }.buttonStyle(.plain)
     }
 }

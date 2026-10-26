@@ -7,7 +7,8 @@ final class NocturneUITests: XCTestCase {
     }
 
     @MainActor private func selectTab(_ name: String, in app: XCUIApplication) {
-        let tab = app.tabBars.buttons[name]
+        // На iPad вкладки находятся в верхней панели, которая не всегда имеет тип TabBar.
+        let tab = app.buttons[name].firstMatch
         XCTAssertTrue(tab.waitForExistence(timeout: 15))
         tab.tap()
         let selected = XCTNSPredicateExpectation(predicate: NSPredicate(format: "selected == true"), object: tab)
@@ -29,8 +30,9 @@ final class NocturneUITests: XCTestCase {
         app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Параллели")).firstMatch.tap()
         XCTAssertTrue(app.buttons["Слушать"].waitForExistence(timeout: 5))
         app.buttons["Слушать"].tap()
-        XCTAssertTrue(app.alerts["Воспроизведение"].waitForExistence(timeout: 5))
-        app.alerts.buttons["Понятно"].tap()
+        XCTAssertTrue(app.buttons["Пауза"].waitForExistence(timeout: 10))
+        XCTAssertFalse(app.alerts["Воспроизведение"].exists)
+        app.buttons["Пауза"].tap()
         selectTab("Поиск", in: app)
         let search = app.searchFields.firstMatch
         XCTAssertTrue(search.waitForExistence(timeout: 5))
@@ -41,6 +43,63 @@ final class NocturneUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Треки"].waitForExistence(timeout: 5))
         let attachment = XCTAttachment(screenshot: app.screenshot())
         attachment.name = "Search results"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+    }
+
+    /// Без mock-сервера: настоящие аудиоресурсы из Release-сборки должны играть на чистой установке.
+    @MainActor func testDemoAudioPlayback() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-AppleLanguages", "(ru)", "-AppleLocale", "ru_RU"]
+        app.launch()
+        let demo = app.buttons["Посмотреть демоверсию"]
+        XCTAssertTrue(demo.waitForExistence(timeout: 20))
+        demo.tap()
+        selectTab("Медиатека", in: app)
+        let album = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Параллели")).firstMatch
+        XCTAssertTrue(album.waitForExistence(timeout: 15))
+        let play = app.buttons["Слушать"]
+        for _ in 0..<3 where !play.exists {
+            album.tap()
+            _ = play.waitForExistence(timeout: 5)
+        }
+        XCTAssertTrue(play.exists)
+        play.tap()
+        let open = app.buttons["player.open"]
+        XCTAssertTrue(open.waitForExistence(timeout: 10))
+        open.tap()
+        let elapsed = app.staticTexts["player.elapsed"]
+        XCTAssertTrue(elapsed.waitForExistence(timeout: 10))
+        func waitForAudio() {
+            let advancing = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+                guard let label = elapsed.label.split(separator: ":").last, let seconds = Int(label) else { return false }
+                return seconds >= 1
+            }, object: nil)
+            XCTAssertEqual(XCTWaiter.wait(for: [advancing], timeout: 10), .completed, "AVPlayer не продвигается")
+            XCTAssertFalse(app.alerts["Воспроизведение"].exists)
+        }
+        for title in ["Первый свет", "Между нами", "Тишина", "Afterglow", "Остаться"] {
+            let changed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", title), object: app.staticTexts["player.title"])
+            XCTAssertEqual(XCTWaiter.wait(for: [changed], timeout: 10), .completed)
+            waitForAudio()
+            if title == "Первый свет" {
+                app.buttons["player.toggle"].tap()
+                XCTAssertEqual(app.buttons["player.toggle"].label, "Воспроизвести")
+                let paused = elapsed.label
+                let moved = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label != %@", paused), object: elapsed)
+                moved.isInverted = true
+                XCTAssertEqual(XCTWaiter.wait(for: [moved], timeout: 2), .completed)
+                app.buttons["player.toggle"].tap()
+                let resumed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label != %@", paused), object: elapsed)
+                XCTAssertEqual(XCTWaiter.wait(for: [resumed], timeout: 5), .completed)
+                // Проверяем автоматический переход в конце файла, а не только реакцию кнопки Next.
+                app.sliders["Позиция воспроизведения"].adjust(toNormalizedSliderPosition: 0.95)
+            } else if title != "Остаться" {
+                app.buttons["player.next"].tap()
+            }
+        }
+        let attachment = XCTAttachment(screenshot: app.screenshot())
+        attachment.name = "Bundled demo audio playing"
         attachment.lifetime = .keepAlways
         add(attachment)
     }
@@ -99,7 +158,13 @@ final class NocturneUITests: XCTestCase {
             _ = last.waitForExistence(timeout: 5)
         }
         XCTAssertTrue(last.exists, "страница альбома не открылась")
-        last.tap()
+        let mini = app.buttons["player.open"]
+        for _ in 0..<3 {
+            last.tap()
+            let started = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label CONTAINS %@", "Тестовый трек 3"), object: mini)
+            if XCTWaiter.wait(for: [started], timeout: 3) == .completed { break }
+        }
+        XCTAssertTrue(mini.label.contains("Тестовый трек 3"), "нажатие не запустило выбранный серверный трек")
         // Трек 8 секунд, потом очередь кончается — должен заиграть похожий, которого не было в альбоме.
         let similar = app.staticTexts["Похожий трек"]
         XCTAssertTrue(similar.waitForExistence(timeout: 30), "после конца альбома не заиграла похожая музыка")

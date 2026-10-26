@@ -41,6 +41,10 @@ final class PlayerStore {
     @ObservationIgnored private let player = AVQueuePlayer()
     @ObservationIgnored private var client: NavidromeClient?
     @ObservationIgnored private var currentItem: AVPlayerItem?
+    @ObservationIgnored private var preparingItem: AVPlayerItem?
+    @ObservationIgnored private var preparationTask: Task<Void, Never>?
+    @ObservationIgnored private var nextPreparationTask: Task<Void, Never>?
+    @ObservationIgnored private var playbackGeneration = UUID()
     /// Preloaded item for the next queue position, so tracks change without a gap.
     @ObservationIgnored private var nextItem: (item: AVPlayerItem, position: Int)?
     @ObservationIgnored private var retryCount = 0
@@ -111,11 +115,14 @@ final class PlayerStore {
 
     /// Without a server (offline or on-device mode) only local and downloaded tracks can play.
     private var offlineOnly: Bool { client == nil || LibraryStore.shared.isOffline }
-    func isPlayable(_ song: Song) -> Bool { !offlineOnly || localFile?(song.id) != nil || directStreams[song.id] != nil }
+    func isPlayable(_ song: Song) -> Bool {
+        if LibraryStore.shared.isDemo, DemoLibrary.audioAsset(for: song.id) != nil { return true }
+        return !offlineOnly || localFile?(song.id) != nil || directStreams[song.id] != nil
+    }
 
     func play(_ songs: [Song], at index: Int = 0, shuffle: Bool? = nil, client: NavidromeClient?) {
         guard songs.indices.contains(index) else { return }
-        self.client = client ?? self.client
+        self.client = LibraryStore.shared.isDemo ? nil : (client ?? self.client)
         var list = songs, start = index
         if offlineOnly {
             // Keep only what is on the phone; the tapped track must be one of them.
@@ -214,7 +221,7 @@ final class PlayerStore {
     func toggle() { isPlaying ? pause() : resume() }
 
     func pause() {
-        isPlaying = false
+        isPlaying = false; isBuffering = false
         resumeAfterInterruption = false
         player.pause()
         updateNowPlaying()
@@ -277,6 +284,8 @@ final class PlayerStore {
     func stop() {
         setSleepTimer(minutes: nil)
         isPlaying = false; isBuffering = false
+        playbackGeneration = UUID()
+        preparationTask?.cancel(); nextPreparationTask?.cancel(); preparingItem = nil
         player.pause(); player.removeAllItems()
         artworkTask?.cancel()
         currentItem = nil; nextItem = nil; itemObservations = [:]
@@ -306,6 +315,7 @@ final class PlayerStore {
         guard current == nil, let data = try? Data(contentsOf: Self.snapshotURL),
               let snapshot = try? JSONDecoder().decode(QueueSnapshot.self, from: data),
               snapshot.account == client.credentials.account || snapshot.account == Self.onDeviceAccount,
+              !snapshot.queue.items.contains(where: { DemoLibrary.audioAsset(for: $0.song.id) != nil }),
               let restored = snapshot.queue.current,
               !restored.song.id.hasPrefix("radio-") else { return }
         self.client = client
@@ -328,7 +338,9 @@ final class PlayerStore {
     func restoreOnDevice() {
         guard current == nil, let data = try? Data(contentsOf: Self.snapshotURL),
               let snapshot = try? JSONDecoder().decode(QueueSnapshot.self, from: data),
-              snapshot.account == Self.onDeviceAccount, snapshot.queue.current != nil else { return }
+              snapshot.account == Self.onDeviceAccount,
+              !snapshot.queue.items.contains(where: { DemoLibrary.audioAsset(for: $0.song.id) != nil }),
+              snapshot.queue.current != nil else { return }
         queue = snapshot.queue
         listening = snapshot.listening
         listening?.recover(pending: pendingScrobbles)
@@ -342,13 +354,15 @@ final class PlayerStore {
     }
 
     func save(force: Bool = false) {
-        guard !queue.isEmpty, force || Date().timeIntervalSince(lastSaved) > 10 else { return }
+        guard !LibraryStore.shared.isDemo, !queue.isEmpty, force || Date().timeIntervalSince(lastSaved) > 10 else { return }
         lastSaved = Date()
         syncToServer(soon: force)
         persistSnapshot()
     }
 
     private func persistSnapshot() {
+        // Демо — временная витрина: она не должна заменять личную очередь или попасть на сервер.
+        guard !LibraryStore.shared.isDemo else { return }
         let account = client?.credentials.account ?? Self.onDeviceAccount
         let snapshot = QueueSnapshot(account: account, queue: queue, elapsed: elapsed, listening: listening)
         guard let data = try? JSONEncoder().encode(snapshot) else { return }
@@ -414,22 +428,32 @@ final class PlayerStore {
         Log.player.notice("Start \(song.id, privacy: .public) at \(time, privacy: .public)s, retry \(isRetry, privacy: .public)")
         if !isRetry { retryCount = 0 }
         waitingForNetwork = false
-        player.removeAllItems()
+        playbackGeneration = UUID()
+        preparationTask?.cancel(); nextPreparationTask?.cancel()
+        currentItem = nil; nextItem = nil; preparingItem = item
+        player.pause(); player.removeAllItems()
         itemObservations = [:]
-        currentItem = item
-        nextItem = nil
-        observe(item)
-        player.insert(item, after: nil)
-        if time > 0 { item.seek(to: CMTime(seconds: time, preferredTimescale: 600), completionHandler: nil) }
         elapsed = time
         duration = song.duration ?? 0
         isPlaying = autoplay
-        if autoplay { activateAndPlay() }
+        isBuffering = autoplay
         if !isRetry && !continueListening {
             listening = nil; listeningEntry = nil
         }
         if !isRetry { artwork = nil; loadArtwork(for: song); reportNowPlaying() }
-        prepareNext()
+        let needsEffects = directStreams[song.id] == nil
+        preparationTask = Task { [weak self] in
+            if needsEffects { await AudioEffects.shared.attach(to: item, duration: song.duration) }
+            guard !Task.isCancelled, let self, self.preparingItem === item else { return }
+            self.preparingItem = nil
+            self.currentItem = item
+            self.observe(item)
+            self.player.insert(item, after: nil)
+            // Во время подготовки пользователь мог передвинуть ползунок или нажать паузу.
+            if self.elapsed > 0 { item.seek(to: CMTime(seconds: self.elapsed, preferredTimescale: 600), completionHandler: nil) }
+            if self.isPlaying { self.activateAndPlay() }
+            self.prepareNext()
+        }
         DownloadStore.shared.prepare(Array(queue.upcoming).map(\.song), currentID: current?.id)
         updateNowPlaying()
         save(force: true)
@@ -438,14 +462,30 @@ final class PlayerStore {
     private func makeItem(for song: Song) -> AVPlayerItem? {
         if let direct = directStreams[song.id] { return AVPlayerItem(url: direct) }
         let item: AVPlayerItem
-        if let local = localFile?(song.id) { item = AVPlayerItem(url: local) } else {
+        if LibraryStore.shared.isDemo, let asset = DemoLibrary.audioAsset(for: song.id) {
+            do { item = AVPlayerItem(url: try demoAudioURL(asset: asset)) }
+            catch { self.error = error.localizedDescription; return nil }
+        } else if let local = localFile?(song.id) { item = AVPlayerItem(url: local) } else {
             guard let url = streamURL(for: song) else { return nil }
             item = AVPlayerItem(url: url)
         }
-        AudioEffects.shared.attach(to: item, duration: song.duration)
         // На скорости 1,5× голос не должен становиться «мультяшным».
         item.audioTimePitchAlgorithm = .timeDomain
         return item
+    }
+
+    /// Фонограммы входят в Assets.car: AVPlayer нужен файловый URL, поэтому распаковываем атомарно.
+    /// Система может очистить кэш — следующий запуск трека заново извлечёт его без сети.
+    private func demoAudioURL(asset: String) throws -> URL {
+        let folder = URL.cachesDirectory.appendingPathComponent("demo-audio-v1", isDirectory: true)
+        let url = folder.appendingPathComponent(asset).appendingPathExtension("m4a")
+        if FileManager.default.fileExists(atPath: url.path) { return url }
+        guard let data = NSDataAsset(name: asset)?.data else {
+            throw CocoaError(.fileReadNoSuchFile)
+        }
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        try data.write(to: url, options: .atomic)
+        return url
     }
 
     private func streamURL(for song: Song) -> URL? {
@@ -457,20 +497,28 @@ final class PlayerStore {
 
     /// Keeps exactly one preloaded item after the current one, matching the queue's next position.
     private func prepareNext() {
+        nextPreparationTask?.cancel()
         if let next = nextItem {
             player.remove(next.item)
             itemObservations[ObjectIdentifier(next.item)] = nil
             nextItem = nil
         }
-        // Очередь на исходе — дописываем похожее заранее, чтобы следующий трек начался без паузы.
         if queue.nextPosition(automatic: true) == nil { extendWithSimilar() }
         guard let currentItem, player.items().contains(currentItem),
-              let position = queue.nextPosition(automatic: true),
-              let item = makeItem(for: queue.items[position].song),
-              player.canInsert(item, after: currentItem) else { return }
-        observe(item)
-        player.insert(item, after: currentItem)
-        nextItem = (item, position)
+              let position = queue.nextPosition(automatic: true) else { return }
+        let entry = queue.items[position]
+        guard let item = makeItem(for: entry.song) else { return }
+        let needsEffects = directStreams[entry.song.id] == nil
+        nextPreparationTask = Task { [weak self] in
+            if needsEffects { await AudioEffects.shared.attach(to: item, duration: entry.song.duration) }
+            guard !Task.isCancelled, let self, self.currentItem === currentItem,
+                  self.queue.nextPosition(automatic: true) == position,
+                  self.queue.items.indices.contains(position), self.queue.items[position].id == entry.id,
+                  self.player.items().contains(currentItem), self.player.canInsert(item, after: currentItem) else { return }
+            self.observe(item)
+            self.player.insert(item, after: currentItem)
+            self.nextItem = (item, position)
+        }
     }
 
     // MARK: - Бесконечное воспроизведение и скорость
@@ -712,7 +760,7 @@ final class PlayerStore {
     }
 
     private func statusChanged(_ status: AVPlayer.TimeControlStatus) {
-        let buffering = (status == .waitingToPlayAtSpecifiedRate && player.currentItem != nil) || waitingForNetwork
+        let buffering = (preparingItem != nil && isPlaying) || (status == .waitingToPlayAtSpecifiedRate && player.currentItem != nil) || waitingForNetwork
         guard buffering != isBuffering else { return }
         isBuffering = buffering
         updateNowPlaying()
@@ -738,6 +786,7 @@ final class PlayerStore {
         #if targetEnvironment(macCatalyst)
         if isPlaying { player.play() }
         #else
+        let generation = playbackGeneration
         Self.sessionQueue.async { [weak self] in
             var failure: String?
             do {
@@ -746,7 +795,10 @@ final class PlayerStore {
                 try session.setActive(true)
             } catch { failure = Log.describe(error) }
             let result = failure
-            Task { @MainActor in self?.sessionActivated(failure: result) }
+            Task { @MainActor in
+                guard let self, self.playbackGeneration == generation else { return }
+                self.sessionActivated(failure: result)
+            }
         }
         #endif
     }
@@ -758,7 +810,7 @@ final class PlayerStore {
             return
         }
         Log.player.error("Audio session: \(failure, privacy: .public)")
-        isPlaying = false
+        isPlaying = false; isBuffering = false
         error = String(localized: "Не удалось запустить аудио. Попробуй ещё раз.")
         updateNowPlaying()
         publishWidget()

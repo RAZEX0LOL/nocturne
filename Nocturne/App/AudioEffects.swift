@@ -66,15 +66,12 @@ final class AudioEffects: Sendable {
     /// Seconds of fade-in/out at track edges; 0 disables.
     var fadeSeconds: Double { UserDefaults.standard.double(forKey: Self.fadeKey) }
 
-    /// Attaches the EQ tap and fades before the item reaches the player: changing the mix of a playing
-    /// item makes CoreMedia rebuild its pipeline. Audio files almost always use track ID 1; if the loaded
-    /// asset says otherwise, the mix is rebuilt for the real track.
-    @MainActor func attach(to item: AVPlayerItem, duration: Double?) {
-        item.audioMix = mix(trackID: 1, duration: duration)
-        Task { @MainActor in
-            guard let track = try? await item.asset.loadTracks(withMediaType: .audio).first, track.trackID != 1 else { return }
-            item.audioMix = mix(trackID: track.trackID, duration: duration)
-        }
+    /// Микс готовится по реальной аудиодорожке до помещения item в AVQueuePlayer.
+    /// Замена audioMix уже играющего item пересобирает аудиотракт и может оставить тихий поток.
+    @MainActor func attach(to item: AVPlayerItem, duration: Double?) async {
+        guard let track = try? await item.asset.loadTracks(withMediaType: .audio).first,
+              !Task.isCancelled else { return }
+        item.audioMix = mix(trackID: track.trackID, duration: duration)
     }
 
     private func mix(trackID: CMPersistentTrackID, duration: Double?) -> AVAudioMix {

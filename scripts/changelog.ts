@@ -5,7 +5,7 @@
  *   bun scripts/changelog.ts check <версия> <платформа>   — есть ли запись; без неё выпускать нельзя
  *   bun scripts/changelog.ts notes <версия> <платформа>   — пункты строками «• …» для плашки обновления
  *   bun scripts/changelog.ts release-body                 — описание релиза «updates» на GitHub
- *   bun scripts/changelog.ts testflight <сборка>          — «Что тестировать» в TestFlight (нужны ASC_KEY_ID,
+ *   bun scripts/changelog.ts testflight <сборка> [ios|mac] — «Что тестировать» в TestFlight (нужны ASC_KEY_ID,
  *                                                           ASC_ISSUER_ID, ASC_KEY_PATH — как у release.sh)
  *
  * Описание релиза на GitHub — и для людей (Markdown), и для сайта: в скрытом комментарии лежит
@@ -89,15 +89,19 @@ async function asc(token: string, method: string, path: string, body?: object) {
 }
 
 /** «Что тестировать» у сборки: ждёт, пока App Store Connect её покажет (после загрузки — минуты). */
-async function testflight(build: string) {
-  const release = find(`1.1.${build}`, 'ios')
-  if (!release) throw new Error(`в site/changelog.json нет версии 1.1.${build} для iPhone`)
-  const text = [release.summary, '', ...changesFor(release, 'ios').map((change) => `• ${change.text}`)].join('\n').slice(0, 4000)
+async function testflight(build: string, platform: 'ios' | 'mac' = 'ios') {
+  const release = find(`1.1.${build}`, platform)
+  if (!release) throw new Error(`в site/changelog.json нет версии 1.1.${build} для ${PLATFORM[platform]}`)
+  const text = [release.summary, '', ...changesFor(release, platform).map((change) => `• ${change.text}`)].join('\n').slice(0, 4000)
   const app = process.env.ASC_APP_ID ?? '6814215090'
   for (let attempt = 0; attempt < 40; attempt++) {
     const token = await jwt()
-    const builds = await asc(token, 'GET', `/v1/builds?filter[app]=${app}&filter[version]=${build}&limit=1`)
-    const id = builds.data[0]?.id
+    const builds = await asc(token, 'GET', `/v1/builds?filter[app]=${app}&filter[version]=${build}&include=preReleaseVersion&limit=10`)
+    const included = (builds as unknown as { included?: { id: string; attributes: { platform: string } }[] }).included ?? []
+    const expected = platform === 'mac' ? 'MAC_OS' : 'IOS'
+    const id = builds.data.find((one: { id: string; relationships: { preReleaseVersion: { data: { id: string } } } }) =>
+      included.some((version) => version.id === one.relationships.preReleaseVersion.data.id && version.attributes.platform === expected),
+    )?.id
     if (id) {
       const existing = await asc(token, 'GET', `/v1/builds/${id}/betaBuildLocalizations`)
       const localization = existing.data.find((one: any) => one.attributes.locale.startsWith('ru')) ?? existing.data[0]
@@ -139,7 +143,7 @@ if (import.meta.main) {
       console.log(markdown(load()))
       break
     case 'testflight':
-      await testflight(first!)
+      await testflight(first!, second === 'mac' ? 'mac' : 'ios')
       break
     default:
       console.error('команды: check | notes | release-body | testflight')
