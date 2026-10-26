@@ -2,6 +2,68 @@
   "$comment": "Что нового в каждой версии. Пишется при выпуске: без записи скрипты выпуска версию не опубликуют. Версия = 1.1.<число коммитов>, как номер сборки. kind: new | better | fix. platforms: mac, windows, linux, android, ios; у пункта — если он не для всех платформ версии.",
   "releases": [
     {
+      "version": "1.1.79",
+      "date": "2026-10-26",
+      "platforms": [
+        "ios",
+        "mac",
+        "windows",
+        "linux",
+        "android"
+      ],
+      "summary": "Демомузыка без интернета и общий выпуск для всех платформ",
+      "summary_en": "Offline demo audio and a coordinated release for every platform",
+      "changes": [
+        {
+          "kind": "fix",
+          "text": "На iPhone, iPad и Mac в TestFlight демотреки теперь воспроизводятся без сервера и интернета: аудиопримеры включены в приложение.",
+          "text_en": "On iPhone, iPad and the TestFlight Mac app, demo tracks now play without a server or internet connection: audio samples are included in the app.",
+          "platforms": [
+            "ios",
+            "mac"
+          ]
+        },
+        {
+          "kind": "fix",
+          "text": "Демо больше не заменяет личную очередь и не переносит демотреки в подключённую медиатеку.",
+          "text_en": "The demo no longer overwrites your personal queue or carries demo tracks into a connected library.",
+          "platforms": [
+            "ios",
+            "mac"
+          ]
+        },
+        {
+          "kind": "fix",
+          "text": "На iPhone, iPad и Mac в TestFlight аудиоэффекты готовятся до запуска трека: устранена гонка при настройке звукового тракта.",
+          "text_en": "On iPhone, iPad and the TestFlight Mac app, audio effects are prepared before a track starts, removing a race during audio pipeline setup.",
+          "platforms": [
+            "ios",
+            "mac"
+          ]
+        },
+        {
+          "kind": "better",
+          "text": "Вся строка альбома принимает нажатие, включая пустое место рядом с названием.",
+          "text_en": "The entire album row is tappable, including empty space beside the title.",
+          "platforms": [
+            "ios",
+            "mac"
+          ]
+        },
+        {
+          "kind": "better",
+          "text": "Свежие сборки Android, Windows, Linux и Mac доступны под общей версией через встроенную проверку обновлений.",
+          "text_en": "Fresh Android, Windows, Linux and Mac builds are available under one version through the built-in update check.",
+          "platforms": [
+            "android",
+            "windows",
+            "linux",
+            "mac"
+          ]
+        }
+      ]
+    },
+    {
       "version": "1.1.77",
       "date": "2026-10-22",
       "platforms": ["android", "ios"],
