@@ -73,7 +73,9 @@ BUNDLE=desktop/src-tauri/target/release/bundle
 ARCH=$(uname -m)
 # Приложение Tauri уже подписал и нотаризовал; образ .dmg — отдельный файл: подписываем, отправляем
 # Apple и вшиваем ответ (staple), чтобы проверка проходила и без сети.
-DMG=$(find "$BUNDLE/dmg" -name '*.dmg' ! -name 'rw.*' | head -1)
+# В кэше остаются образы прошлых версий: публикуем только установщик текущего выпуска.
+DMG=$(find "$BUNDLE/dmg" -name "Nocturne_${VERSION}_*.dmg" ! -name 'rw.*' | head -1)
+[[ -n "$DMG" ]] || { echo "Нет DMG для $VERSION" >&2; exit 1; }
 codesign --force --sign "$APPLE_SIGNING_IDENTITY" --timestamp "$DMG"
 xcrun notarytool submit "$DMG" --key "$APPLE_API_KEY_PATH" --key-id "$APPLE_API_KEY" --issuer "$APPLE_API_ISSUER" --wait
 xcrun stapler staple "$DMG"
@@ -83,9 +85,9 @@ spctl -a -vv "$BUNDLE/macos/Nocturne.app"
 # В имени архива версия: файл на сервере не подменяется под тем же именем посреди чьей-то загрузки.
 cp "$BUNDLE/macos/Nocturne.app.tar.gz" "$OUT/Nocturne_${VERSION}_${ARCH}.app.tar.gz"
 cp "$BUNDLE/macos/Nocturne.app.tar.gz.sig" "$OUT/Nocturne_${VERSION}_${ARCH}.app.tar.gz.sig"
-find "$BUNDLE/dmg" -name '*.dmg' ! -name 'rw.*' -exec cp {} "$OUT/" \;
+cp "$DMG" "$OUT/"
 # Постоянные имена — для сайта: кнопка «Скачать» всегда ведёт на последнюю версию.
-find "$BUNDLE/dmg" -name '*.dmg' ! -name 'rw.*' -exec cp {} "$OUT/Nocturne-mac.dmg" \;
+cp "$DMG" "$OUT/Nocturne-mac.dmg"
 NOTES=$(bun scripts/changelog.ts notes "$VERSION" mac) python3 scripts/updater_manifest.py "$VERSION" "$OUT" "$BASE" darwin "$ARCH"
 
 # Windows с Мака: NSIS-установщик он же и обновление (ставится поверх в тихом режиме).

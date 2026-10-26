@@ -59,8 +59,8 @@ ssh "$HOST" "docker run --rm --dns 1.1.1.1 --dns 8.8.8.8 -v $REMOTE/src:/src -v 
   bun install --frozen-lockfile
   bunx tauri build --config src-tauri/tauri.linux.json --bundles deb,appimage
   rm -f /out/*
-  cp src-tauri/target/release/bundle/appimage/*.AppImage /out/
-  cp src-tauri/target/release/bundle/deb/*.deb /out/
+  cp src-tauri/target/release/bundle/appimage/*_${VERSION}_*.AppImage /out/
+  cp src-tauri/target/release/bundle/deb/*_${VERSION}_*.deb /out/
   chown -R $OWNER /out
 '"
 
@@ -68,7 +68,7 @@ rm -rf "$OUT" && mkdir -p "$OUT"
 scp -q "$HOST:$REMOTE/out/*" "$OUT/"
 
 # Обновлялка Linux берёт AppImage. Подписываем здесь — ключ дальше этого Mac не уходит.
-APPIMAGE=$(find "$OUT" -name '*.AppImage' | head -1)
+APPIMAGE=$(find "$OUT" -name "*_${VERSION}_*.AppImage" | head -1)
 [[ -n "$APPIMAGE" ]] || { echo "Сборка не отдала AppImage" >&2; exit 1; }
 # Имя с версией: файл на сервере не подменяется под тем же именем посреди чьей-то загрузки.
 VERSIONED="$OUT/Nocturne_${VERSION}_amd64.AppImage"
@@ -76,7 +76,7 @@ VERSIONED="$OUT/Nocturne_${VERSION}_amd64.AppImage"
 (cd desktop && bunx tauri signer sign "../$VERSIONED")
 # Постоянное имя — для кнопки на сайте.
 cp "$VERSIONED" "$OUT/Nocturne-linux.AppImage"
-DEB=$(find "$OUT" -name '*.deb' | head -1)
+DEB=$(find "$OUT" -name "*_${VERSION}_*.deb" | head -1)
 [[ -n "$DEB" ]] && cp "$DEB" "$OUT/Nocturne-linux.deb"
 
 NOTES=$(bun scripts/changelog.ts notes "$VERSION" linux) python3 scripts/updater_manifest.py "$VERSION" "$OUT" "$BASE" linux x86_64
