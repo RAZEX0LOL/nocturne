@@ -42,6 +42,38 @@ zsh scripts/release.sh mac-upload  # Mac Catalyst туда же, в ту же з
 (ссылка на сайте) — только после проверки Apple: добавить сборку в группу и отправить
 `betaAppReviewSubmissions` через API App Store Connect.
 
+### Полный доступ для App Review
+
+После повторного отказа 2.1(a) для проверки используется обычный вход на отдельный Navidrome:
+`https://nocturne.razex.online/review-server`. Встроенная демомедиатека не заменяет этот доступ:
+в ней нет серверных операций с избранным, плейлистами и загрузками.
+
+- VPS `nl`, `/opt/nocturne-review/compose.yml`, контейнер `nocturne-review`; собственные data/music,
+  порт только `127.0.0.1:4534`. Личная медиатека не подключается.
+- Конфигурация: `deploy/review-server/compose.yml`; HTTPS-прокси — `site/deploy/nginx.conf`.
+  При выкладке сайта сохранять блок `/review-server/` и сертификаты.
+- Учётные данные: `~/.nocturne/review-server.env` (`600`). `REVIEW_USERNAME`/`REVIEW_PASSWORD` —
+  обычный пользователь; отдельный администратор — только для обслуживания. Значения не печатать.
+- Логин/пароль ревьюера заносятся в **App Review Information** для обеих платформ и в сведения
+  **TestFlight App Review**; `demoAccountRequired=true`. В Notes — адрес и шаги обычного входа,
+  без пароля. Сервер и учётку держать доступными весь срок проверки.
+- Медиатека: `python3 scripts/generate-review-library.py build/review-music`, затем rsync на VPS.
+  6 альбомов / 30 треков из пяти оригинальных встроенных фонограмм, без чужих записей.
+- Проверка снаружи: `python3 scripts/check-review-server.py`. Проверяет авторизацию, каталог,
+  поиск, избранное, временный плейлист с удалением, все потоки, Range и скачивание.
+  Использует User-Agent приложения: Cloudflare Browser Integrity Check отклоняет Python-агент.
+- UI-регрессия: `testAppReviewServerLoginAndPlayback` проходит форму в Release, без `--connect`.
+  `REVIEW_SERVER_URL`, `REVIEW_USERNAME`, `REVIEW_PASSWORD` передаются в окружение тестового
+  runner через защищённый `.xctestrun` в `~/.nocturne/`, не в репозиторий и не в аргументы команды.
+  Если DNS симулятора возвращает CFNetwork `-1003`, для UI-проверки используется SSH-туннель
+  `14534 → nl:127.0.0.1:4534` и локальный адрес `http://127.0.0.1:14534/review-server` только
+  в окружении runner. Публичный HTTPS проверяется отдельно; это ограничение нужно указывать
+  в отчёте. DNS/proxy всего Mac ради теста не менять.
+
+Отказ 2026-10-29 относится к 1.1.81 (81), iPad Air 11-inch M3 / iPadOS 27.0.1.
+Наличие аудио в архиве и движение таймера сами по себе не доказывают слышимый звук на устройстве.
+Не объявлять проблему демоплеера исправленной без воспроизведения причины и повторной проверки.
+
 ## Android
 
 ```

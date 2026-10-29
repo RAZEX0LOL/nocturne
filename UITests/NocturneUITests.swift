@@ -10,11 +10,11 @@ final class NocturneUITests: XCTestCase {
         // На iPad вкладки находятся в верхней панели, которая не всегда имеет тип TabBar.
         let tab = app.buttons[name].firstMatch
         XCTAssertTrue(tab.waitForExistence(timeout: 15))
-        tab.tap()
+        tab.press(forDuration: 0.15)
         let selected = XCTNSPredicateExpectation(predicate: NSPredicate(format: "selected == true"), object: tab)
         if XCTWaiter.wait(for: [selected], timeout: 5) != .completed {
             // Во время появления системной панели первый тап может попасть в переходную анимацию.
-            tab.tap()
+            tab.press(forDuration: 0.15)
             let retry = XCTNSPredicateExpectation(predicate: NSPredicate(format: "selected == true"), object: tab)
             XCTAssertEqual(XCTWaiter.wait(for: [retry], timeout: 10), .completed)
         }
@@ -54,20 +54,18 @@ final class NocturneUITests: XCTestCase {
         app.launch()
         let demo = app.buttons["Посмотреть демоверсию"]
         XCTAssertTrue(demo.waitForExistence(timeout: 20))
-        demo.tap()
+        demo.press(forDuration: 0.15)
+        XCTAssertTrue(app.staticTexts["Недавно добавлено"].waitForExistence(timeout: 15), "Один тап должен открыть демомедиатеку")
         selectTab("Медиатека", in: app)
         let album = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Параллели")).firstMatch
         XCTAssertTrue(album.waitForExistence(timeout: 15))
         let play = app.buttons["Слушать"]
-        for _ in 0..<3 where !play.exists {
-            album.tap()
-            _ = play.waitForExistence(timeout: 5)
-        }
-        XCTAssertTrue(play.exists)
-        play.tap()
+        album.press(forDuration: 0.15)
+        XCTAssertTrue(play.waitForExistence(timeout: 10))
+        play.press(forDuration: 0.15)
         let open = app.buttons["player.open"]
         XCTAssertTrue(open.waitForExistence(timeout: 10))
-        open.tap()
+        open.press(forDuration: 0.15)
         let elapsed = app.staticTexts["player.elapsed"]
         XCTAssertTrue(elapsed.waitForExistence(timeout: 10))
         func waitForAudio() {
@@ -83,19 +81,19 @@ final class NocturneUITests: XCTestCase {
             XCTAssertEqual(XCTWaiter.wait(for: [changed], timeout: 10), .completed)
             waitForAudio()
             if title == "Первый свет" {
-                app.buttons["player.toggle"].tap()
+                app.buttons["player.toggle"].press(forDuration: 0.15)
                 XCTAssertEqual(app.buttons["player.toggle"].label, "Воспроизвести")
                 let paused = elapsed.label
                 let moved = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label != %@", paused), object: elapsed)
                 moved.isInverted = true
                 XCTAssertEqual(XCTWaiter.wait(for: [moved], timeout: 2), .completed)
-                app.buttons["player.toggle"].tap()
+                app.buttons["player.toggle"].press(forDuration: 0.15)
                 let resumed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label != %@", paused), object: elapsed)
                 XCTAssertEqual(XCTWaiter.wait(for: [resumed], timeout: 5), .completed)
                 // Проверяем автоматический переход в конце файла, а не только реакцию кнопки Next.
                 app.sliders["Позиция воспроизведения"].adjust(toNormalizedSliderPosition: 0.95)
             } else if title != "Остаться" {
-                app.buttons["player.next"].tap()
+                app.buttons["player.next"].press(forDuration: 0.15)
             }
         }
         let attachment = XCTAttachment(screenshot: app.screenshot())
@@ -127,6 +125,51 @@ final class NocturneUITests: XCTestCase {
             _ = address.waitForExistence(timeout: 10)
         }
         XCTAssertTrue(address.exists)
+    }
+
+    /// Обычный вход из Release-сборки: аргумент --connect обходит форму и не проверяет путь ревьюера.
+    @MainActor func testAppReviewServerLoginAndPlayback() throws {
+        let environment = ProcessInfo.processInfo.environment
+        guard let server = environment["REVIEW_SERVER_URL"],
+              let username = environment["REVIEW_USERNAME"],
+              let password = environment["REVIEW_PASSWORD"] else {
+            throw XCTSkip("Тестовый доступ задаётся в защищённом xctestrun вне репозитория")
+        }
+        let app = XCUIApplication()
+        app.launchArguments = ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
+        app.launch()
+        let address = app.textFields["https://music.example.com"]
+        XCTAssertTrue(address.waitForExistence(timeout: 20))
+        address.press(forDuration: 0.15); address.typeText(server)
+        let login = app.textFields["Username"]
+        XCTAssertTrue(login.exists)
+        login.press(forDuration: 0.15); login.typeText(username)
+        let secret = app.secureTextFields.firstMatch
+        secret.press(forDuration: 0.15); secret.typeText(password)
+        app.buttons["Connect"].press(forDuration: 0.15)
+        XCTAssertTrue(app.buttons["Settings"].waitForExistence(timeout: 45))
+        selectTab("Library", in: app)
+        let album = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Parallels")).firstMatch
+        XCTAssertTrue(album.waitForExistence(timeout: 45))
+        album.press(forDuration: 0.15)
+        let play = app.buttons["Play"]
+        XCTAssertTrue(play.waitForExistence(timeout: 15))
+        play.press(forDuration: 0.15)
+        let open = app.buttons["player.open"]
+        XCTAssertTrue(open.waitForExistence(timeout: 15))
+        open.press(forDuration: 0.15)
+        let elapsed = app.staticTexts["player.elapsed"]
+        XCTAssertTrue(elapsed.waitForExistence(timeout: 10))
+        let advancing = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            guard let text = elapsed.label.split(separator: ":").last, let seconds = Int(text) else { return false }
+            return seconds >= 2
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [advancing], timeout: 20), .completed)
+        XCTAssertFalse(app.alerts.firstMatch.exists)
+        let attachment = XCTAttachment(screenshot: app.screenshot())
+        attachment.name = "App Review server playback"
+        attachment.lifetime = .keepAlways
+        add(attachment)
     }
 
     /// Regression: theme colours were closures isolated to the main actor and crashed when

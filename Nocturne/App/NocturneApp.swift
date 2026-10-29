@@ -185,7 +185,7 @@ struct ConnectionView: View {
                         Task {
                             do {
                                 try await library.connect(server: server, username: username, password: password)
-                                player.stop(); password = ""; dismiss()
+                                player.stop(); password = ""; closeIfPresented()
                             } catch { self.error = LibraryStore.message(error) }
                             busy = false
                         }
@@ -198,13 +198,22 @@ struct ConnectionView: View {
                     if adding {
                         EmptyView()
                     } else if !library.isConnected {
-                        Button(String(localized: "Слушать музыку с \(Device.name)")) { player.stop(); library.useOnDevice(); dismiss() }
-                            .frame(maxWidth: .infinity).padding(.vertical, 8).disabled(busy)
-                        Button(String(localized: "Посмотреть демоверсию")) { player.stop(); library.useDemo(); dismiss() }
-                            .frame(maxWidth: .infinity).padding(.vertical, 8).disabled(busy)
+                        Button {
+                            player.stop(); library.useOnDevice(); closeIfPresented()
+                        } label: {
+                            Text(String(localized: "Слушать музыку с \(Device.name)"))
+                                .frame(maxWidth: .infinity, minHeight: 44).contentShape(Rectangle())
+                        }.buttonStyle(.plain).foregroundStyle(Theme.accent).disabled(busy)
+                        Button {
+                            Log.library.notice("Demo entry requested")
+                            player.stop(); library.useDemo(); closeIfPresented()
+                        } label: {
+                            Text(String(localized: "Посмотреть демоверсию"))
+                                .frame(maxWidth: .infinity, minHeight: 44).contentShape(Rectangle())
+                        }.buttonStyle(.plain).foregroundStyle(Theme.accent).disabled(busy)
                     } else {
                         Button(String(localized: "Отключить сервер"), role: .destructive) {
-                            do { try library.disconnect(); player.stop(); dismiss() }
+                            do { try library.disconnect(); player.stop(); closeIfPresented() }
                             catch { self.error = LibraryStore.message(error) }
                         }.disabled(busy)
                     }
@@ -219,6 +228,10 @@ struct ConnectionView: View {
                     username = library.client?.credentials.username ?? ""
                 }
         }
+    }
+    private func closeIfPresented() {
+        // На первом входе RootView сам меняет экран. dismiss относится только к форме в sheet.
+        if !isInitial { dismiss() }
     }
     private func field<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 8) {

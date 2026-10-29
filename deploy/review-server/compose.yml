@@ -1,0 +1,17 @@
+services:
+  navidrome:
+    image: navidrome/navidrome@sha256:38dc2727bfcfd5ede290f8ada114fc90368146f265ae4701ddddbcbe2a44ee52
+    container_name: nocturne-review
+    user: "1000:1000"
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:4534:4533"
+    environment:
+      ND_BASEURL: /review-server
+      ND_SCANSCHEDULE: "@every 1h"
+      ND_ENABLESHARING: "true"
+      ND_ENABLEINSIGHTSCOLLECTOR: "false"
+      ND_LOGLEVEL: warn
+    volumes:
+      - ./data:/data
+      - ./music:/music:ro
