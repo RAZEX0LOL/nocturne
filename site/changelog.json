@@ -2,6 +2,50 @@
   "$comment": "Что нового в каждой версии. Пишется при выпуске: без записи скрипты выпуска версию не опубликуют. Версия = 1.1.<число коммитов>, как номер сборки. kind: new | better | fix. platforms: mac, windows, linux, android, ios; у пункта — если он не для всех платформ версии.",
   "releases": [
     {
+      "version": "1.1.83",
+      "date": "2026-10-29",
+      "platforms": [
+        "ios",
+        "mac",
+        "windows",
+        "linux",
+        "android"
+      ],
+      "summary": "Удобнее входить в демоверсию на iPad",
+      "summary_en": "Easier demo entry on iPad",
+      "changes": [
+        {
+          "kind": "better",
+          "text": "На iPhone, iPad и Mac в TestFlight кнопки демоверсии и локальной музыки на экране входа принимают нажатия по всей ширине строки.",
+          "text_en": "On iPhone, iPad and the TestFlight Mac app, the demo and on-device music buttons on the connection screen respond across the full row.",
+          "platforms": [
+            "ios",
+            "mac"
+          ]
+        },
+        {
+          "kind": "fix",
+          "text": "Улучшен переход с начального экрана в медиатеку при подключении сервера и выборе демоверсии.",
+          "text_en": "Improved the transition from the initial connection screen to the library when connecting a server or entering the demo.",
+          "platforms": [
+            "ios",
+            "mac"
+          ]
+        },
+        {
+          "kind": "better",
+          "text": "Свежие сборки Android, Windows, Linux и Mac доступны под общей версией через встроенную проверку обновлений.",
+          "text_en": "Fresh Android, Windows, Linux and Mac builds are available under one version through the built-in update check.",
+          "platforms": [
+            "android",
+            "windows",
+            "linux",
+            "mac"
+          ]
+        }
+      ]
+    },
+    {
       "version": "1.1.81",
       "date": "2026-10-26",
       "platforms": [

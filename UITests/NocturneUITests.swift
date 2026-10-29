@@ -135,6 +135,14 @@ final class NocturneUITests: XCTestCase {
               let password = environment["REVIEW_PASSWORD"] else {
             throw XCTSkip("Тестовый доступ задаётся в защищённом xctestrun вне репозитория")
         }
+        let passwordPrompt = addUIInterruptionMonitor(withDescription: "Save password") { alert in
+            for title in ["Not Now", "Not now", "Не сейчас"] {
+                let button = alert.buttons[title]
+                if button.exists { button.press(forDuration: 0.15); return true }
+            }
+            return false
+        }
+        defer { removeUIInterruptionMonitor(passwordPrompt) }
         let app = XCUIApplication()
         app.launchArguments = ["-AppleLanguages", "(en)", "-AppleLocale", "en_US"]
         app.launch()
@@ -148,6 +156,9 @@ final class NocturneUITests: XCTestCase {
         secret.press(forDuration: 0.15); secret.typeText(password)
         app.buttons["Connect"].press(forDuration: 0.15)
         XCTAssertTrue(app.buttons["Settings"].waitForExistence(timeout: 45))
+        // На iPadOS 27 сохранение пароля показывается удалённым системным view, а не UIAlert.
+        let later = app.buttons.matching(NSPredicate(format: "label IN %@", ["Not Now", "Not now", "Не сейчас"] as NSArray)).firstMatch
+        if later.waitForExistence(timeout: 10) { later.press(forDuration: 0.15) }
         selectTab("Library", in: app)
         let album = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Parallels")).firstMatch
         XCTAssertTrue(album.waitForExistence(timeout: 45))
@@ -170,6 +181,15 @@ final class NocturneUITests: XCTestCase {
         attachment.name = "App Review server playback"
         attachment.lifetime = .keepAlways
         add(attachment)
+        // Удаляем только добавленный тестом локальный вход, чтобы следующие тесты начинались с формы.
+        app.buttons["Minimise player"].press(forDuration: 0.15)
+        selectTab("Home", in: app)
+        app.buttons["Settings"].press(forDuration: 0.15)
+        let disconnect = app.buttons["Disconnect current server"]
+        XCTAssertTrue(disconnect.waitForExistence(timeout: 10))
+        disconnect.press(forDuration: 0.15)
+        app.buttons["Disconnect"].press(forDuration: 0.15)
+        XCTAssertTrue(address.waitForExistence(timeout: 15))
     }
 
     /// Regression: theme colours were closures isolated to the main actor and crashed when
