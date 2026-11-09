@@ -76,7 +76,7 @@ struct RootView: View {
         .task { await ArtworkCache.shared.trim() }
         .task { await LocalLibrary.shared.scan() }
         .onOpenURL { url in
-            // Audio files shared to the app ("Open in Nocturne") go to the on-device library.
+            // Audio files shared to the app ("Open in Nocturne Player") go to the on-device library.
             if url.isFileURL {
                 Task {
                     let added = await LocalLibrary.shared.importItems([url])
@@ -217,7 +217,7 @@ struct ConnectionView: View {
                             catch { self.error = LibraryStore.message(error) }
                         }.disabled(busy)
                     }
-                    Text("NOCTURNE").font(.caption2.weight(.semibold)).tracking(5).foregroundStyle(Theme.secondary).frame(maxWidth: .infinity)
+                    Text("NOCTURNE PLAYER").font(.caption2.weight(.semibold)).tracking(3).foregroundStyle(Theme.secondary).frame(maxWidth: .infinity)
                 }.padding(24)
             }.background(Theme.background)
                 .toolbar { if !isInitial { ToolbarItem(placement: .topBarTrailing) { Button(String(localized: "Закрыть")) { dismiss() }.disabled(busy) } } }

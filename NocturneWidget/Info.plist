@@ -9,10 +9,10 @@
 		<string>ru</string>
 		<string>en</string>
 	</array>
-	<key>CFBundleDisplayName</key><string>Nocturne</string>
+	<key>CFBundleDisplayName</key><string>Nocturne Player</string>
 	<key>CFBundleExecutable</key><string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key><string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
-	<key>CFBundleName</key><string>$(PRODUCT_NAME)</string>
+	<key>CFBundleName</key><string>Nocturne Player</string>
 	<key>CFBundlePackageType</key><string>XPC!</string>
 	<key>CFBundleShortVersionString</key><string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key><string>$(CURRENT_PROJECT_VERSION)</string>

@@ -38,7 +38,7 @@ echo "Готово: $OUT/$NAME (версия $VERSION)"
 
 if [[ "${1:-}" == "publish" ]]; then
   gh release view updates -R "$REPO" >/dev/null 2>&1 || gh release create updates -R "$REPO" \
-    --title "Nocturne — обновления" --notes "Файлы, которые приложение Nocturne скачивает само. Установщики для первой установки — тоже здесь."
+    --title "Nocturne Player — обновления" --notes "Файлы, которые приложение Nocturne Player скачивает само. Установщики для первой установки — тоже здесь."
   # Сначала APK, потом манифест: иначе приложение увидело бы версию раньше её файла.
   gh release upload updates -R "$REPO" --clobber "$OUT/$NAME" "$OUT/Nocturne-android.apk"
   gh release upload updates -R "$REPO" --clobber "$OUT/android.json"

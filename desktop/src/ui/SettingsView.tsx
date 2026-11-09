@@ -252,7 +252,7 @@ export function SettingsView() {
           <SettingsCard
             icon="artist"
             title={t('Статус в Discord')}
-            description={t('Друзья увидят «Слушает Nocturne» с треком, исполнителем и временем. Нужен только запущенный Discord на этом компьютере.')}
+            description={t('Друзья увидят трек, исполнителя и время воспроизведения. Нужен только запущенный Discord на этом компьютере.')}
           >
             <Toggle checked={settings.discord} onChange={(discord) => store.update({ discord })} label={t('Статус в Discord')} />
           </SettingsCard>
@@ -309,7 +309,7 @@ function UpdateCard() {
   return (
     <SettingsCard
       icon="download"
-      title={version ? t('Nocturne {version}', { version }) : 'Nocturne'}
+      title={version ? t('Nocturne Player {version}', { version }) : 'Nocturne Player'}
       description={t('Обновления ставятся поверх установленной версии — настройки, загрузки и вход на сервер остаются.')}
     >
       {update ? (

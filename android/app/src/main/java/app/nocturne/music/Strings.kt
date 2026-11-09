@@ -234,7 +234,7 @@ private val english = mapOf(
     "Установлена последняя версия" to "You have the latest version",
     "Не удалось проверить обновления." to "Could not check for updates.",
     "Не удалось установить обновление." to "Could not install the update.",
-    "Разреши установку из Nocturne и нажми «Обновить» ещё раз" to "Allow installs from Nocturne, then tap Update again",
+    "Разреши установку из Nocturne Player и нажми «Обновить» ещё раз" to "Allow installs from Nocturne Player, then tap Update again",
     "Файл обновления повреждён — скачай ещё раз." to "The update file is damaged — download it again.",
     "Обновление подписано другим ключом — поверх этой версии оно не встанет." to "The update is signed with another key — it can't install over this version.",
     "Можно поискать в открытой базе lrclib.net — туда уйдут название и исполнитель." to "You can search the open lrclib.net database — the title and artist will be sent there.",

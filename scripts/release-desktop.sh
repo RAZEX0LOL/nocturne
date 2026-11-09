@@ -74,18 +74,18 @@ ARCH=$(uname -m)
 # Приложение Tauri уже подписал и нотаризовал; образ .dmg — отдельный файл: подписываем, отправляем
 # Apple и вшиваем ответ (staple), чтобы проверка проходила и без сети.
 # В кэше остаются образы прошлых версий: публикуем только установщик текущего выпуска.
-DMG=$(find "$BUNDLE/dmg" -name "Nocturne_${VERSION}_*.dmg" ! -name 'rw.*' | head -1)
+DMG=$(find "$BUNDLE/dmg" -name "Nocturne Player_${VERSION}_*.dmg" ! -name 'rw.*' | head -1)
 [[ -n "$DMG" ]] || { echo "Нет DMG для $VERSION" >&2; exit 1; }
 codesign --force --sign "$APPLE_SIGNING_IDENTITY" --timestamp "$DMG"
 xcrun notarytool submit "$DMG" --key "$APPLE_API_KEY_PATH" --key-id "$APPLE_API_KEY" --issuer "$APPLE_API_ISSUER" --wait
 xcrun stapler staple "$DMG"
 # Проверка глазами Gatekeeper — та же, что у Mac, на который приложение скачали из браузера.
 spctl -a -vv -t install "$DMG"
-spctl -a -vv "$BUNDLE/macos/Nocturne.app"
+spctl -a -vv "$BUNDLE/macos/Nocturne Player.app"
 # В имени архива версия: файл на сервере не подменяется под тем же именем посреди чьей-то загрузки.
-cp "$BUNDLE/macos/Nocturne.app.tar.gz" "$OUT/Nocturne_${VERSION}_${ARCH}.app.tar.gz"
-cp "$BUNDLE/macos/Nocturne.app.tar.gz.sig" "$OUT/Nocturne_${VERSION}_${ARCH}.app.tar.gz.sig"
-cp "$DMG" "$OUT/"
+cp "$BUNDLE/macos/Nocturne Player.app.tar.gz" "$OUT/Nocturne_${VERSION}_${ARCH}.app.tar.gz"
+cp "$BUNDLE/macos/Nocturne Player.app.tar.gz.sig" "$OUT/Nocturne_${VERSION}_${ARCH}.app.tar.gz.sig"
+cp "$DMG" "$OUT/Nocturne_${VERSION}_${ARCH}.dmg"
 # Постоянные имена — для сайта: кнопка «Скачать» всегда ведёт на последнюю версию.
 cp "$DMG" "$OUT/Nocturne-mac.dmg"
 NOTES=$(bun scripts/changelog.ts notes "$VERSION" mac) python3 scripts/updater_manifest.py "$VERSION" "$OUT" "$BASE" darwin "$ARCH"
@@ -95,8 +95,9 @@ if (( WINDOWS )); then
   (cd desktop && PATH=/opt/homebrew/opt/llvm/bin:$PATH bun run tauri build --config src-tauri/tauri.version.json \
     --runner cargo-xwin --target x86_64-pc-windows-msvc --bundles nsis)
   WIN=desktop/src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis
-  cp "$WIN"/Nocturne_${VERSION}_x64-setup.exe "$WIN"/Nocturne_${VERSION}_x64-setup.exe.sig "$OUT/"
-  cp "$WIN"/Nocturne_${VERSION}_x64-setup.exe "$OUT/Nocturne-windows-setup.exe"
+  cp "$WIN/Nocturne Player_${VERSION}_x64-setup.exe" "$OUT/Nocturne_${VERSION}_x64-setup.exe"
+  cp "$WIN/Nocturne Player_${VERSION}_x64-setup.exe.sig" "$OUT/Nocturne_${VERSION}_x64-setup.exe.sig"
+  cp "$WIN/Nocturne Player_${VERSION}_x64-setup.exe" "$OUT/Nocturne-windows-setup.exe"
   NOTES=$(bun scripts/changelog.ts notes "$VERSION" windows) python3 scripts/updater_manifest.py "$VERSION" "$OUT" "$BASE" windows x86_64
 fi
 echo "Готово: $OUT (версия $VERSION)"
@@ -104,7 +105,7 @@ ls -1 "$OUT"
 
 if (( PUBLISH )); then
   gh release view updates -R "$REPO" >/dev/null 2>&1 || gh release create updates -R "$REPO" \
-    --title "Nocturne — обновления" --notes "Файлы, которые приложение Nocturne скачивает само. Установщики для первой установки — тоже здесь."
+    --title "Nocturne Player — обновления" --notes "Файлы, которые приложение Nocturne Player скачивает само. Установщики для первой установки — тоже здесь."
   # Сначала файлы, потом манифесты: иначе приложение могло бы увидеть версию раньше её файла.
   gh release upload updates -R "$REPO" --clobber $(find "$OUT" -type f ! -name '*.json')
   gh release upload updates -R "$REPO" --clobber "$OUT"/*.json

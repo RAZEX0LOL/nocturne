@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Nocturne",
+  "productName": "Nocturne Player",
   "version": "1.0.0",
   "identifier": "app.nocturne.music",
   "build": {
@@ -13,7 +13,7 @@
     "macOSPrivateApi": true,
     "windows": [
       {
-        "title": "Nocturne",
+        "title": "Nocturne Player",
         "width": 1180,
         "height": 800,
         "minWidth": 720,

@@ -146,7 +146,7 @@ const english: Record<string, string> = {
   'Установить': 'Install',
   'Установлена последняя версия': 'You have the latest version',
   'Не удалось проверить обновления.': 'Could not check for updates.',
-  'Nocturne {version}': 'Nocturne {version}',
+  'Nocturne Player {version}': 'Nocturne Player {version}',
   'Обновления ставятся поверх установленной версии — настройки, загрузки и вход на сервер остаются.':
     'Updates install over the current version — settings, downloads and the server sign-in stay.',
   'Установить {version}': 'Install {version}',
@@ -332,8 +332,8 @@ const english: Record<string, string> = {
   '«{title}» — {artist}, с {time}': '“{title}” by {artist}, from {time}',
   'Продолжить': 'Continue',
   // Интеграции: трей, сочетания, LRCLIB, визуализатор
-  'Показать Nocturne': 'Show Nocturne',
-  'Выйти из Nocturne': 'Quit Nocturne',
+  'Показать Nocturne Player': 'Show Nocturne Player',
+  'Выйти из Nocturne Player': 'Quit Nocturne Player',
   'Текст песни и визуализация': 'Lyrics and visuals',
   'Искать тексты в LRCLIB': 'Find lyrics on LRCLIB',
   'Если у Navidrome текста нет, он берётся из открытой базы lrclib.net. Туда уходят название, исполнитель и длительность трека.':
@@ -409,8 +409,8 @@ const english: Record<string, string> = {
   'треков': 'songs',
   // Discord
   'Статус в Discord': 'Discord status',
-  'Друзья увидят «Слушает Nocturne» с треком, исполнителем и временем. Нужен только запущенный Discord на этом компьютере.':
-    'Friends see “Listening to Nocturne” with the song, artist and time. All it needs is Discord running on this computer.',
+  'Друзья увидят трек, исполнителя и время воспроизведения. Нужен только запущенный Discord на этом компьютере.':
+    'Friends see the song, artist and playback time. All it needs is Discord running on this computer.',
   // ТРИЗ: оформление, палитра, бесконечное воспроизведение
   'OLED-чёрная': 'OLED black',
   'Авто: альбом подряд — по альбому': 'Auto: album in order — by album',

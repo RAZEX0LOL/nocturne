@@ -49,7 +49,7 @@ function find(version: string, platform: PlatformId): Release | undefined {
 }
 
 function markdown(releases: Release[]): string {
-  const lines = ['Файлы, которые приложение Nocturne скачивает само, и установщики для первой установки.', '', 'Сайт: https://nocturne.razex.online', '']
+  const lines = ['Файлы, которые приложение Nocturne Player скачивает само, и установщики для первой установки.', '', 'Сайт: https://nocturne.razex.online', '']
   for (const release of releases.slice(0, 10)) {
     lines.push(`## ${release.version} — ${release.summary}`, `_${release.date} · ${release.platforms.map((one) => PLATFORM[one]).join(', ')}_`, '')
     for (const change of release.changes) {

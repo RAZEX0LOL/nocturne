@@ -213,7 +213,7 @@ internal val LocalCoverFiles = staticCompositionLocalOf<Map<String, String>> { e
     }
     vm.error?.let { message ->
         AlertDialog(
-            onDismissRequest = { vm.error = null }, title = { Text("Nocturne") }, text = { Text(message) },
+            onDismissRequest = { vm.error = null }, title = { Text("Nocturne Player") }, text = { Text(message) },
             confirmButton = { TextButton(onClick = { vm.error = null }) { Text(tr("Понятно")) } },
         )
     }
@@ -253,7 +253,7 @@ internal val LocalCoverFiles = staticCompositionLocalOf<Map<String, String>> { e
             Text(tr("Слушать музыку с телефона — без сервера"))
         }
         if (vm.client == null) TextButton(onClick = { vm.useDemo(); done() }, enabled = !vm.connecting, modifier = Modifier.fillMaxWidth()) { Text(tr("Посмотреть демоверсию")) }
-        Text("NOCTURNE", letterSpacing = 5.sp, color = Muted, style = MaterialTheme.typography.labelSmall, modifier = Modifier.align(Alignment.CenterHorizontally).padding(16.dp))
+        Text("NOCTURNE PLAYER", letterSpacing = 5.sp, color = Muted, style = MaterialTheme.typography.labelSmall, modifier = Modifier.align(Alignment.CenterHorizontally).padding(16.dp))
     }
 }
 
@@ -838,7 +838,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.downloadsSection(vm: 
         SectionTitle(tr("Приложение"))
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text("Nocturne ${BuildConfig.VERSION_NAME}")
+                Text("Nocturne Player ${BuildConfig.VERSION_NAME}")
                 Text(tr("Обновления ставятся поверх установленной версии — настройки, загрузки и вход на сервер остаются."), color = Muted, style = MaterialTheme.typography.bodySmall)
             }
             TextButton(onClick = { vm.checkForAppUpdate(manual = true) }) { Text(tr("Проверить")) }

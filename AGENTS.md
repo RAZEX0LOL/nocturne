@@ -1,4 +1,4 @@
-# Nocturne — инструкции для ИИ-агента
+# Nocturne Player — инструкции для ИИ-агента
 
 Клиент Navidrome/Subsonic на всех платформах. Общие правила работы со мной — в `~/.codex/AGENTS.md`,
 серверы — в `~/ops/RUNBOOK.md`. Здесь — только этот репозиторий.
@@ -103,7 +103,7 @@ Debug-вход: `adb shell am start -n app.nocturne.music/.MainActivity -e serve
 | Сайт | `site/deploy/deploy.sh` (`--nginx` — ещё и конфиг) | nl, `/var/www/nocturne` |
 
 Подробности, ключи и как устроены обновления — `docs/release.md`.
-Публичная бета TestFlight (группа «Nocturne public test») требует проверки Apple — отправлять после моего «ок».
+Публичная бета TestFlight (группа «Nocturne Player public test») требует проверки Apple — отправлять после моего «ок».
 GitHub Actions собирает проверочные артефакты без релизных ключей; запуски в приватном
 репозитории зависят от квот аккаунта. Официальные сборки подписываются локально.
 

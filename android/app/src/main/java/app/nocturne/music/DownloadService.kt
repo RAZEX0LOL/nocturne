@@ -16,9 +16,9 @@ class DownloadService : Service() {
     override fun onCreate() {
         super.onCreate()
         val manager = getSystemService(NotificationManager::class.java)
-        manager.createNotificationChannel(NotificationChannel("downloads", "Nocturne", NotificationManager.IMPORTANCE_LOW))
+        manager.createNotificationChannel(NotificationChannel("downloads", "Nocturne Player", NotificationManager.IMPORTANCE_LOW))
         startForeground(42, Notification.Builder(this, "downloads").setSmallIcon(app.nocturne.music.R.drawable.ic_nocturne)
-            .setContentTitle("Nocturne").setContentText(tr("Загрузка музыки")).setOngoing(true).build())
+            .setContentTitle("Nocturne Player").setContentText(tr("Загрузка музыки")).setOngoing(true).build())
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {

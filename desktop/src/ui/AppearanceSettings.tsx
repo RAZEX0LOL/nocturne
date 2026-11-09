@@ -159,7 +159,7 @@ const PLAYER_BUTTON_LABELS: Record<PlayerButton, string> = {
   queue: 'Очередь',
 }
 
-const ACCENT_LABELS: Record<AccentMode, string> = { system: 'Системный', cover: 'Из обложки', brand: 'Nocturne', custom: 'Свой' }
+const ACCENT_LABELS: Record<AccentMode, string> = { system: 'Системный', cover: 'Из обложки', brand: 'Nocturne Player', custom: 'Свой' }
 
 /** «Оформление»: всё, что меняет вид, в одном месте и сразу видно. */
 export function AppearanceSettings() {

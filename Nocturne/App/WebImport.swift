@@ -232,7 +232,7 @@ final class BrowserModel: NSObject, WKNavigationDelegate, WKDownloadDelegate {
     func webView(_ webView: WKWebView, decidePolicyFor navigationResponse: WKNavigationResponse) async -> WKNavigationResponsePolicy {
         if WebImport.isAudio(navigationResponse.response) { return .download }
         if !navigationResponse.canShowMIMEType {
-            player?.show(String(localized: "Nocturne сохраняет только аудиофайлы"))
+            player?.show(String(localized: "Nocturne Player сохраняет только аудиофайлы"))
             return .cancel
         }
         return .allow
@@ -249,7 +249,7 @@ final class BrowserModel: NSObject, WKNavigationDelegate, WKDownloadDelegate {
     func download(_ download: WKDownload, decideDestinationUsing response: URLResponse, suggestedFilename: String) async -> URL? {
         Log.library.notice("Browser: destination for \(response.mimeType ?? "-", privacy: .public), audio \(WebImport.isAudio(response), privacy: .public)")
         guard WebImport.isAudio(response) else {
-            player?.show(String(localized: "Nocturne сохраняет только аудиофайлы"))
+            player?.show(String(localized: "Nocturne Player сохраняет только аудиофайлы"))
             return nil
         }
         let file = WebImport.stagingFolder().appendingPathComponent(WebImport.fileName(for: response))

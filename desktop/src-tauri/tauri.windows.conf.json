@@ -3,7 +3,7 @@
   "app": {
     "windows": [
       {
-        "title": "Nocturne",
+        "title": "Nocturne Player",
         "width": 1180,
         "height": 800,
         "minWidth": 720,
@@ -26,9 +26,11 @@
         "installMode": "currentUser",
         "languages": ["Russian", "English"],
         "displayLanguageSelector": false,
-        "installerIcon": "icons/icon.ico"
+        "installerIcon": "icons/icon.ico",
+        "installerHooks": "installer-hooks.nsh"
       },
       "wix": {
+        "upgradeCode": "eaa1f146-7d1d-5c62-ba8b-c73f0d60d57a",
         "language": ["ru-RU", "en-US"]
       }
     }

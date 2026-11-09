@@ -22,7 +22,7 @@ function Header() {
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         <a href="#top" className="flex items-center gap-2.5 font-extrabold tracking-[0.25em]">
           <Logo />
-          <span className="text-sm">NOCTURNE</span>
+          <span className="text-xs leading-tight">NOCTURNE<br />PLAYER</span>
         </a>
         <nav className="hidden items-center gap-8 text-sm text-muted xl:flex">
           <a href="#features" className="hover:text-ink">{t('Возможности')}</a>
@@ -57,7 +57,7 @@ function Hero({ main, release }: { main?: Platform; release: ReleaseInfo }) {
             <span className="bg-gradient-to-r from-[#c4b5fd] via-accent to-[#e3c7a0] bg-clip-text text-transparent">{t('Твоё пространство.')}</span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-muted sm:text-xl">
-            {t('Nocturne — плеер для своего сервера Navidrome. Красивый, быстрый и родной на каждой системе: начни слушать на компьютере и продолжи с того же места на телефоне.')}
+            {t('Nocturne Player — плеер для своего сервера Navidrome. Красивый, быстрый и родной на каждой системе: начни слушать на компьютере и продолжи с того же места на телефоне.')}
           </p>
           <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
             {main && href ? (
@@ -93,15 +93,15 @@ function Hero({ main, release }: { main?: Platform; release: ReleaseInfo }) {
               loop
               playsInline
               preload="metadata"
-              aria-label={t('Nocturne на компьютере: альбом, полноэкранный плеер с текстом песни и светлая тема')}
+              aria-label={t('Nocturne Player на компьютере: альбом, полноэкранный плеер с текстом песни и светлая тема')}
               className="block w-full"
             >
               <source src="/shots/demo.webm" type="video/webm" />
               <source src="/shots/demo.mp4" type="video/mp4" />
-              <img src="/shots/desktop-nowplaying.webp" alt={t('Nocturne на Mac: полноэкранный плеер с синхронным текстом песни')} width={1600} height={1000} className="block w-full" />
+              <img src="/shots/desktop-nowplaying.webp" alt={t('Nocturne Player на Mac: полноэкранный плеер с синхронным текстом песни')} width={1600} height={1000} className="block w-full" />
             </video>
           </div>
-          <Phone src="/shots/ios-player.webp" alt={t('Nocturne на iPhone: плеер')} className="absolute -bottom-2 right-2 w-[24%] min-w-[110px] sm:right-[-2%]" />
+          <Phone src="/shots/ios-player.webp" alt={t('Nocturne Player на iPhone: плеер')} className="absolute -bottom-2 right-2 w-[24%] min-w-[110px] sm:right-[-2%]" />
         </div>
       </div>
     </div>
@@ -133,7 +133,7 @@ function Features() {
       id="features"
       eyebrow="Возможности"
       title="Всё, что нужно от плеера — и ничего лишнего"
-      lead={t('Nocturne подключается к Navidrome (и любому Subsonic-совместимому серверу) и превращает домашнюю медиатеку в музыкальный сервис, который принадлежит тебе.')}
+      lead={t('Nocturne Player подключается к Navidrome (и любому Subsonic-совместимому серверу) и превращает домашнюю медиатеку в музыкальный сервис, который принадлежит тебе.')}
     >
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {FEATURES.map((feature) => (
@@ -378,7 +378,7 @@ const FAQ: Array<[string, ReactNode]> = [
   [
     'Что такое Navidrome и зачем он нужен?',
     <>
-      {t('Navidrome — бесплатный сервер для своей музыкальной коллекции: ставится на домашний компьютер, NAS или VPS и раздаёт музыку по сети. Nocturne — плеер к нему. Подойдёт и любой другой сервер с API Subsonic.')}{' '}
+      {t('Navidrome — бесплатный сервер для своей музыкальной коллекции: ставится на домашний компьютер, NAS или VPS и раздаёт музыку по сети. Nocturne Player — плеер к нему. Подойдёт и любой другой сервер с API Subsonic.')}{' '}
       <a className="text-accent underline-offset-4 hover:underline" href={localizePath('/start')}>
         {t('Поставить за 10 минут')}
       </a>
@@ -386,7 +386,7 @@ const FAQ: Array<[string, ReactNode]> = [
   ],
   ['Можно без сервера?', t('Да, на любой системе. На компьютере, iPhone, iPad и Android можно слушать файлы прямо с устройства: на экране входа выбери «Слушать музыку с этого устройства». Есть и демоверсия — посмотреть плеер, ничего не подключая.')],
   ['Как подключиться?', t('Открой приложение, введи адрес сервера, логин и пароль Navidrome. Пароль хранится в системном хранилище — Связке ключей, Keystore или менеджере учётных данных Windows.')],
-  ['Как приходят обновления?', t('На компьютере и Android обновления доступны в приложении: настройки, загрузки и вход сохраняются. На Android разреши установку из Nocturne, когда система попросит. Версии из App Store обновляются через App Store.')],
+  ['Как приходят обновления?', t('На компьютере и Android обновления доступны в приложении: настройки, загрузки и вход сохраняются. На Android разреши установку из Nocturne Player, когда система попросит. Версии из App Store обновляются через App Store.')],
   ['Почему Windows предупреждает при первом запуске?', t('Версия для Windows пока не подписана сертификатом Microsoft, поэтому SmartScreen её не знает. Нажми «Подробнее» → «Выполнить в любом случае» — это нужно один раз. Версия для Mac подписана и проверена Apple, там предупреждений нет.')],
   ['Сколько стоит?', t('Бесплатно, без рекламы и подписок. Разработчик не собирает историю прослушиваний. О подключениях к серверу, поиске текстов и проверке обновлений — в политике конфиденциальности.')],
 ]
@@ -433,7 +433,7 @@ export function App() {
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 py-10 text-sm text-muted sm:flex-row sm:px-6">
           <div className="flex items-center gap-2.5">
             <Logo size={22} />
-            <span>{t('Nocturne — плеер для Navidrome')}</span>
+            <span>{t('Nocturne Player — плеер для Navidrome')}</span>
           </div>
           <nav className="flex flex-wrap items-center justify-center gap-x-5 gap-y-3">
             <a href={localizePath('/start')} className="hover:text-ink">{t('С чего начать')}</a>

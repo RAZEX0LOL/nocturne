@@ -818,7 +818,7 @@ internal class MusicViewModel(application: Application) : AndroidViewModel(appli
         val update = appUpdate ?: return
         if (updateProgress != null) return
         if (!updater.canInstall()) {
-            notice = tr("Разреши установку из Nocturne и нажми «Обновить» ещё раз")
+            notice = tr("Разреши установку из Nocturne Player и нажми «Обновить» ещё раз")
             getApplication<Application>().startActivity(updater.permissionIntent())
             return
         }

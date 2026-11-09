@@ -168,8 +168,8 @@ function followTray() {
         pause: t('Пауза'),
         previous: t('Предыдущий трек'),
         next: t('Следующий трек'),
-        show: t('Показать Nocturne'),
-        quit: t('Выйти из Nocturne'),
+        show: t('Показать Nocturne Player'),
+        quit: t('Выйти из Nocturne Player'),
       },
       playing: state.playing,
       title,
@@ -182,8 +182,8 @@ function followTray() {
 // MARK: - Discord
 
 /**
- * Приложение «Nocturne» в Discord Developer Portal: его имя Discord показывает в статусе
- * («Слушает Nocturne»). ID не секрет — он и так виден всем в профиле.
+ * Имя приложения задаётся в Discord Developer Portal: Discord показывает его в статусе
+ * прослушивания. ID не секрет — он и так виден всем в профиле.
  */
 const DISCORD_APP_ID = '1557743642607616000'
 
@@ -223,7 +223,7 @@ function followDiscord() {
   }
   store.subscribe(sync)
   sync()
-  // Discord открыли уже после Nocturne: статус появится сам через несколько секунд.
+  // Discord открыли уже после Nocturne Player: статус появится сам через несколько секунд.
   setInterval(() => {
     if (!sent && store.snapshot().settings.discord) sync()
   }, 15_000)
@@ -244,7 +244,7 @@ export async function openMiniPlayer() {
   }
   new WebviewWindow(MINI, {
     url: 'index.html?mini',
-    title: 'Nocturne',
+    title: 'Nocturne Player',
     width: 380,
     height: 128,
     resizable: false,
@@ -304,7 +304,7 @@ function followTitle() {
   let shown = ''
   store.subscribe(() => {
     const song = store.snapshot().queue?.current?.song
-    const title = song ? `${song.title} — ${song.artist ?? t('Неизвестный исполнитель')}` : 'Nocturne'
+    const title = song ? `${song.title} — ${song.artist ?? t('Неизвестный исполнитель')}` : 'Nocturne Player'
     if (title === shown) return
     shown = title
     void import('@tauri-apps/api/window').then(({ getCurrentWindow }) => getCurrentWindow().setTitle(title)).catch(() => {})

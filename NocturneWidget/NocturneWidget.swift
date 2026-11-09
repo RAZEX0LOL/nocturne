@@ -58,7 +58,7 @@ struct NowPlayingWidgetView: View {
     private var titles: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(entry.snapshot?.title ?? "Ничего не играет").font(.headline).lineLimit(2)
-            Text(entry.snapshot?.artist ?? "Открой Nocturne").font(.caption).foregroundStyle(.secondary).lineLimit(1)
+            Text(entry.snapshot?.artist ?? "Открой Nocturne Player").font(.caption).foregroundStyle(.secondary).lineLimit(1)
         }
     }
 
@@ -102,7 +102,7 @@ struct NowPlayingWidgetView: View {
         HStack {
             Image(systemName: entry.snapshot?.isPlaying == true ? "waveform" : "pause")
             VStack(alignment: .leading) {
-                Text(entry.snapshot?.title ?? "Nocturne").font(.headline).lineLimit(1)
+                Text(entry.snapshot?.title ?? "Nocturne Player").font(.headline).lineLimit(1)
                 Text(entry.snapshot?.artist ?? "Ничего не играет").font(.caption).lineLimit(1)
             }
         }
@@ -119,7 +119,7 @@ struct NowPlayingWidget: Widget {
                 }
         }
         .configurationDisplayName("Сейчас играет")
-        .description("Текущий трек Nocturne с кнопками управления.")
+        .description("Текущий трек Nocturne Player с кнопками управления.")
         .supportedFamilies([.systemSmall, .systemMedium, .accessoryRectangular])
     }
 }

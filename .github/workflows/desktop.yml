@@ -5,10 +5,12 @@ on:
     paths:
       - 'desktop/**'
       - '.github/workflows/desktop.yml'
+      - 'scripts/check-windows-rename.ps1'
   pull_request:
     paths:
       - 'desktop/**'
       - '.github/workflows/desktop.yml'
+      - 'scripts/check-windows-rename.ps1'
   workflow_dispatch:
 
 permissions:
@@ -58,6 +60,11 @@ jobs:
         run: |
           printf '%s\n' '{"bundle":{"createUpdaterArtifacts":false}}' > src-tauri/tauri.ci.json
           bun run tauri build --config src-tauri/tauri.ci.json
+
+      - name: Проверить обновление Windows после переименования
+        if: matrix.name == 'windows'
+        shell: pwsh
+        run: ./scripts/check-windows-rename.ps1
 
       # Разбор имён файлов, безопасные имена загрузок, форматы — проверки Rust-стороны.
       - if: matrix.name == 'linux'

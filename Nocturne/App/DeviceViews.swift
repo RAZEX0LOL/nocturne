@@ -35,9 +35,9 @@ struct DeviceLibraryView: View {
     /// Where the files can come from differs per platform: on a Mac the folder is right there in Finder.
     private var hint: String {
         #if targetEnvironment(macCatalyst)
-        String(localized: "Добавь файлы или папку кнопками выше, скачай по ссылке или через браузер, или положи файлы в папку Nocturne → Music в Finder. Поддерживаются MP3, M4A, AAC, ALAC, FLAC, WAV.")
+        String(localized: "Добавь файлы или папку кнопками выше, скачай по ссылке или через браузер, или положи файлы в папку Nocturne Player → Music в Finder. Поддерживаются MP3, M4A, AAC, ALAC, FLAC, WAV.")
         #else
-        String(localized: "Добавь файлы или папку кнопками выше, скачай по ссылке или через браузер, отправь через «Поделиться → Nocturne» из любого приложения или скопируй с Mac в Finder: \(Device.name) → Файлы → Nocturne → Music. Поддерживаются MP3, M4A, AAC, ALAC, FLAC, WAV.")
+        String(localized: "Добавь файлы или папку кнопками выше, скачай по ссылке или через браузер, отправь через «Поделиться → Nocturne Player» из любого приложения или скопируй с Mac в Finder: \(Device.name) → Файлы → Nocturne Player → Music. Поддерживаются MP3, M4A, AAC, ALAC, FLAC, WAV.")
         #endif
     }
 

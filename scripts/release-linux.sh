@@ -77,7 +77,11 @@ VERSIONED="$OUT/Nocturne_${VERSION}_amd64.AppImage"
 # Постоянное имя — для кнопки на сайте.
 cp "$VERSIONED" "$OUT/Nocturne-linux.AppImage"
 DEB=$(find "$OUT" -name "*_${VERSION}_*.deb" | head -1)
-[[ -n "$DEB" ]] && cp "$DEB" "$OUT/Nocturne-linux.deb"
+if [[ -n "$DEB" ]]; then
+  VERSIONED_DEB="$OUT/Nocturne_${VERSION}_amd64.deb"
+  [[ "$DEB" == "$VERSIONED_DEB" ]] || mv "$DEB" "$VERSIONED_DEB"
+  cp "$VERSIONED_DEB" "$OUT/Nocturne-linux.deb"
+fi
 
 NOTES=$(bun scripts/changelog.ts notes "$VERSION" linux) python3 scripts/updater_manifest.py "$VERSION" "$OUT" "$BASE" linux x86_64
 echo "Готово: $OUT (версия $VERSION)"
@@ -85,7 +89,7 @@ command ls -1 "$OUT"
 
 if (( PUBLISH )); then
   gh release view updates -R "$REPO" >/dev/null 2>&1 || gh release create updates -R "$REPO" \
-    --title "Nocturne — обновления" --notes "Файлы, которые приложение Nocturne скачивает само. Установщики для первой установки — тоже здесь."
+    --title "Nocturne Player — обновления" --notes "Файлы, которые приложение Nocturne Player скачивает само. Установщики для первой установки — тоже здесь."
   # Сначала файлы, потом манифест: иначе приложение увидело бы версию раньше её файла.
   gh release upload updates -R "$REPO" --clobber $(find "$OUT" -type f ! -name '*.json')
   gh release upload updates -R "$REPO" --clobber "$OUT"/*.json

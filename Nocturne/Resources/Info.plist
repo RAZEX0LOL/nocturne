@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>ru</string>
 	<key>CFBundleDisplayName</key>
-	<string>Nocturne</string>
+	<string>Nocturne Player</string>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
@@ -35,7 +35,7 @@
 		<string>en</string>
 	</array>
 	<key>CFBundleName</key>
-	<string>$(PRODUCT_NAME)</string>
+	<string>Nocturne Player</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -69,7 +69,7 @@
 		<true/>
 	</dict>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>Nocturne подключается к серверу Navidrome в твоей домашней сети.</string>
+	<string>Nocturne Player подключается к серверу Navidrome в твоей домашней сети.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

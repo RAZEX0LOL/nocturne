@@ -31,7 +31,7 @@ class AppUpdater(private val context: Context, private val http: OkHttpClient = 
         }
     }
 
-    /** Разрешение «Установка неизвестных приложений» для Nocturne — Android спрашивает его один раз. */
+    /** Разрешение «Установка неизвестных приложений» для Nocturne Player — Android спрашивает его один раз. */
     fun canInstall(): Boolean = context.packageManager.canRequestPackageInstalls()
 
     fun permissionIntent(): Intent =
@@ -89,7 +89,7 @@ class AppUpdater(private val context: Context, private val http: OkHttpClient = 
         val installer = context.packageManager.packageInstaller
         val params = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL).apply {
             setAppPackageName(context.packageName)
-            // Android 12+: если Nocturne уже ставил себя сам, следующие обновления — без лишнего вопроса.
+            // Android 12+: если Nocturne Player уже ставил себя сам, следующие обновления — без лишнего вопроса.
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED)
         }
         val id = installer.createSession(params)

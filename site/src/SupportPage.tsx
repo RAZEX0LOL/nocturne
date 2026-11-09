@@ -19,7 +19,7 @@ export function Support() {
         <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-4 sm:px-6">
           <a href={localizePath('/')} className="flex items-center gap-2.5 font-extrabold tracking-[0.25em]">
             <Logo />
-            <span className="text-sm">NOCTURNE</span>
+            <span className="text-xs leading-tight">NOCTURNE<br />PLAYER</span>
           </a>
           <LanguageSwitch />
         </div>
@@ -27,9 +27,9 @@ export function Support() {
 
       <main className="mx-auto max-w-3xl px-4 py-16 sm:px-6 sm:py-24">
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-accent">{t('Поддержка')}</p>
-        <h1 className="mt-3 text-4xl font-extrabold tracking-tight sm:text-5xl">{t('Помощь с Nocturne')}</h1>
+        <h1 className="mt-3 text-4xl font-extrabold tracking-tight sm:text-5xl">{t('Помощь с Nocturne Player')}</h1>
         <p className="mt-5 text-lg text-muted">
-          {t('Nocturne — плеер для своего сервера Navidrome. Ниже — ответы на то, с чем люди сталкиваются чаще всего, и способ написать, если ответа здесь нет.')}
+          {t('Nocturne Player — плеер для своего сервера Navidrome. Ниже — ответы на то, с чем люди сталкиваются чаще всего, и способ написать, если ответа здесь нет.')}
         </p>
 
         <Block title="Первый запуск">
@@ -52,7 +52,7 @@ export function Support() {
 
         <Block title="Без сервера: музыка с устройства">
           <p>{t('На Android открой «Медиатека → На телефоне» и нажми «Файлы» или «Папка». Выбранная музыка копируется в приложение и играет без интернета. Если сервер уже подключён, отключать его не нужно.')}</p>
-          <p>{t('На iPhone и iPad открой раздел музыки на устройстве и добавь файлы или папку. Можно также отправить аудиофайл через «Поделиться → Nocturne». На компьютере добавь файлы или папку в локальную медиатеку.')}</p>
+          <p>{t('На iPhone и iPad открой раздел музыки на устройстве и добавь файлы или папку. Можно также отправить аудиофайл через «Поделиться → Nocturne Player». На компьютере добавь файлы или папку в локальную медиатеку.')}</p>
         </Block>
 
         <Block title="Не подключается к серверу">
@@ -81,7 +81,7 @@ export function Support() {
             {t('Опиши, что происходит, на каком устройстве и какая версия приложения (она написана в настройках). Ответ придёт на почту.')}
           </p>
           <p>
-            <a className="text-accent underline-offset-4 hover:underline" href="mailto:rasulhattaev715@gmail.com?subject=Nocturne">
+            <a className="text-accent underline-offset-4 hover:underline" href="mailto:rasulhattaev715@gmail.com?subject=Nocturne Player">
               rasulhattaev715@gmail.com
             </a>
           </p>
@@ -92,7 +92,7 @@ export function Support() {
         <div className="mx-auto flex max-w-3xl flex-col items-center justify-between gap-4 px-4 py-10 text-sm text-muted sm:flex-row sm:px-6">
           <a href={localizePath('/')} className="flex items-center gap-2.5">
             <Logo size={22} />
-            <span>{t('Nocturne — плеер для Navidrome')}</span>
+            <span>{t('Nocturne Player — плеер для Navidrome')}</span>
           </a>
           <a href={localizePath('/privacy')} className="hover:text-ink">
             {t('Конфиденциальность')}

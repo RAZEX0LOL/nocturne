@@ -135,3 +135,17 @@ scripts/release-desktop.sh publish --windows   # + Windows (NSIS через carg
 
 `site/deploy/deploy.sh` — сборка и rsync на nl (`/var/www/nocturne`), `--nginx` — ещё и конфиг nginx.
 Конфиг в репозитории содержит строки certbot — не выкладывать старую версию поверх.
+
+## Название приложения
+
+Публичное имя — **Nocturne Player**, исходники — `RAZEX0LOL/nocturne-player`.
+Идентификаторы `app.nocturne.music`, схемы Xcode, имя Rust-бинарника `nocturne`,
+папка локальной музыки desktop `Music/Nocturne` и адреса `nocturne-releases`
+сохранены для совместимости существующих установок. Архивы Tauri создаются
+с именем `Nocturne Player`; скрипты выпуска нормализуют имена файлов для загрузок.
+
+Windows NSIS переносит регистрацию старого имени, сохраняя каталог установки.
+Проверка `scripts/check-windows-rename.ps1` в Windows CI устанавливает официальный
+1.1.83, затем новую сборку, проверяет имя, исполняемый файл, сохранность данных
+и повторную установку. MSI сохраняет прежний `upgradeCode`. Имя приложения
+в статусе Discord отдельно задаётся владельцем в Discord Developer Portal.

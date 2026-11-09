@@ -1,7 +1,7 @@
 # Security policy / Сообщения об уязвимостях
 
 Напиши приватно на [rasulhattaev715@gmail.com](mailto:rasulhattaev715@gmail.com?subject=Nocturne%20security)
-с темой **Nocturne security**. Не открывай публичный Issue с действующими данными доступа.
+с темой **Nocturne Player security**. Не открывай публичный Issue с действующими данными доступа.
 
 Report vulnerabilities privately to the address above. Include the affected platform,
 app version, reproduction steps, impact and a minimal proof of concept. Use a disposable

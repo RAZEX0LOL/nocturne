@@ -32,7 +32,7 @@ export const PLATFORMS: Platform[] = [
     file: 'Nocturne-mac.dmg',
     alt: { href: 'https://apps.apple.com/app/id6814215090', action: 'Версия из App Store' },
     action: 'Скачать .dmg',
-    note: 'Открой образ и перетащи Nocturne в «Программы». Приложение подписано и проверено Apple — откроется без предупреждений.',
+    note: 'Открой образ и перетащи Nocturne Player в «Программы». Приложение подписано и проверено Apple — откроется без предупреждений.',
   },
   {
     id: 'windows',

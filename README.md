@@ -1,11 +1,11 @@
-# Nocturne
+# Nocturne Player
 
 [English](README.en.md) · [Сайт](https://nocturne.razex.online) · [App Store](https://apps.apple.com/app/id6814215090) · [Установщики](https://github.com/RAZEX0LOL/nocturne-releases/releases/tag/updates)
 
 Плеер для своей медиатеки Navidrome/OpenSubsonic и локальных файлов.
 iPhone, iPad, Mac, Windows, Linux и Android. Бесплатное приложение без рекламы и подписок.
 
-![Nocturne: полноэкранный плеер](site/public/shots/desktop-nowplaying.webp)
+![Nocturne Player: полноэкранный плеер](site/public/shots/desktop-nowplaying.webp)
 
 ## Установка
 
@@ -41,7 +41,7 @@ iPhone, iPad, Mac, Windows, Linux и Android. Бесплатное прилож�
 
 ## Исходники и сборка
 
-Клонируй с историей: `git clone https://github.com/RAZEX0LOL/nocturne.git`.
+Клонируй с историей: `git clone https://github.com/RAZEX0LOL/nocturne-player.git`.
 Скрипты выпуска вычисляют номер сборки по числу коммитов.
 
 | Часть | Требования | Проверка |

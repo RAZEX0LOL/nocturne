@@ -19,7 +19,7 @@ export function Privacy() {
         <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-4 sm:px-6">
           <a href={localizePath('/')} className="flex items-center gap-2.5 font-extrabold tracking-[0.25em]">
             <Logo />
-            <span className="text-sm">NOCTURNE</span>
+            <span className="text-xs leading-tight">NOCTURNE<br />PLAYER</span>
           </a>
           <LanguageSwitch />
         </div>
@@ -29,13 +29,13 @@ export function Privacy() {
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-accent">{t('Конфиденциальность')}</p>
         <h1 className="mt-3 text-2xl font-extrabold tracking-tight sm:text-5xl">{t('Политика конфиденциальности')}</h1>
         <p className="mt-5 text-lg text-muted">
-          {t('Коротко: Nocturne не собирает о тебе никаких данных. У приложения нет серверов, аккаунтов, аналитики и рекламы. Музыка и всё, что с ней связано, остаются между твоим устройством и твоим сервером.')}
+          {t('Коротко: Nocturne Player не собирает о тебе никаких данных. У приложения нет серверов, аккаунтов, аналитики и рекламы. Музыка и всё, что с ней связано, остаются между твоим устройством и твоим сервером.')}
         </p>
         <p className="mt-3 text-sm text-muted">{t('Обновлено 9 ноября 2026 года.')}</p>
 
         <Block title="Какие данные мы собираем">
           <p>
-            {t('Никаких. У Nocturne нет собственного сервера, который мог бы что-то получать: разработчик не видит ни твою медиатеку, ни то, что ты слушаешь, ни адрес твоего сервера.')}
+            {t('Никаких. У Nocturne Player нет собственного сервера, который мог бы что-то получать: разработчик не видит ни твою медиатеку, ни то, что ты слушаешь, ни адрес твоего сервера.')}
           </p>
         </Block>
 
@@ -94,7 +94,7 @@ export function Privacy() {
         <div className="mx-auto flex max-w-3xl flex-col items-center justify-between gap-4 px-4 py-10 text-sm text-muted sm:flex-row sm:px-6">
           <a href={localizePath('/')} className="flex items-center gap-2.5">
             <Logo size={22} />
-            <span>{t('Nocturne — плеер для Navidrome')}</span>
+            <span>{t('Nocturne Player — плеер для Navidrome')}</span>
           </a>
           <span>{t('Сделано для своей музыки · {year}', { year: new Date().getFullYear() })}</span>
         </div>

@@ -11,20 +11,20 @@ export type Language = 'ru' | 'en'
 const english: Record<string, string> = {
   'Обновлено 9 ноября 2026 года.': 'Updated November 9, 2026.',
   "Версия из App Store": "App Store version",
-  "Nocturne — плеер для Navidrome": "Nocturne — a player for Navidrome",
+  "Nocturne Player — плеер для Navidrome": "Nocturne Player — a player for Navidrome",
   "Nocturne Player: музыка с Navidrome и файлы с устройства. Бесплатно на iPhone, iPad, Mac, Windows, Linux и Android. iPhone и iPad — в App Store.": "Nocturne Player: your Navidrome library and local music. Free on iPhone, iPad, Mac, Windows, Linux and Android. Available on the App Store for iPhone and iPad.",
-  "С чего начать — Nocturne": "Getting started — Nocturne",
-  "Как слушать локальную музыку без сервера или подключить Nocturne к своей медиатеке Navidrome: пошаговая инструкция.": "Play local music without a server or connect Nocturne to your own Navidrome library: a step-by-step guide.",
-  "Поддержка — Nocturne": "Support — Nocturne",
-  "Помощь с Nocturne: установка из App Store, музыка с телефона без сервера, подключение к Navidrome и воспроизведение.": "Nocturne help: App Store installation, local music without a server, connecting to Navidrome and playback.",
-  "Политика конфиденциальности — Nocturne": "Privacy policy — Nocturne",
-  "Nocturne: локальное хранение музыки и настроек, подключение к своему серверу и внешним сервисам, без рекламы и аналитики.": "Nocturne: local music and settings, connections to your server and external services, with no ads or analytics.",
+  "С чего начать — Nocturne Player": "Getting started — Nocturne Player",
+  "Как слушать локальную музыку без сервера или подключить Nocturne Player к своей медиатеке Navidrome: пошаговая инструкция.": "Play local music without a server or connect Nocturne Player to your own Navidrome library: a step-by-step guide.",
+  "Поддержка — Nocturne Player": "Support — Nocturne Player",
+  "Помощь с Nocturne Player: установка из App Store, музыка с телефона без сервера, подключение к Navidrome и воспроизведение.": "Nocturne Player help: App Store installation, local music without a server, connecting to Navidrome and playback.",
+  "Политика конфиденциальности — Nocturne Player": "Privacy policy — Nocturne Player",
+  "Nocturne Player: локальное хранение музыки и настроек, подключение к своему серверу и внешним сервисам, без рекламы и аналитики.": "Nocturne Player: local music and settings, connections to your server and external services, with no ads or analytics.",
   "Скачать в App Store": "Download on the App Store",
   "Новая версия сохраняет настройки, загрузки и вход на сервер. На iPhone и iPad обновления приходят через App Store.": "New versions keep your settings, downloads and server sign-in. On iPhone and iPad, updates arrive through the App Store.",
-  "На компьютере и Android обновления доступны в приложении: настройки, загрузки и вход сохраняются. На Android разреши установку из Nocturne, когда система попросит. Версии из App Store обновляются через App Store.": "On desktop and Android, updates are available in the app and keep your settings, downloads and sign-in. On Android, allow installation from Nocturne when prompted. App Store versions update through the App Store.",
+  "На компьютере и Android обновления доступны в приложении: настройки, загрузки и вход сохраняются. На Android разреши установку из Nocturne Player, когда система попросит. Версии из App Store обновляются через App Store.": "On desktop and Android, updates are available in the app and keep your settings, downloads and sign-in. On Android, allow installation from Nocturne Player when prompted. App Store versions update through the App Store.",
   "Бесплатно, без рекламы и подписок. Разработчик не собирает историю прослушиваний. О подключениях к серверу, поиске текстов и проверке обновлений — в политике конфиденциальности.": "Free, with no ads or subscriptions. The developer does not collect your listening history. See the privacy policy for details about server connections, lyrics search and update checks.",
   "Общая медиатека и привычное управление, с интерфейсом под каждую систему.": "Your library and familiar controls, with an interface tailored to each system.",
-  "Nocturne играет файлы с устройства и музыку с сервера Navidrome. Для локальных файлов сервер не нужен. Эта инструкция — для своей сетевой медиатеки на домашнем компьютере, NAS или VPS.": "Nocturne plays files from your device and music from a Navidrome server. Local files do not need a server. This guide covers setting up your own network library on a home computer, NAS or VPS.",
+  "Nocturne Player играет файлы с устройства и музыку с сервера Navidrome. Для локальных файлов сервер не нужен. Эта инструкция — для своей сетевой медиатеки на домашнем компьютере, NAS или VPS.": "Nocturne Player plays files from your device and music from a Navidrome server. Local files do not need a server. This guide covers setting up your own network library on a home computer, NAS or VPS.",
   "Для сетевой медиатеки подключи свой Navidrome на домашнем компьютере, NAS или VPS. Если сервера ещё нет, воспользуйся инструкцией:": "For a network library, connect your own Navidrome on a home computer, NAS or VPS. If you do not have a server yet, follow the guide:",
   "Можно начать без сервера: выбери прослушивание музыки с устройства на экране входа и добавь свои файлы. Или открой «Посмотреть демоверсию», чтобы попробовать плеер на встроенных треках.": "You can start without a server: choose music from your device on the connection screen and add your own files. Or choose “See the demo” to try the player with bundled tracks.",
   "Проверь громкость и выбранный аудиовыход, затем перезапусти трек. На Android проверь ограничения работы приложения в фоне и настройки батареи. Для серверного трека попробуй другое качество потока: сервер мог не справиться с перекодированием. Если звук снова пропадёт, напиши модель устройства, версию системы и приложения, а также продолжает ли двигаться время трека.": "Check the volume and selected audio output, then restart the track. On Android, check background activity and battery restrictions. For a server track, try a different streaming quality: the server may have failed to transcode it. If sound drops again, send your device model, OS and app versions, and whether the track timer keeps moving.",
@@ -37,7 +37,7 @@ const english: Record<string, string> = {
   "или": "or",
   "Без сервера: музыка с устройства": "No server: music from your device",
   "На Android открой «Медиатека → На телефоне» и нажми «Файлы» или «Папка». Выбранная музыка копируется в приложение и играет без интернета. Если сервер уже подключён, отключать его не нужно.": "On Android, open “Library → On this phone” and choose “Files” or “Folder”. Selected music is copied into the app and plays offline. You do not need to disconnect an existing server.",
-  "На iPhone и iPad открой раздел музыки на устройстве и добавь файлы или папку. Можно также отправить аудиофайл через «Поделиться → Nocturne». На компьютере добавь файлы или папку в локальную медиатеку.": "On iPhone and iPad, open the on-device music section and add files or a folder. You can also send an audio file via “Share → Nocturne”. On desktop, add files or a folder to the local library.",
+  "На iPhone и iPad открой раздел музыки на устройстве и добавь файлы или папку. Можно также отправить аудиофайл через «Поделиться → Nocturne Player». На компьютере добавь файлы или папку в локальную медиатеку.": "On iPhone and iPad, open the on-device music section and add files or a folder. You can also send an audio file via “Share → Nocturne Player”. On desktop, add files or a folder to the local library.",
   "Установить приложение": "Install the app",
   "На iPhone и iPad Nocturne Player доступен в App Store. Для Android, Windows, Linux и Mac установщики находятся на главной странице.": "On iPhone and iPad, Nocturne Player is available on the App Store. Android, Windows, Linux and Mac installers are on the home page.",
   // Шапка и главный экран
@@ -50,21 +50,21 @@ const english: Record<string, string> = {
   'Версия {version}': 'Version {version}',
   'Твоя музыка.': 'Your music.',
   'Твоё пространство.': 'Your space.',
-  'Nocturne — плеер для своего сервера Navidrome. Красивый, быстрый и родной на каждой системе: начни слушать на компьютере и продолжи с того же места на телефоне.':
-    'Nocturne is a player for your own Navidrome server. Beautiful, fast and native on every system: start listening on your computer and pick up at the same spot on your phone.',
+  'Nocturne Player — плеер для своего сервера Navidrome. Красивый, быстрый и родной на каждой системе: начни слушать на компьютере и продолжи с того же места на телефоне.':
+    'Nocturne Player is a player for your own Navidrome server. Beautiful, fast and native on every system: start listening on your computer and pick up at the same spot on your phone.',
   'Скачать для {name}': 'Download for {name}',
   'Установить через TestFlight': 'Install via TestFlight',
   'Все платформы': 'All platforms',
   'Бесплатно · без рекламы · без аккаунтов, кроме твоего сервера': 'Free · no ads · no accounts beyond your own server',
-  'Nocturne на компьютере: альбом, полноэкранный плеер с текстом песни и светлая тема':
-    'Nocturne on a computer: an album, the full-screen player with lyrics and the light theme',
-  'Nocturne на Mac: полноэкранный плеер с синхронным текстом песни': 'Nocturne on Mac: the full-screen player with synced lyrics',
-  'Nocturne на iPhone: плеер': 'Nocturne on iPhone: the player',
+  'Nocturne Player на компьютере: альбом, полноэкранный плеер с текстом песни и светлая тема':
+    'Nocturne Player on a computer: an album, the full-screen player with lyrics and the light theme',
+  'Nocturne Player на Mac: полноэкранный плеер с синхронным текстом песни': 'Nocturne Player on Mac: the full-screen player with synced lyrics',
+  'Nocturne Player на iPhone: плеер': 'Nocturne Player on iPhone: the player',
 
   // Возможности
   'Всё, что нужно от плеера — и ничего лишнего': 'Everything a player needs — and nothing more',
-  'Nocturne подключается к Navidrome (и любому Subsonic-совместимому серверу) и превращает домашнюю медиатеку в музыкальный сервис, который принадлежит тебе.':
-    'Nocturne connects to Navidrome (and any Subsonic-compatible server) and turns your home library into a music service that belongs to you.',
+  'Nocturne Player подключается к Navidrome (и любому Subsonic-совместимому серверу) и превращает домашнюю медиатеку в музыкальный сервис, который принадлежит тебе.':
+    'Nocturne Player connects to Navidrome (and any Subsonic-compatible server) and turns your home library into a music service that belongs to you.',
   'Продолжи на другом устройстве': 'Pick up on another device',
   'Очередь и место в треке сохраняются на сервере. Выключил музыку на компьютере — телефон предложит продолжить с той же секунды.':
     'The queue and your position are saved on the server. Stop the music on your computer and your phone offers to continue from the same second.',
@@ -113,8 +113,8 @@ const english: Record<string, string> = {
   '. Каждое обновление подписано: приложение не поставит файл, который подменили по дороге.':
     '. Every update is signed: the app will not install a file that was tampered with on the way.',
   'Mac на Apple Silicon (M1 и новее)': 'Mac with Apple Silicon (M1 and newer)',
-  'Открой образ и перетащи Nocturne в «Программы». Приложение подписано и проверено Apple — откроется без предупреждений.':
-    'Open the image and drag Nocturne into Applications. The app is signed and notarized by Apple, so it opens without warnings.',
+  'Открой образ и перетащи Nocturne Player в «Программы». Приложение подписано и проверено Apple — откроется без предупреждений.':
+    'Open the image and drag Nocturne Player into Applications. The app is signed and notarized by Apple, so it opens without warnings.',
   'Скачать .dmg': 'Download .dmg',
   'Windows 10 и 11, x64': 'Windows 10 and 11, x64',
   'Если SmartScreen предупредит о новом приложении — «Подробнее» → «Выполнить в любом случае».':
@@ -148,8 +148,8 @@ const english: Record<string, string> = {
   // Вопросы
   'Частые вопросы': 'Frequently asked questions',
   'Что такое Navidrome и зачем он нужен?': 'What is Navidrome and why do I need it?',
-  'Navidrome — бесплатный сервер для своей музыкальной коллекции: ставится на домашний компьютер, NAS или VPS и раздаёт музыку по сети. Nocturne — плеер к нему. Подойдёт и любой другой сервер с API Subsonic.':
-    'Navidrome is a free server for your own music collection: it runs on a home computer, a NAS or a VPS and serves the music over the network. Nocturne is a player for it. Any other server with the Subsonic API works too.',
+  'Navidrome — бесплатный сервер для своей музыкальной коллекции: ставится на домашний компьютер, NAS или VPS и раздаёт музыку по сети. Nocturne Player — плеер к нему. Подойдёт и любой другой сервер с API Subsonic.':
+    'Navidrome is a free server for your own music collection: it runs on a home computer, a NAS or a VPS and serves the music over the network. Nocturne Player is a player for it. Any other server with the Subsonic API works too.',
   'Поставить за 10 минут': 'Set it up in 10 minutes',
   'Можно без сервера?': 'Can I use it without a server?',
   'Да, на любой системе. На компьютере, iPhone, iPad и Android можно слушать файлы прямо с устройства: на экране входа выбери «Слушать музыку с этого устройства». Есть и демоверсия — посмотреть плеер, ничего не подключая.':
@@ -172,8 +172,8 @@ const english: Record<string, string> = {
 
   // Страница «С чего начать»
   'Свой музыкальный сервер за 10 минут': 'Your own music server in 10 minutes',
-  'Nocturne — это плеер, а музыка живёт на твоём сервере Navidrome: на домашнем компьютере, NAS или VPS. Ставится он одной командой. Ниже — весь путь от пустой папки до музыки в телефоне.':
-    'Nocturne is the player; the music lives on your own Navidrome server — a home computer, a NAS or a VPS. It installs with one command. Below is the whole path from an empty folder to music on your phone.',
+  'Nocturne Player — это плеер, а музыка живёт на твоём сервере Navidrome: на домашнем компьютере, NAS или VPS. Ставится он одной командой. Ниже — весь путь от пустой папки до музыки в телефоне.':
+    'Nocturne Player is the player; the music lives on your own Navidrome server — a home computer, a NAS or a VPS. It installs with one command. Below is the whole path from an empty folder to music on your phone.',
   'Нужен компьютер, который может быть включён, когда ты слушаешь музыку, и': 'You need a computer that can stay on while you listen, and',
   '. Подойдёт и домашний ПК, и мини-компьютер, и арендованный сервер.': '. A home PC, a mini computer or a rented server all work.',
   'Пусть сканирует папку каждую минуту: закинул файлы — они сразу в медиатеке.':
@@ -204,7 +204,7 @@ const english: Record<string, string> = {
   'Открой': 'Open',
   '— Navidrome попросит придумать логин и пароль администратора. Их же ты введёшь в Nocturne. Первое сканирование большой коллекции занимает несколько минут.':
     '— Navidrome will ask you to create an admin username and password. Those are what you enter in Nocturne. The first scan of a large collection takes a few minutes.',
-  'Подключи Nocturne': 'Connect Nocturne',
+  'Подключи Nocturne Player': 'Connect Nocturne Player',
   'Скачай приложение': 'Download the app',
   'для своей системы и введи три поля: адрес сервера, логин и пароль.': 'for your system and fill in three fields: server address, username and password.',
   'Если плеер на том же компьютере, адрес —': 'If the player runs on the same computer, the address is',
@@ -214,8 +214,8 @@ const english: Record<string, string> = {
   'Пока сервер доступен только из домашней сети. Чтобы музыка играла и в дороге, есть три пути — от простого к надёжному:':
     'For now the server is reachable only from your home network. There are three ways to take the music with you, from simplest to sturdiest:',
   'Скачать заранее.': 'Download in advance.',
-  'Ничего настраивать не нужно: отметь альбомы и плейлисты в Nocturne — они будут играть без сети.':
-    'Nothing to set up: mark albums and playlists in Nocturne and they play without a network.',
+  'Ничего настраивать не нужно: отметь альбомы и плейлисты в Nocturne Player — они будут играть без сети.':
+    'Nothing to set up: mark albums and playlists in Nocturne Player and they play without a network.',
   'Своя сеть поверх интернета': 'A private network over the internet',
   '. Ставится на сервер и на телефон, адрес остаётся внутренним, наружу ничего не торчит. Самый простой безопасный способ.':
     '. Install it on the server and on your phone; the address stays private and nothing is exposed. The simplest safe option.',
@@ -228,17 +228,17 @@ const english: Record<string, string> = {
   ', и загляни в': ', and look at',
   '. Подробности — в': '. Details are in the',
   'документации Navidrome': 'Navidrome documentation',
-  'Скачать Nocturne': 'Download Nocturne',
+  'Скачать Nocturne Player': 'Download Nocturne Player',
 
   // Конфиденциальность и поддержка
   'Конфиденциальность': 'Privacy',
   'Политика конфиденциальности': 'Privacy policy',
-  'Коротко: Nocturne не собирает о тебе никаких данных. У приложения нет серверов, аккаунтов, аналитики и рекламы. Музыка и всё, что с ней связано, остаются между твоим устройством и твоим сервером.':
-    'In short: Nocturne collects no data about you. The app has no servers, no accounts, no analytics and no ads. Your music and everything around it stays between your device and your server.',
+  'Коротко: Nocturne Player не собирает о тебе никаких данных. У приложения нет серверов, аккаунтов, аналитики и рекламы. Музыка и всё, что с ней связано, остаются между твоим устройством и твоим сервером.':
+    'In short: Nocturne Player collects no data about you. The app has no servers, no accounts, no analytics and no ads. Your music and everything around it stays between your device and your server.',
   'Действует с 22 октября 2026 года.': 'In effect since 22 October 2026.',
   'Какие данные мы собираем': 'What data we collect',
-  'Никаких. У Nocturne нет собственного сервера, который мог бы что-то получать: разработчик не видит ни твою медиатеку, ни то, что ты слушаешь, ни адрес твоего сервера.':
-    'None. Nocturne has no server of its own that could receive anything: the developer sees neither your library, nor what you listen to, nor your server’s address.',
+  'Никаких. У Nocturne Player нет собственного сервера, который мог бы что-то получать: разработчик не видит ни твою медиатеку, ни то, что ты слушаешь, ни адрес твоего сервера.':
+    'None. Nocturne Player has no server of its own that could receive anything: the developer sees neither your library, nor what you listen to, nor your server’s address.',
   'Куда приложение обращается': 'Where the app connects',
   'Твой сервер Navidrome': 'Your Navidrome server',
   '— адрес, логин и пароль вводишь ты. Туда уходят запросы за музыкой, обложками и плейлистами, а также отметки о прослушивании, оценки и очередь. Этим сервером распоряжаешься ты.':
@@ -263,9 +263,9 @@ const english: Record<string, string> = {
   'Связаться': 'Get in touch',
   'Вопросы о приложении и о приватности — на странице поддержки:': 'Questions about the app and about privacy go to the support page:',
   'Поддержка': 'Support',
-  'Помощь с Nocturne': 'Nocturne help',
-  'Nocturne — плеер для своего сервера Navidrome. Ниже — ответы на то, с чем люди сталкиваются чаще всего, и способ написать, если ответа здесь нет.':
-    'Nocturne is a player for your own Navidrome server. Below are the things people run into most often, and a way to write in if the answer is not here.',
+  'Помощь с Nocturne Player': 'Nocturne Player help',
+  'Nocturne Player — плеер для своего сервера Navidrome. Ниже — ответы на то, с чем люди сталкиваются чаще всего, и способ написать, если ответа здесь нет.':
+    'Nocturne Player is a player for your own Navidrome server. Below are the things people run into most often, and a way to write in if the answer is not here.',
   'Первый запуск': 'First launch',
   'Приложению нужен сервер Navidrome — свой, на домашнем компьютере, NAS или VPS. Если его ещё нет, поставь за десять минут по инструкции:':
     'The app needs a Navidrome server of your own — on a home computer, a NAS or a VPS. If you do not have one yet, set it up in ten minutes:',

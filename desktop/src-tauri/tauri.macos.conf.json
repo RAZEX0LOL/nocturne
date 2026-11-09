@@ -3,7 +3,7 @@
   "app": {
     "windows": [
       {
-        "title": "Nocturne",
+        "title": "Nocturne Player",
         "width": 1180,
         "height": 800,
         "minWidth": 720,

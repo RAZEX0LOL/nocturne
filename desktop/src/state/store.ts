@@ -96,7 +96,7 @@ export interface Settings {
   globalShortcuts: boolean
   /** Полосы спектра под обложкой в полноэкранном плеере. */
   visualizer: boolean
-  /** «Слушает … в Nocturne» в статусе Discord; нужен ID своего приложения Discord. */
+  /** Показывать текущий трек в Discord через встроенное приложение. */
   discord: boolean
   accent: AccentMode
   quality: StreamQuality

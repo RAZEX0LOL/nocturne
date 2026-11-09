@@ -14,6 +14,7 @@ import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+from urllib.parse import quote
 
 # Как называется файл обновления на каждой системе. Tauri 2 подписывает сами установщики.
 ARCHIVES = {
@@ -52,7 +53,7 @@ def main(version: str, folder: str, base: str, system: str, machine: str) -> int
         "pub_date": datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
         # В имени файла версия: старый установщик на сервере не подменяется новым под тем же именем,
         # и скачавший его в момент публикации получит целый файл.
-        "url": f"{base.rstrip('/')}/{archive.name}",
+        "url": f"{base.rstrip('/')}/{quote(archive.name)}",
         "signature": signature.read_text().strip(),
     }
     # Пункты чейнджлога (scripts/changelog.ts notes) — приложение показывает их в плашке обновления.

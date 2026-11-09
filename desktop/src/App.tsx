@@ -225,7 +225,7 @@ export function App() {
             <button onClick={goBack} disabled={!canGoBack} className="icon-btn" title={t('Назад')} aria-label={t('Назад')}>
               <Icon name="back" />
             </button>
-            <span className="px-2 text-xs font-semibold tracking-[0.2em] text-secondary">NOCTURNE</span>
+            <span className="px-2 text-xs font-semibold tracking-[0.12em] text-secondary">NOCTURNE<br />PLAYER</span>
           </div>
           <div className="sidebar-scroll -mx-1.5 flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-1.5">
           {sectionsFor(serverless, offline)

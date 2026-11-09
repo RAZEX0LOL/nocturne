@@ -335,7 +335,7 @@
         }
       }
     },
-    "NOCTURNE": {},
+    "NOCTURNE PLAYER": {},
     "Navidrome не нашёл текст для этого трека.": {
       "localizations": {
         "en": {
@@ -346,7 +346,7 @@
         }
       }
     },
-    "Nocturne сохраняет только аудиофайлы": {},
+    "Nocturne Player сохраняет только аудиофайлы": {},
     "OpenSubsonic API": {},
     "ReplayGain выравнивает громкость по тегам файлов: «по треку» для перемешанных очередей, «по альбому» сохраняет задуманную разницу между треками, «авто» выбирает сам. Бесконечное воспроизведение: очередь кончилась — дальше играет похожая музыка. Таймер сна плавно затихает за последние полминуты.": {
       "localizations": {
@@ -992,18 +992,18 @@
         }
       }
     },
-    "Добавь файлы или папку кнопками выше, скачай по ссылке или через браузер, или положи файлы в папку Nocturne → Music в Finder. Поддерживаются MP3, M4A, AAC, ALAC, FLAC, WAV.": {
+    "Добавь файлы или папку кнопками выше, скачай по ссылке или через браузер, или положи файлы в папку Nocturne Player → Music в Finder. Поддерживаются MP3, M4A, AAC, ALAC, FLAC, WAV.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Add files or a folder with the buttons above, download by link or through the browser, or drop files into the Nocturne → Music folder in Finder. MP3, M4A, AAC, ALAC, FLAC and WAV are supported."
+            "value": "Add files or a folder with the buttons above, download by link or through the browser, or drop files into the Nocturne Player → Music folder in Finder. MP3, M4A, AAC, ALAC, FLAC and WAV are supported."
           }
         }
       }
     },
-    "Добавь файлы или папку кнопками выше, скачай по ссылке или через браузер, отправь через «Поделиться → Nocturne» из любого приложения или скопируй с Mac в Finder: %@ → Файлы → Nocturne → Music. Поддерживаются MP3, M4A, AAC, ALAC, FLAC, WAV.": {},
+    "Добавь файлы или папку кнопками выше, скачай по ссылке или через браузер, отправь через «Поделиться → Nocturne Player» из любого приложения или скопируй с Mac в Finder: %@ → Файлы → Nocturne Player → Music. Поддерживаются MP3, M4A, AAC, ALAC, FLAC, WAV.": {},
     "Долгое нажатие на трек или меню альбома → «Скачать». Скачанное играет без сети.": {
       "localizations": {
         "en": {
@@ -3031,12 +3031,12 @@
         }
       }
     },
-    "Текущий трек Nocturne с кнопками управления.": {
+    "Текущий трек Nocturne Player с кнопками управления.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The current Nocturne track with playback controls."
+            "value": "The current Nocturne Player track with playback controls."
           }
         }
       }

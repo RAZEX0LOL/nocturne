@@ -1,11 +1,11 @@
-# Nocturne
+# Nocturne Player
 
 [Русский](README.md) · [Website](https://nocturne.razex.online/?lang=en) · [App Store](https://apps.apple.com/app/id6814215090) · [Downloads](https://github.com/RAZEX0LOL/nocturne-releases/releases/tag/updates)
 
 A music player for your own Navidrome/OpenSubsonic library and local files.
 iPhone, iPad, Mac, Windows, Linux and Android. Free to download, with no ads or subscriptions.
 
-![Nocturne player](site/public/shots/desktop-nowplaying.webp)
+![Nocturne Player player](site/public/shots/desktop-nowplaying.webp)
 
 ## Install and listen
 
@@ -30,7 +30,7 @@ and may not carry release signatures.
 
 ## Build and test
 
-Clone the full history: `git clone https://github.com/RAZEX0LOL/nocturne.git`.
+Clone the full history: `git clone https://github.com/RAZEX0LOL/nocturne-player.git`.
 Release numbers are derived from the commit count.
 
 - **Apple:** Swift 6, `swift test`. Xcode on macOS for iOS / iPadOS / Mac Catalyst;
