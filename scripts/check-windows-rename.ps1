@@ -18,6 +18,7 @@ $newKey = 'HKCU:\Software\Nocturne Player\Nocturne Player'
 $newUninstall = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\Nocturne Player'
 $installedAt = (Get-Item $legacyKey).GetValue('')
 if (-not $installedAt -or -not (Test-Path "$installedAt\nocturne.exe")) { throw 'Legacy install not found' }
+$legacyHash = (Get-FileHash "$installedAt\nocturne.exe").Hash
 $marker = Join-Path $installedAt 'rename-preservation.txt'
 Set-Content $marker 'keep-existing-files'
 $dataDirectory = Join-Path $env:LOCALAPPDATA 'app.nocturne.music'
@@ -34,7 +35,15 @@ if (Test-Path $oldUninstall) { throw 'Legacy uninstall registration remains' }
 if (Test-Path $legacyKey) { throw 'Legacy product registration remains' }
 if ((Get-Content $marker) -ne 'keep-existing-files') { throw 'Existing files changed' }
 if ((Get-Content $dataMarker) -ne 'keep-user-data') { throw 'User data changed' }
-if ((Get-FileHash "$installedAt\nocturne.exe").Hash -ne (Get-FileHash 'desktop/src-tauri/target/release/nocturne.exe').Hash) { throw 'Installed executable was not updated' }
+# Tauri меняет маркер типа установщика в PE при упаковке MSI/NSIS, поэтому хеш
+# target/release отличается от упакованного файла. Проверяем замену старого PE
+# и ресурсы версии, которые остаются одинаковыми при такой упаковке.
+$installedBinary = Get-Item "$installedAt\nocturne.exe"
+$builtBinary = Get-Item 'desktop/src-tauri/target/release/nocturne.exe'
+if ((Get-FileHash $installedBinary.FullName).Hash -eq $legacyHash) { throw 'Legacy executable was not replaced' }
+if ($installedBinary.VersionInfo.ProductName -ne 'Nocturne Player') { throw 'Installed executable has the old product name' }
+if ($installedBinary.VersionInfo.ProductVersion -ne $builtBinary.VersionInfo.ProductVersion) { throw 'Installed executable has the wrong version' }
+if ((Get-ItemProperty $newUninstall).Publisher -ne 'Nocturne Player') { throw 'Incorrect publisher name' }
 # Повторное обновление уже переименованного приложения тоже остаётся на том же месте.
 Install-Quietly $installer
 if ((Get-Item $newKey).GetValue('') -ne $installedAt) { throw 'Reinstall changed location' }
