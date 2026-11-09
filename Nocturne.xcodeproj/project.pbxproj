@@ -7,47 +7,47 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0850149335D4E7B5290E8B5A /* Nocturne/App/WebImport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F3FB8E7B8F949CBA10A5F44 /* Nocturne/App/WebImport.swift */; };
+		0D15B47E6E7F49D134222167 /* Nocturne/Resources/PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 6F5ADE23265FE4C20E5DAE8F /* Nocturne/Resources/PrivacyInfo.xcprivacy */; };
 		0E5E30389398C23134A8825D /* Nocturne/App/LibraryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788B79F1FFEA4F698DD5DEF6 /* Nocturne/App/LibraryStore.swift */; };
+		10AC574E8ABD15AB22190D57 /* Nocturne/App/AppIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02B6B373835CAAA78174B882 /* Nocturne/App/AppIntents.swift */; };
 		14681B04CE7AEDFA8FCCE90C /* Nocturne/App/NocturneApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DDB5986E5F512CD2F97D5C9 /* Nocturne/App/NocturneApp.swift */; };
+		1DF57C4B51D0F23F195FB43C /* Nocturne/App/StatsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EE4DF7186F349BAC4D5A532 /* Nocturne/App/StatsStore.swift */; };
+		27F48A8FA3BB743F5EFB5A9B /* Nocturne/App/AddMusic.swift in Sources */ = {isa = PBXBuildFile; fileRef = F184813B74E2F7059B6BDA7A /* Nocturne/App/AddMusic.swift */; };
+		2D973FAE9653057797240C59 /* Nocturne/App/ArtworkCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADB4E61A45838B578F5DBDDE /* Nocturne/App/ArtworkCache.swift */; };
+		2F50D00DF5F9B5537DED6A7C /* Nocturne/Shared/WidgetIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDC6CBE205B46EE8D1D63DF6 /* Nocturne/Shared/WidgetIntents.swift */; };
+		43E3EF56C042396FD4E8DC78 /* NocturneWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 1CF7607B608A7E6324CD10BC /* NocturneWidget.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		4770F704DE92F6622D6A27F2 /* Nocturne/Shared/WidgetIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDC6CBE205B46EE8D1D63DF6 /* Nocturne/Shared/WidgetIntents.swift */; };
+		512C3EA6EF3B89F0A13B5782 /* Nocturne/App/SongActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B07F37FBBCA9A19C7775567F /* Nocturne/App/SongActions.swift */; };
+		543A80626A777E6CC7CB554A /* Nocturne/App/AppearanceSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18F7EDDEA20CBC997CD88CD3 /* Nocturne/App/AppearanceSettingsView.swift */; };
+		552D2A9AC365CC0AA0CBB620 /* Nocturne/App/LyricsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB85ADEE88A6C506E965B63E /* Nocturne/App/LyricsView.swift */; };
 		587854A59EFBF8969CAFD37F /* UITests/NocturneUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A56472E961F58FFFAE622D5B /* UITests/NocturneUITests.swift */; };
+		5F58648F6626F63A71541F60 /* Nocturne/Resources/Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 72B8CC6E0CB3458A44F5748C /* Nocturne/Resources/Localizable.xcstrings */; };
+		618D0A3513FAEA75E288EF1E /* Nocturne/Resources/PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 6F5ADE23265FE4C20E5DAE8F /* Nocturne/Resources/PrivacyInfo.xcprivacy */; };
 		66415D7430C2B881C3B195F4 /* Nocturne/Core/NavidromeClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8776A1776DCCA1B9F5053A9 /* Nocturne/Core/NavidromeClient.swift */; };
+		66B4F436E72511CCC1657FE0 /* Nocturne/App/NetworkMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = B116454CDEF528B63E73523C /* Nocturne/App/NetworkMonitor.swift */; };
 		673414468DC61EED9FDF73C1 /* Nocturne/App/Design.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBADB1390517AA4AA5BCE526 /* Nocturne/App/Design.swift */; };
+		69DC6D616DC99FF7736C23E5 /* Nocturne/App/Appearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 056767913ABE2F2802614D74 /* Nocturne/App/Appearance.swift */; };
+		87E7FB4DCC26C86C085999ED /* Nocturne/Core/Playback.swift in Sources */ = {isa = PBXBuildFile; fileRef = A86F53C8105010E6C212CED9 /* Nocturne/Core/Playback.swift */; };
+		8C168313618BE0F9D2048A61 /* NocturneWidget/NocturneWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = B72DE0D24B2E2CB64D92A750 /* NocturneWidget/NocturneWidget.swift */; };
+		8EC0F1632945AD905D04ABB4 /* Nocturne/App/EqualizerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD7729DE46A3696169A1A255 /* Nocturne/App/EqualizerView.swift */; };
+		A38F968096DAB93D9E4EC532 /* Nocturne/App/AudioEffects.swift in Sources */ = {isa = PBXBuildFile; fileRef = 152612EC5D62A85448DC369B /* Nocturne/App/AudioEffects.swift */; };
+		A65E8DF4DCC06FF4D32FC41E /* Nocturne/App/LocalLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 792232701517B14A3E3EBD2C /* Nocturne/App/LocalLibrary.swift */; };
 		A6D37B147602B6D23C7CDB89 /* Nocturne/App/PlayerStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C93D6784ED341C603ED7A492 /* Nocturne/App/PlayerStore.swift */; };
+		A96E0D27B1899769D366B322 /* Nocturne/App/SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86EF0EC5395992708D4BB83F /* Nocturne/App/SettingsView.swift */; };
+		B55E7C0A11C0A55E7C0A11C0 /* Nocturne/Resources/Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A55E7C0A11C0A55E7C0A11C0 /* Nocturne/Resources/Assets.xcassets */; };
 		BD8F8EC03E5EDF6B68726904 /* Nocturne/App/PlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2418496CC408A0325E95B016 /* Nocturne/App/PlayerView.swift */; };
 		BDE951B1B59497EAA71F8283 /* Nocturne/Core/Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85D681455A9553A667B6F865 /* Nocturne/Core/Models.swift */; };
-		D4BBAD5368A6E398C64062BF /* Nocturne/App/LibraryViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72EAE5BD08C062C4E61CB4ED /* Nocturne/App/LibraryViews.swift */; };
-		87E7FB4DCC26C86C085999ED /* Nocturne/Core/Playback.swift in Sources */ = {isa = PBXBuildFile; fileRef = A86F53C8105010E6C212CED9 /* Nocturne/Core/Playback.swift */; };
-		2D973FAE9653057797240C59 /* Nocturne/App/ArtworkCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADB4E61A45838B578F5DBDDE /* Nocturne/App/ArtworkCache.swift */; };
-		66B4F436E72511CCC1657FE0 /* Nocturne/App/NetworkMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = B116454CDEF528B63E73523C /* Nocturne/App/NetworkMonitor.swift */; };
-		A96E0D27B1899769D366B322 /* Nocturne/App/SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86EF0EC5395992708D4BB83F /* Nocturne/App/SettingsView.swift */; };
-		512C3EA6EF3B89F0A13B5782 /* Nocturne/App/SongActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B07F37FBBCA9A19C7775567F /* Nocturne/App/SongActions.swift */; };
-		552D2A9AC365CC0AA0CBB620 /* Nocturne/App/LyricsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB85ADEE88A6C506E965B63E /* Nocturne/App/LyricsView.swift */; };
-		B55E7C0A11C0A55E7C0A11C0 /* Nocturne/Resources/Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A55E7C0A11C0A55E7C0A11C0 /* Nocturne/Resources/Assets.xcassets */; };
-		E7B8B2731C75C25CA7575717 /* Nocturne/App/Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69E616E49BD7E61ACE622F26 /* Nocturne/App/Log.swift */; };
-		FE739EA672EDAC1B19B522D6 /* Nocturne/App/DownloadStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86F2E037AA6AE809969B7A58 /* Nocturne/App/DownloadStore.swift */; };
-		69DC6D616DC99FF7736C23E5 /* Nocturne/App/Appearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 056767913ABE2F2802614D74 /* Nocturne/App/Appearance.swift */; };
-		543A80626A777E6CC7CB554A /* Nocturne/App/AppearanceSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18F7EDDEA20CBC997CD88CD3 /* Nocturne/App/AppearanceSettingsView.swift */; };
-		1DF57C4B51D0F23F195FB43C /* Nocturne/App/StatsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EE4DF7186F349BAC4D5A532 /* Nocturne/App/StatsStore.swift */; };
-		F2F35E08546F89A8C4A29AE8 /* Nocturne/App/StatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7171064AA73188A248019ED9 /* Nocturne/App/StatsView.swift */; };
-		10AC574E8ABD15AB22190D57 /* Nocturne/App/AppIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02B6B373835CAAA78174B882 /* Nocturne/App/AppIntents.swift */; };
-		A38F968096DAB93D9E4EC532 /* Nocturne/App/AudioEffects.swift in Sources */ = {isa = PBXBuildFile; fileRef = 152612EC5D62A85448DC369B /* Nocturne/App/AudioEffects.swift */; };
-		8EC0F1632945AD905D04ABB4 /* Nocturne/App/EqualizerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD7729DE46A3696169A1A255 /* Nocturne/App/EqualizerView.swift */; };
-		BDEE8310D9AFC01D83686B9E /* NowPlayingSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50820B4A82DCF7B45C60DE2B /* NowPlayingSnapshot.swift */; };
-		4770F704DE92F6622D6A27F2 /* WidgetIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDC6CBE205B46EE8D1D63DF6 /* WidgetIntents.swift */; };
-		CDFAACE3C280C2577BB1C25B /* NowPlayingSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50820B4A82DCF7B45C60DE2B /* NowPlayingSnapshot.swift */; };
-		2F50D00DF5F9B5537DED6A7C /* WidgetIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDC6CBE205B46EE8D1D63DF6 /* WidgetIntents.swift */; };
-		8C168313618BE0F9D2048A61 /* NocturneWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = B72DE0D24B2E2CB64D92A750 /* NocturneWidget.swift */; };
-		43E3EF56C042396FD4E8DC78 /* NocturneWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 1CF7607B608A7E6324CD10BC /* NocturneWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); };  platformFilters = (ios, ); };
-		F311A0F0AD4F5DF5A36F43B9 /* Nocturne/App/CarPlaySceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788DD5A81B6E4766D235BDF2 /* Nocturne/App/CarPlaySceneDelegate.swift */; };
-		618D0A3513FAEA75E288EF1E /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 6F5ADE23265FE4C20E5DAE8F /* PrivacyInfo.xcprivacy */; };
-		0D15B47E6E7F49D134222167 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 6F5ADE23265FE4C20E5DAE8F /* PrivacyInfo.xcprivacy */; };
-		E73F4F43FF05FAF5DE702CAC /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 72B8CC6E0CB3458A44F5748C /* Localizable.xcstrings */; };
-		5F58648F6626F63A71541F60 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 72B8CC6E0CB3458A44F5748C /* Localizable.xcstrings */; };
-		D1328A2F40BB1B9E331407A2 /* AppShortcuts.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 525330C55C345C8A7D4C51F0 /* AppShortcuts.xcstrings */; };
-		A65E8DF4DCC06FF4D32FC41E /* Nocturne/App/LocalLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 792232701517B14A3E3EBD2C /* Nocturne/App/LocalLibrary.swift */; };
+		BDEE8310D9AFC01D83686B9E /* Nocturne/Shared/NowPlayingSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50820B4A82DCF7B45C60DE2B /* Nocturne/Shared/NowPlayingSnapshot.swift */; };
+		CDFAACE3C280C2577BB1C25B /* Nocturne/Shared/NowPlayingSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50820B4A82DCF7B45C60DE2B /* Nocturne/Shared/NowPlayingSnapshot.swift */; };
+		D1328A2F40BB1B9E331407A2 /* Nocturne/Resources/AppShortcuts.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 525330C55C345C8A7D4C51F0 /* Nocturne/Resources/AppShortcuts.xcstrings */; };
 		D2E007F43F451BC80F72FCA5 /* Nocturne/App/DeviceViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1DCFFF070C241B3D871508 /* Nocturne/App/DeviceViews.swift */; };
-		27F48A8FA3BB743F5EFB5A9B /* Nocturne/App/AddMusic.swift in Sources */ = {isa = PBXBuildFile; fileRef = F184813B74E2F7059B6BDA7A /* Nocturne/App/AddMusic.swift */; };
-		0850149335D4E7B5290E8B5A /* Nocturne/App/WebImport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F3FB8E7B8F949CBA10A5F44 /* Nocturne/App/WebImport.swift */; };
+		D4BBAD5368A6E398C64062BF /* Nocturne/App/LibraryViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72EAE5BD08C062C4E61CB4ED /* Nocturne/App/LibraryViews.swift */; };
+		E73F4F43FF05FAF5DE702CAC /* Nocturne/Resources/Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 72B8CC6E0CB3458A44F5748C /* Nocturne/Resources/Localizable.xcstrings */; };
+		E7B8B2731C75C25CA7575717 /* Nocturne/App/Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69E616E49BD7E61ACE622F26 /* Nocturne/App/Log.swift */; };
+		F2F35E08546F89A8C4A29AE8 /* Nocturne/App/StatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7171064AA73188A248019ED9 /* Nocturne/App/StatsView.swift */; };
+		F311A0F0AD4F5DF5A36F43B9 /* Nocturne/App/CarPlaySceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788DD5A81B6E4766D235BDF2 /* Nocturne/App/CarPlaySceneDelegate.swift */; };
+		FE739EA672EDAC1B19B522D6 /* Nocturne/App/DownloadStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86F2E037AA6AE809969B7A58 /* Nocturne/App/DownloadStore.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -82,59 +82,59 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		02B6B373835CAAA78174B882 /* Nocturne/App/AppIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/AppIntents.swift; sourceTree = SOURCE_ROOT; };
+		056767913ABE2F2802614D74 /* Nocturne/App/Appearance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/Appearance.swift; sourceTree = SOURCE_ROOT; };
+		152612EC5D62A85448DC369B /* Nocturne/App/AudioEffects.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/AudioEffects.swift; sourceTree = SOURCE_ROOT; };
+		18F7EDDEA20CBC997CD88CD3 /* Nocturne/App/AppearanceSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/AppearanceSettingsView.swift; sourceTree = SOURCE_ROOT; };
+		1CF7607B608A7E6324CD10BC /* NocturneWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = NocturneWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		2418496CC408A0325E95B016 /* Nocturne/App/PlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/PlayerView.swift; sourceTree = SOURCE_ROOT; };
+		28E3DC2AB6E1A9F88569D147 /* NocturneWidget/Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = NocturneWidget/Info.plist; sourceTree = SOURCE_ROOT; };
 		4DDB5986E5F512CD2F97D5C9 /* Nocturne/App/NocturneApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/NocturneApp.swift; sourceTree = SOURCE_ROOT; };
+		50820B4A82DCF7B45C60DE2B /* Nocturne/Shared/NowPlayingSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/Shared/NowPlayingSnapshot.swift; sourceTree = SOURCE_ROOT; };
+		525330C55C345C8A7D4C51F0 /* Nocturne/Resources/AppShortcuts.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Nocturne/Resources/AppShortcuts.xcstrings; sourceTree = SOURCE_ROOT; };
+		69E616E49BD7E61ACE622F26 /* Nocturne/App/Log.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/Log.swift; sourceTree = SOURCE_ROOT; };
+		6F3FB8E7B8F949CBA10A5F44 /* Nocturne/App/WebImport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/WebImport.swift; sourceTree = SOURCE_ROOT; };
+		6F5ADE23265FE4C20E5DAE8F /* Nocturne/Resources/PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = Nocturne/Resources/PrivacyInfo.xcprivacy; sourceTree = SOURCE_ROOT; };
+		7171064AA73188A248019ED9 /* Nocturne/App/StatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/StatsView.swift; sourceTree = SOURCE_ROOT; };
+		72B8CC6E0CB3458A44F5748C /* Nocturne/Resources/Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Nocturne/Resources/Localizable.xcstrings; sourceTree = SOURCE_ROOT; };
 		72EAE5BD08C062C4E61CB4ED /* Nocturne/App/LibraryViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/LibraryViews.swift; sourceTree = SOURCE_ROOT; };
 		788B79F1FFEA4F698DD5DEF6 /* Nocturne/App/LibraryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/LibraryStore.swift; sourceTree = SOURCE_ROOT; };
+		788DD5A81B6E4766D235BDF2 /* Nocturne/App/CarPlaySceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/CarPlaySceneDelegate.swift; sourceTree = SOURCE_ROOT; };
+		792232701517B14A3E3EBD2C /* Nocturne/App/LocalLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/LocalLibrary.swift; sourceTree = SOURCE_ROOT; };
+		831E54FF662C3D2A826AE8B4 /* Nocturne/Resources/Nocturne.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Nocturne/Resources/Nocturne.entitlements; sourceTree = SOURCE_ROOT; };
 		85D681455A9553A667B6F865 /* Nocturne/Core/Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/Core/Models.swift; sourceTree = SOURCE_ROOT; };
+		86EF0EC5395992708D4BB83F /* Nocturne/App/SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/SettingsView.swift; sourceTree = SOURCE_ROOT; };
+		86F2E037AA6AE809969B7A58 /* Nocturne/App/DownloadStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/DownloadStore.swift; sourceTree = SOURCE_ROOT; };
+		8EE4DF7186F349BAC4D5A532 /* Nocturne/App/StatsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/StatsStore.swift; sourceTree = SOURCE_ROOT; };
 		A172CEDCAE47474B615C54D5 /* Nocturne.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; path = Nocturne.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A55E7C0A11C0A55E7C0A11C0 /* Nocturne/Resources/Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Nocturne/Resources/Assets.xcassets; sourceTree = SOURCE_ROOT; };
 		A56472E961F58FFFAE622D5B /* UITests/NocturneUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITests/NocturneUITests.swift; sourceTree = SOURCE_ROOT; };
-		C8776A1776DCCA1B9F5053A9 /* Nocturne/Core/NavidromeClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/Core/NavidromeClient.swift; sourceTree = SOURCE_ROOT; };
-		C93D6784ED341C603ED7A492 /* Nocturne/App/PlayerStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/PlayerStore.swift; sourceTree = SOURCE_ROOT; };
-		E7F08BCC397888750F5CB9BD /* NocturneUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = NocturneUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		FBADB1390517AA4AA5BCE526 /* Nocturne/App/Design.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/Design.swift; sourceTree = SOURCE_ROOT; };
+		A69F14E58C5F2365A36462CA /* NocturneWidget/NocturneWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NocturneWidget/NocturneWidget.entitlements; sourceTree = SOURCE_ROOT; };
 		A86F53C8105010E6C212CED9 /* Nocturne/Core/Playback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/Core/Playback.swift; sourceTree = SOURCE_ROOT; };
 		ADB4E61A45838B578F5DBDDE /* Nocturne/App/ArtworkCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/ArtworkCache.swift; sourceTree = SOURCE_ROOT; };
-		B116454CDEF528B63E73523C /* Nocturne/App/NetworkMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/NetworkMonitor.swift; sourceTree = SOURCE_ROOT; };
-		86EF0EC5395992708D4BB83F /* Nocturne/App/SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/SettingsView.swift; sourceTree = SOURCE_ROOT; };
 		B07F37FBBCA9A19C7775567F /* Nocturne/App/SongActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/SongActions.swift; sourceTree = SOURCE_ROOT; };
-		FB85ADEE88A6C506E965B63E /* Nocturne/App/LyricsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/LyricsView.swift; sourceTree = SOURCE_ROOT; };
-		A55E7C0A11C0A55E7C0A11C0 /* Nocturne/Resources/Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Nocturne/Resources/Assets.xcassets; sourceTree = SOURCE_ROOT; };
-		69E616E49BD7E61ACE622F26 /* Nocturne/App/Log.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/Log.swift; sourceTree = SOURCE_ROOT; };
-		86F2E037AA6AE809969B7A58 /* Nocturne/App/DownloadStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/DownloadStore.swift; sourceTree = SOURCE_ROOT; };
-		056767913ABE2F2802614D74 /* Nocturne/App/Appearance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/Appearance.swift; sourceTree = SOURCE_ROOT; };
-		18F7EDDEA20CBC997CD88CD3 /* Nocturne/App/AppearanceSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/AppearanceSettingsView.swift; sourceTree = SOURCE_ROOT; };
-		8EE4DF7186F349BAC4D5A532 /* Nocturne/App/StatsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/StatsStore.swift; sourceTree = SOURCE_ROOT; };
-		7171064AA73188A248019ED9 /* Nocturne/App/StatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/StatsView.swift; sourceTree = SOURCE_ROOT; };
-		02B6B373835CAAA78174B882 /* Nocturne/App/AppIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/AppIntents.swift; sourceTree = SOURCE_ROOT; };
-		152612EC5D62A85448DC369B /* Nocturne/App/AudioEffects.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/AudioEffects.swift; sourceTree = SOURCE_ROOT; };
-		DD7729DE46A3696169A1A255 /* Nocturne/App/EqualizerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/EqualizerView.swift; sourceTree = SOURCE_ROOT; };
-		50820B4A82DCF7B45C60DE2B /* Nocturne/Shared/NowPlayingSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/Shared/NowPlayingSnapshot.swift; sourceTree = SOURCE_ROOT; };
-		CDC6CBE205B46EE8D1D63DF6 /* Nocturne/Shared/WidgetIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/Shared/WidgetIntents.swift; sourceTree = SOURCE_ROOT; };
+		B116454CDEF528B63E73523C /* Nocturne/App/NetworkMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/NetworkMonitor.swift; sourceTree = SOURCE_ROOT; };
 		B72DE0D24B2E2CB64D92A750 /* NocturneWidget/NocturneWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NocturneWidget/NocturneWidget.swift; sourceTree = SOURCE_ROOT; };
-		28E3DC2AB6E1A9F88569D147 /* NocturneWidget/Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = NocturneWidget/Info.plist; sourceTree = SOURCE_ROOT; };
-		A69F14E58C5F2365A36462CA /* NocturneWidget/NocturneWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NocturneWidget/NocturneWidget.entitlements; sourceTree = SOURCE_ROOT; };
-		831E54FF662C3D2A826AE8B4 /* Nocturne/Resources/Nocturne.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Nocturne/Resources/Nocturne.entitlements; sourceTree = SOURCE_ROOT; };
-		1CF7607B608A7E6324CD10BC /* NocturneWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = NocturneWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		788DD5A81B6E4766D235BDF2 /* Nocturne/App/CarPlaySceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/CarPlaySceneDelegate.swift; sourceTree = SOURCE_ROOT; };
-		6F5ADE23265FE4C20E5DAE8F /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = Nocturne/Resources/PrivacyInfo.xcprivacy; sourceTree = SOURCE_ROOT; };
-		72B8CC6E0CB3458A44F5748C /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Nocturne/Resources/Localizable.xcstrings; sourceTree = SOURCE_ROOT; };
-		525330C55C345C8A7D4C51F0 /* AppShortcuts.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Nocturne/Resources/AppShortcuts.xcstrings; sourceTree = SOURCE_ROOT; };
-		792232701517B14A3E3EBD2C /* Nocturne/App/LocalLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/LocalLibrary.swift; sourceTree = SOURCE_ROOT; };
-		FA1DCFFF070C241B3D871508 /* Nocturne/App/DeviceViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/DeviceViews.swift; sourceTree = SOURCE_ROOT; };
+		C8776A1776DCCA1B9F5053A9 /* Nocturne/Core/NavidromeClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/Core/NavidromeClient.swift; sourceTree = SOURCE_ROOT; };
+		C93D6784ED341C603ED7A492 /* Nocturne/App/PlayerStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/PlayerStore.swift; sourceTree = SOURCE_ROOT; };
+		CDC6CBE205B46EE8D1D63DF6 /* Nocturne/Shared/WidgetIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/Shared/WidgetIntents.swift; sourceTree = SOURCE_ROOT; };
+		DD7729DE46A3696169A1A255 /* Nocturne/App/EqualizerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/EqualizerView.swift; sourceTree = SOURCE_ROOT; };
+		E7F08BCC397888750F5CB9BD /* NocturneUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = NocturneUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F184813B74E2F7059B6BDA7A /* Nocturne/App/AddMusic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/AddMusic.swift; sourceTree = SOURCE_ROOT; };
-		6F3FB8E7B8F949CBA10A5F44 /* Nocturne/App/WebImport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/WebImport.swift; sourceTree = SOURCE_ROOT; };
+		FA1DCFFF070C241B3D871508 /* Nocturne/App/DeviceViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/DeviceViews.swift; sourceTree = SOURCE_ROOT; };
+		FB85ADEE88A6C506E965B63E /* Nocturne/App/LyricsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/LyricsView.swift; sourceTree = SOURCE_ROOT; };
+		FBADB1390517AA4AA5BCE526 /* Nocturne/App/Design.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nocturne/App/Design.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		E2AA269EB967A8853A258BFA /* Frameworks */ = {
+		9A8ED7911312D6446CF593A6 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		9A8ED7911312D6446CF593A6 /* Frameworks */ = {
+		E2AA269EB967A8853A258BFA /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -161,16 +161,16 @@
 				F184813B74E2F7059B6BDA7A /* Nocturne/App/AddMusic.swift */,
 				FA1DCFFF070C241B3D871508 /* Nocturne/App/DeviceViews.swift */,
 				792232701517B14A3E3EBD2C /* Nocturne/App/LocalLibrary.swift */,
-				525330C55C345C8A7D4C51F0 /* AppShortcuts.xcstrings */,
-				72B8CC6E0CB3458A44F5748C /* Localizable.xcstrings */,
-				6F5ADE23265FE4C20E5DAE8F /* PrivacyInfo.xcprivacy */,
+				525330C55C345C8A7D4C51F0 /* Nocturne/Resources/AppShortcuts.xcstrings */,
+				72B8CC6E0CB3458A44F5748C /* Nocturne/Resources/Localizable.xcstrings */,
+				6F5ADE23265FE4C20E5DAE8F /* Nocturne/Resources/PrivacyInfo.xcprivacy */,
 				788DD5A81B6E4766D235BDF2 /* Nocturne/App/CarPlaySceneDelegate.swift */,
-				831E54FF662C3D2A826AE8B4 /* aent */,
-				A69F14E58C5F2365A36462CA /* went */,
-				28E3DC2AB6E1A9F88569D147 /* wplist */,
-				B72DE0D24B2E2CB64D92A750 /* wsrc */,
-				CDC6CBE205B46EE8D1D63DF6 /* wint */,
-				50820B4A82DCF7B45C60DE2B /* snap */,
+				831E54FF662C3D2A826AE8B4 /* Nocturne/Resources/Nocturne.entitlements */,
+				A69F14E58C5F2365A36462CA /* NocturneWidget/NocturneWidget.entitlements */,
+				28E3DC2AB6E1A9F88569D147 /* NocturneWidget/Info.plist */,
+				B72DE0D24B2E2CB64D92A750 /* NocturneWidget/NocturneWidget.swift */,
+				CDC6CBE205B46EE8D1D63DF6 /* Nocturne/Shared/WidgetIntents.swift */,
+				50820B4A82DCF7B45C60DE2B /* Nocturne/Shared/NowPlayingSnapshot.swift */,
 				DD7729DE46A3696169A1A255 /* Nocturne/App/EqualizerView.swift */,
 				152612EC5D62A85448DC369B /* Nocturne/App/AudioEffects.swift */,
 				02B6B373835CAAA78174B882 /* Nocturne/App/AppIntents.swift */,
@@ -222,22 +222,6 @@
 			productReference = A172CEDCAE47474B615C54D5 /* Nocturne.app */;
 			productType = "com.apple.product-type.application";
 		};
-		E5B4A42C1A9B11F842B19C64 /* NocturneUITests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 5FA394EFD07597E96CACD8E1 /* Build configuration list for PBXNativeTarget "NocturneUITests" */;
-			buildPhases = (
-				798B65A4B63A4D08FDD4C755 /* Sources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				25E506C77AE10A94A633D071 /* PBXTargetDependency */,
-			);
-			name = NocturneUITests;
-			productName = NocturneUITests;
-			productReference = E7F08BCC397888750F5CB9BD /* NocturneUITests.xctest */;
-			productType = "com.apple.product-type.bundle.ui-testing";
-		};
 		AD2495FA014F867A9B1AF0BE /* NocturneWidget */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = A73DF215AC10D78B0B6E997F /* Build configuration list for PBXNativeTarget "NocturneWidget" */;
@@ -254,6 +238,22 @@
 			productName = NocturneWidget;
 			productReference = 1CF7607B608A7E6324CD10BC /* NocturneWidget.appex */;
 			productType = "com.apple.product-type.app-extension";
+		};
+		E5B4A42C1A9B11F842B19C64 /* NocturneUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 5FA394EFD07597E96CACD8E1 /* Build configuration list for PBXNativeTarget "NocturneUITests" */;
+			buildPhases = (
+				798B65A4B63A4D08FDD4C755 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				25E506C77AE10A94A633D071 /* PBXTargetDependency */,
+			);
+			name = NocturneUITests;
+			productName = NocturneUITests;
+			productReference = E7F08BCC397888750F5CB9BD /* NocturneUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
 
@@ -289,9 +289,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D1328A2F40BB1B9E331407A2 /* AppShortcuts.xcstrings in Resources */,
-				E73F4F43FF05FAF5DE702CAC /* Localizable.xcstrings in Resources */,
-				618D0A3513FAEA75E288EF1E /* PrivacyInfo.xcprivacy in Resources */,
+				D1328A2F40BB1B9E331407A2 /* Nocturne/Resources/AppShortcuts.xcstrings in Resources */,
+				E73F4F43FF05FAF5DE702CAC /* Nocturne/Resources/Localizable.xcstrings in Resources */,
+				618D0A3513FAEA75E288EF1E /* Nocturne/Resources/PrivacyInfo.xcprivacy in Resources */,
 				B55E7C0A11C0A55E7C0A11C0 /* Nocturne/Resources/Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -300,14 +300,24 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5F58648F6626F63A71541F60 /* Localizable.xcstrings in Resources */,
-				0D15B47E6E7F49D134222167 /* PrivacyInfo.xcprivacy in Resources */,
+				5F58648F6626F63A71541F60 /* Nocturne/Resources/Localizable.xcstrings in Resources */,
+				0D15B47E6E7F49D134222167 /* Nocturne/Resources/PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		559E0FA594D9F59FC97F153B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CDFAACE3C280C2577BB1C25B /* Nocturne/Shared/NowPlayingSnapshot.swift in Sources */,
+				2F50D00DF5F9B5537DED6A7C /* Nocturne/Shared/WidgetIntents.swift in Sources */,
+				8C168313618BE0F9D2048A61 /* NocturneWidget/NocturneWidget.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		798B65A4B63A4D08FDD4C755 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -325,8 +335,8 @@
 				D2E007F43F451BC80F72FCA5 /* Nocturne/App/DeviceViews.swift in Sources */,
 				A65E8DF4DCC06FF4D32FC41E /* Nocturne/App/LocalLibrary.swift in Sources */,
 				F311A0F0AD4F5DF5A36F43B9 /* Nocturne/App/CarPlaySceneDelegate.swift in Sources */,
-				4770F704DE92F6622D6A27F2 /* WidgetIntents.swift in Sources */,
-				BDEE8310D9AFC01D83686B9E /* NowPlayingSnapshot.swift in Sources */,
+				4770F704DE92F6622D6A27F2 /* Nocturne/Shared/WidgetIntents.swift in Sources */,
+				BDEE8310D9AFC01D83686B9E /* Nocturne/Shared/NowPlayingSnapshot.swift in Sources */,
 				8EC0F1632945AD905D04ABB4 /* Nocturne/App/EqualizerView.swift in Sources */,
 				A38F968096DAB93D9E4EC532 /* Nocturne/App/AudioEffects.swift in Sources */,
 				10AC574E8ABD15AB22190D57 /* Nocturne/App/AppIntents.swift in Sources */,
@@ -353,16 +363,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		559E0FA594D9F59FC97F153B /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				CDFAACE3C280C2577BB1C25B /* NowPlayingSnapshot.swift in Sources */,
-				2F50D00DF5F9B5537DED6A7C /* WidgetIntents.swift in Sources */,
-				8C168313618BE0F9D2048A61 /* NocturneWidget.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -382,11 +382,11 @@
 		0B0C687DF8B6B8DC790B519C /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CURRENT_PROJECT_VERSION = 1;
-				MARKETING_VERSION = 1.0;
 				CLANG_ENABLE_MODULES = YES;
+				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
@@ -398,18 +398,22 @@
 		6C7EFF6369083C8E1F2B1994 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				SUPPORTS_MACCATALYST = YES;
-				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = NO;
-				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "Nocturne/Resources/Nocturne-Catalyst.entitlements";
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIcon-Dawn AppIcon-Mint AppIcon-Mono AppIcon-Light";
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = Nocturne/Resources/Nocturne.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "Nocturne/Resources/Nocturne-Catalyst.entitlements";
 				CODE_SIGN_STYLE = Automatic;
+				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = NO;
 				DEVELOPMENT_TEAM = 22YK6BV6UY;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = Nocturne/Resources/Info.plist; ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIcon-Dawn AppIcon-Mint AppIcon-Mono AppIcon-Light"; ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES; ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				INFOPLIST_FILE = Nocturne/Resources/Info.plist;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				PRODUCT_BUNDLE_IDENTIFIER = app.nocturne.music;
 				PRODUCT_NAME = Nocturne;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -418,20 +422,44 @@
 		73EBF6644258C120893E685D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COPY_PHASE_STRIP = NO;
-				STRIP_INSTALLED_PRODUCT = NO;
-				CURRENT_PROJECT_VERSION = 1;
-				MARKETING_VERSION = 1.0;
 				CLANG_ENABLE_MODULES = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
 				SDKROOT = iphoneos;
+				STRIP_INSTALLED_PRODUCT = NO;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_VERSION = 6.0;
 			};
 			name = Debug;
+		};
+		A4CF8B41A236016B7AB4CCBF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_ENTITLEMENTS = NocturneWidget/NocturneWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 22YK6BV6UY;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = NocturneWidget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = app.nocturne.music.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = WIDGET_EXTENSION;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
 		};
 		DD3F495F7D6A5AA1C1769021 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -440,8 +468,8 @@
 				DEVELOPMENT_TEAM = 22YK6BV6UY;
 				GENERATE_INFOPLIST_FILE = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = app.nocturne.music.uitests;
-				SUPPORTS_MACCATALYST = YES;
 				PRODUCT_NAME = NocturneUITests;
+				SUPPORTS_MACCATALYST = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_TARGET_NAME = Nocturne;
 			};
@@ -450,18 +478,22 @@
 		DD75E2CB1C510A828AC72D96 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				SUPPORTS_MACCATALYST = YES;
-				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = NO;
-				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "Nocturne/Resources/Nocturne-Catalyst.entitlements";
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIcon-Dawn AppIcon-Mint AppIcon-Mono AppIcon-Light";
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = Nocturne/Resources/Nocturne.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "Nocturne/Resources/Nocturne-Catalyst.entitlements";
 				CODE_SIGN_STYLE = Automatic;
+				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = NO;
 				DEVELOPMENT_TEAM = 22YK6BV6UY;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = Nocturne/Resources/Info.plist; ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "AppIcon-Dawn AppIcon-Mint AppIcon-Mono AppIcon-Light"; ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES; ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				INFOPLIST_FILE = Nocturne/Resources/Info.plist;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				PRODUCT_BUNDLE_IDENTIFIER = app.nocturne.music;
 				PRODUCT_NAME = Nocturne;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -474,8 +506,8 @@
 				DEVELOPMENT_TEAM = 22YK6BV6UY;
 				GENERATE_INFOPLIST_FILE = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = app.nocturne.music.uitests;
-				SUPPORTS_MACCATALYST = YES;
 				PRODUCT_NAME = NocturneUITests;
+				SUPPORTS_MACCATALYST = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_TARGET_NAME = Nocturne;
 			};
@@ -504,30 +536,6 @@
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
-		};
-		A4CF8B41A236016B7AB4CCBF /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				APPLICATION_EXTENSION_API_ONLY = YES;
-				CODE_SIGN_ENTITLEMENTS = NocturneWidget/NocturneWidget.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 22YK6BV6UY;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = NocturneWidget/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = app.nocturne.music.widget;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "WIDGET_EXTENSION";
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
