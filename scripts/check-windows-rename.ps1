@@ -14,7 +14,7 @@ if ((Get-FileHash $legacyInstaller -Algorithm SHA256).Hash -ne '06FAEA77AA9113AA
 Install-Quietly $legacyInstaller
 $legacyKey = 'HKCU:\Software\Nocturne\Nocturne'
 $oldUninstall = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\Nocturne'
-$newKey = 'HKCU:\Software\Nocturne\Nocturne Player'
+$newKey = 'HKCU:\Software\Nocturne Player\Nocturne Player'
 $newUninstall = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\Nocturne Player'
 $installedAt = (Get-Item $legacyKey).GetValue('')
 if (-not $installedAt -or -not (Test-Path "$installedAt\nocturne.exe")) { throw 'Legacy install not found' }

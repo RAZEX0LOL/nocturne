@@ -20,7 +20,7 @@
     ]
   },
   "bundle": {
-    "publisher": "Nocturne",
+    "publisher": "Nocturne Player",
     "windows": {
       "nsis": {
         "installMode": "currentUser",
