@@ -1,9 +1,9 @@
-//! Статус в Discord: «Слушает Nocturne — Песня, Исполнитель» с полосой времени, как у Spotify.
+//! Статус в Discord с песней, исполнителем и полосой времени, как у Spotify.
 //!
 //! Связь с запущенным клиентом Discord — локальная (IPC), без интернета и без токенов. ID приложения
-//! «Nocturne» встроен (src/shell.ts) — человеку ничего настраивать не нужно. Обложку не отправляем:
+//! встроен (src/shell.ts) — человеку ничего настраивать не нужно. Обложку не отправляем:
 //! адрес обложки Navidrome содержит токен доступа, а статус в Discord видят все. Вместо неё — значок
-//! Nocturne по ссылке с сайта: Discord сам скачивает картинки по https, загружать их в портал не нужно.
+//! Nocturne Player по ссылке с сайта: Discord сам скачивает картинки по https, загружать их в портал не нужно.
 
 use std::sync::Mutex;
 
@@ -18,7 +18,7 @@ struct Connection {
 
 static CONNECTION: Mutex<Option<Connection>> = Mutex::new(None);
 
-/** Значок Nocturne в статусе — с сайта, по https. */
+/** Значок Nocturne Player в статусе — с сайта, по https. */
 const ICON: &str = "https://nocturne.razex.online/discord.png";
 
 #[derive(Deserialize)]
@@ -61,7 +61,7 @@ fn apply(client_id: &str, presence: Option<&Presence>) -> Result<(), String> {
         None => ipc.clear_activity(),
         Some(presence) => {
             let details = fit(&presence.title);
-            let state = fit(presence.artist.as_deref().unwrap_or("Nocturne"));
+            let state = fit(presence.artist.as_deref().unwrap_or("Nocturne Player"));
             let album = presence.album.as_deref().map(fit);
             let mut timestamps = Timestamps::new().start(presence.started_at);
             if let Some(end) = presence.ends_at {

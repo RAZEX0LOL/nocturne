@@ -53,6 +53,13 @@
       "icons/icon.ico"
     ],
     "category": "Music",
+    "linux": {
+      "deb": {
+        "provides": ["nocturne"],
+        "conflicts": ["nocturne"],
+        "replaces": ["nocturne"]
+      }
+    },
     "shortDescription": "Клиент Navidrome",
     "longDescription": "Слушай свою музыку с домашнего сервера Navidrome или прямо с этого компьютера.",
     "createUpdaterArtifacts": true

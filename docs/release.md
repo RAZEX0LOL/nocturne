@@ -147,5 +147,7 @@ scripts/release-desktop.sh publish --windows   # + Windows (NSIS через carg
 Windows NSIS переносит регистрацию старого имени, сохраняя каталог установки.
 Проверка `scripts/check-windows-rename.ps1` в Windows CI устанавливает официальный
 1.1.83, затем новую сборку, проверяет имя, исполняемый файл, сохранность данных
-и повторную установку. MSI сохраняет прежний `upgradeCode`. Имя приложения
+и повторную установку. MSI сохраняет прежний `upgradeCode`. Linux deb объявляет
+`Provides`/`Conflicts`/`Replaces` для `nocturne`; Linux CI проверяет замену
+официального пакета 1.1.83 новым `nocturne-player`. Имя приложения
 в статусе Discord отдельно задаётся владельцем в Discord Developer Portal.

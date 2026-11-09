@@ -66,6 +66,23 @@ jobs:
         shell: pwsh
         run: ./scripts/check-windows-rename.ps1
 
+      - name: Проверить замену Linux deb после переименования
+        if: matrix.name == 'linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          legacy="$RUNNER_TEMP/nocturne-legacy.deb"
+          curl -fsSL https://github.com/RAZEX0LOL/nocturne-releases/releases/download/updates/Nocturne_1.1.83_amd64.deb -o "$legacy"
+          echo "8025b9032c82ccfa8876e5115ce8812e3ebe911b130cc1a3171f605f507260ac  $legacy" | sha256sum --check
+          sudo dpkg --unpack "$legacy"
+          package=$(find desktop/src-tauri/target/release/bundle/deb -name '*.deb' -print -quit)
+          test "$(dpkg-deb --field "$package" Package)" = nocturne-player
+          sudo dpkg --unpack "$package"
+          test "$(dpkg-query -W -f='${db:Status-Status}' nocturne-player)" = unpacked
+          test "$(dpkg-query -W -f='${db:Status-Status}' nocturne 2>/dev/null || true)" != installed
+          test "$(dpkg-query -W -f='${db:Status-Status}' nocturne 2>/dev/null || true)" != unpacked
+          echo 'PASS: legacy nocturne package replaced by nocturne-player'
+
       # Разбор имён файлов, безопасные имена загрузок, форматы — проверки Rust-стороны.
       - if: matrix.name == 'linux'
         run: cargo test
