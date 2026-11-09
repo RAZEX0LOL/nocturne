@@ -2,6 +2,7 @@
 name = "nocturne"
 version = "1.0.0"
 description = "Nocturne — клиент Navidrome"
+license = "PolyForm-Noncommercial-1.0.0"
 edition = "2021"
 rust-version = "1.77"
 

@@ -17,7 +17,7 @@
 | `Nocturne/`, `NocturneWidget/`, `Tests/`, `UITests/` | iPhone/iPad и Mac (Catalyst) | Swift 6, SwiftUI, AVQueuePlayer |
 | `android/` | Android: `core/` (логика, тесты на JVM) + `app/` (UI) | Kotlin, Compose Material3, Media3 |
 | `desktop/` | Mac/Windows/Linux «файлом» | Tauri 2 (Rust) + React 19 + TypeScript + Tailwind 4, Web Audio |
-| `site/` | сайт https://nocturne.razex.online (две страницы: главная и `/start`) + чейнджлог `site/changelog.json` | Vite + React + Tailwind |
+| `site/` | сайт https://nocturne.razex.online (главная, `/start`, `/support`, `/privacy`) + чейнджлог `site/changelog.json` | Vite + React + Tailwind |
 | `shared/` | общие кейсы (`cases/*.json`), мок-сервер, спецификация API | Python, JSON |
 | `scripts/` | выпуски и чейнджлог | zsh, bun |
 
@@ -104,7 +104,8 @@ Debug-вход: `adb shell am start -n app.nocturne.music/.MainActivity -e serve
 
 Подробности, ключи и как устроены обновления — `docs/release.md`.
 Публичная бета TestFlight (группа «Nocturne public test») требует проверки Apple — отправлять после моего «ок».
-GitHub Actions не работает (биллинг) — всё собирается и подписывается локально.
+GitHub Actions собирает проверочные артефакты без релизных ключей; запуски в приватном
+репозитории зависят от квот аккаунта. Официальные сборки подписываются локально.
 
 ---
 

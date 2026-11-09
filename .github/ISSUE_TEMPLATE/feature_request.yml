@@ -1,0 +1,15 @@
+name: Feature request / Предложение
+description: Suggest an improvement to Nocturne
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve? / Какую задачу это решит?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior and platform / Предлагаемое поведение и платформа
+    validations:
+      required: true

@@ -92,7 +92,7 @@
 > Task :app:lintAnalyzeDebug
 
 > Task :app:lintReportDebug
-Wrote HTML report to file:///Users/razex/Documents/ChatGPT/ios-project/android/app/build/reports/lint-results-debug.html
+Wrote HTML report to file://<repo>/android/app/build/reports/lint-results-debug.html
 
 > Task :app:lintDebug
 

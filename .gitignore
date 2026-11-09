@@ -27,3 +27,13 @@ desktop/src-tauri/target/
 
 # Python verification tools
 __pycache__/
+
+# Приватные ключи и сертификаты остаются вне исходников.
+*.p8
+*.p12
+*.pfx
+*.key
+*.pem
+*.mobileprovision
+*.provisionprofile
+*.xctestrun

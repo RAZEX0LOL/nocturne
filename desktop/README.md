@@ -6,7 +6,7 @@ Tauri 2: интерфейс на React и TypeScript, звук через `<audi
 ## Запуск
 
 ```sh
-bun install
+bun install --frozen-lockfile
 bun run tauri dev      # окно с горячей перезагрузкой
 bun run tauri build    # установщик для текущей системы
 ```
@@ -14,8 +14,9 @@ bun run tauri build    # установщик для текущей систем
 Нужны Bun и Rust (`rustup`). На Linux ещё WebKitGTK:
 `sudo apt install libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf`.
 Windows собирается с Mac через cargo-xwin и NSIS. Linux требует Linux-окружения.
-CI описан в `.github/workflows/desktop.yml`, но сейчас недоступен из-за биллинга; рабочий выпуск
-выполняется локальными скриптами (см. `docs/release.md`).
+CI описан в [desktop.yml](../.github/workflows/desktop.yml) и собирает проверочные установщики
+без релизных ключей. Официальный подписанный выпуск выполняется отдельно
+(см. [выпуск](../docs/release.md)).
 
 ## Проверки
 
@@ -24,6 +25,19 @@ bun test                 # общий контракт из shared/cases
 bun run typecheck
 cd src-tauri && cargo test
 ```
+
+## Браузер для e2e
+
+В папке `desktop` установи Chromium для текущего Playwright и задай путь:
+
+```sh
+bunx playwright-core install chromium
+export CHROME="$(bun -e 'import { chromium } from "playwright-core"; console.log(chromium.executablePath())')"
+```
+
+Все скрипты `e2e/*.mjs` принимают `CHROME`. После этого из корня репозитория можно
+запускать `python3 scripts/verify.py`. Тесты используют только локальный мок и
+отдельный профиль браузера; данные пользовательского браузера им не нужны.
 
 ## Windows
 
@@ -77,3 +91,6 @@ NOCTURNE_DEV_CREDENTIALS='{"server":"http://127.0.0.1:4533","username":"test","p
 игнорируются. Задания сохраняют метаданные и качество без подписанных URL и возобновляются
 при следующем запуске. Автоподготовка выключена по умолчанию; ограничения и миграция описаны
 в [`docs/reliability.md`](../docs/reliability.md).
+
+Лицензия собственного кода — [PolyForm Noncommercial 1.0.0](../LICENSE).
+Сторонние библиотеки сохраняют свои лицензии: [уведомления](../THIRD_PARTY_NOTICES.md).

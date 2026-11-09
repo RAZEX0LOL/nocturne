@@ -1,0 +1,29 @@
+name: Bug report / Ошибка
+description: A reproducible problem in Nocturne
+body:
+  - type: markdown
+    attributes:
+      value: "Не публикуйте пароли, ключи, личную музыку и подписанные URL. Уязвимости: SECURITY.md. / No credentials or authenticated URLs; report security issues privately."
+  - type: input
+    id: environment
+    attributes:
+      label: Platform, OS and app version / Платформа, ОС и версия приложения
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps / Шаги воспроизведения
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Expected and actual behavior / Ожидаемое и фактическое поведение
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Additional details / Дополнения
+      description: "For audio: output device, file format, whether the timer moves. Для сервера: тип и версия, без адреса и данных входа."
