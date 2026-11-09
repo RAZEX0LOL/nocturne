@@ -125,7 +125,7 @@ export function Start() {
             <Code>docker compose up -d</Code>
             <p>
               {t('Открой')} <code className="rounded bg-panel px-1.5 py-0.5 text-sm text-ink">http://localhost:4533</code>{' '}
-              {t('— Navidrome попросит придумать логин и пароль администратора. Их же ты введёшь в Nocturne. Первое сканирование большой коллекции занимает несколько минут.')}
+              {t('— Navidrome попросит придумать логин и пароль администратора. Их же ты введёшь в Nocturne Player. Первое сканирование большой коллекции занимает несколько минут.')}
             </p>
           </Step>
 

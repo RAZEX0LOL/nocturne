@@ -158,8 +158,8 @@ const english: Record<string, string> = {
   'Открой приложение, введи адрес сервера, логин и пароль Navidrome. Пароль хранится в системном хранилище — Связке ключей, Keystore или менеджере учётных данных Windows.':
     'Open the app and enter the server address, your Navidrome username and password. The password is kept in the system store — Keychain, Keystore or Windows Credential Manager.',
   'Как приходят обновления?': 'How do updates arrive?',
-  'Приложение само проверяет новую версию, скачивает её и ставит поверх — настройки, загрузки и вход остаются. На Android система один раз попросит разрешить установку из Nocturne. На iPhone обновления приходят через TestFlight.':
-    'The app checks for a new version itself, downloads it and installs it over the old one — settings, downloads and the sign-in stay. On Android the system asks once to allow installs from Nocturne. On iPhone updates come through TestFlight.',
+  'Приложение само проверяет новую версию, скачивает её и ставит поверх — настройки, загрузки и вход остаются. На Android система один раз попросит разрешить установку из Nocturne Player. На iPhone обновления приходят через TestFlight.':
+    'The app checks for a new version itself, downloads it and installs it over the old one — settings, downloads and the sign-in stay. On Android the system asks once to allow installs from Nocturne Player. On iPhone updates come through TestFlight.',
   'Почему Windows предупреждает при первом запуске?': 'Why does Windows warn me on first launch?',
   'Версия для Windows пока не подписана сертификатом Microsoft, поэтому SmartScreen её не знает. Нажми «Подробнее» → «Выполнить в любом случае» — это нужно один раз. Версия для Mac подписана и проверена Apple, там предупреждений нет.':
     'The Windows build is not signed with a Microsoft certificate yet, so SmartScreen does not know it. Choose “More info” → “Run anyway” — once is enough. The Mac build is signed and notarized by Apple, so there are no warnings there.',
@@ -202,8 +202,8 @@ const english: Record<string, string> = {
   'Запусти сервер': 'Start the server',
   'В той же папке выполни:': 'Run this in the same folder:',
   'Открой': 'Open',
-  '— Navidrome попросит придумать логин и пароль администратора. Их же ты введёшь в Nocturne. Первое сканирование большой коллекции занимает несколько минут.':
-    '— Navidrome will ask you to create an admin username and password. Those are what you enter in Nocturne. The first scan of a large collection takes a few minutes.',
+  '— Navidrome попросит придумать логин и пароль администратора. Их же ты введёшь в Nocturne Player. Первое сканирование большой коллекции занимает несколько минут.':
+    '— Navidrome will ask you to create an admin username and password. Those are what you enter in Nocturne Player. The first scan of a large collection takes a few minutes.',
   'Подключи Nocturne Player': 'Connect Nocturne Player',
   'Скачай приложение': 'Download the app',
   'для своей системы и введи три поля: адрес сервера, логин и пароль.': 'for your system and fill in three fields: server address, username and password.',
