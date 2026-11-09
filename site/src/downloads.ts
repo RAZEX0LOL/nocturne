@@ -1,3 +1,5 @@
+import { language } from './i18n'
+
 /**
  * Ссылки на скачивание. Файлы с постоянными именами лежат в релизе «updates» публичного
  * репозитория: скрипты выпуска перезаписывают их при каждой новой версии, поэтому сайт
@@ -12,12 +14,12 @@ export interface Platform {
   id: PlatformId
   name: string
   detail: string
-  /** Файл в релизе; у iPhone вместо него ссылка в TestFlight. */
+  /** Файл в релизе; у iPhone вместо него ссылка в App Store. */
   file?: string
   href?: string
   action: string
-  /** Второй файл — там, где форматов два (Linux: AppImage и .deb). */
-  alt?: { file: string; action: string }
+  /** Дополнительный вариант установки: App Store для Mac или .deb для Linux. */
+  alt?: { file?: string; href?: string; action: string }
   /** Что сделать при первой установке — то, на чём люди обычно спотыкаются. */
   note: string
 }
@@ -28,6 +30,7 @@ export const PLATFORMS: Platform[] = [
     name: 'macOS',
     detail: 'Mac на Apple Silicon (M1 и новее)',
     file: 'Nocturne-mac.dmg',
+    alt: { href: 'https://apps.apple.com/app/id6814215090', action: 'Версия из App Store' },
     action: 'Скачать .dmg',
     note: 'Открой образ и перетащи Nocturne в «Программы». Приложение подписано и проверено Apple — откроется без предупреждений.',
   },
@@ -50,10 +53,10 @@ export const PLATFORMS: Platform[] = [
   {
     id: 'ios',
     name: 'iPhone и iPad',
-    detail: 'iOS 17+, бета через TestFlight',
-    href: 'https://testflight.apple.com/join/PHtXMJ1u',
-    action: 'Открыть в TestFlight',
-    note: 'Поставь TestFlight из App Store и открой ссылку на телефоне. Обновления придут через TestFlight.',
+    detail: 'iOS и iPadOS 17 и новее',
+    href: 'https://apps.apple.com/app/id6814215090',
+    action: 'Открыть в App Store',
+    note: 'Установи Nocturne Player из App Store. Обновления приходят через App Store; TestFlight не нужен.',
   },
   {
     id: 'linux',
@@ -124,7 +127,7 @@ function changelogFrom(body: string | undefined): ChangelogEntry[] | undefined {
  * с CORS). Не ответил — кнопки всё равно работают, просто без версии.
  */
 export async function loadRelease(): Promise<ReleaseInfo> {
-  const response = await fetch(`https://api.github.com/repos/${REPO}/releases/tags/updates`)
+  const response = await fetch(`https://api.github.com/repos/${REPO}/releases/tags/updates`, { signal: AbortSignal.timeout(8000) })
   if (!response.ok) return { sizes: {} }
   const release = (await response.json()) as { body?: string; assets: Array<{ name: string; size: number }> }
   const versions = release.assets
@@ -139,4 +142,4 @@ export async function loadRelease(): Promise<ReleaseInfo> {
   return { version: versions[0], sizes, changelog: changelogFrom(release.body) }
 }
 
-export const megabytes = (bytes: number) => `${(bytes / 1024 / 1024).toFixed(bytes > 50 * 1024 * 1024 ? 0 : 1)} МБ`
+export const megabytes = (bytes: number) => `${(bytes / 1024 / 1024).toLocaleString(language === 'en' ? 'en-US' : 'ru-RU', { maximumFractionDigits: bytes > 50 * 1024 * 1024 ? 0 : 1 })} ${language === 'en' ? 'MB' : 'МБ'}`

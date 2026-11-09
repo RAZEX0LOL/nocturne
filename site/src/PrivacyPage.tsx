@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { LanguageSwitch } from './LanguageSwitch'
 import { Logo } from './Logo'
-import { t } from './i18n'
+import { localizePath, t } from './i18n'
 
 function Block({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -17,7 +17,7 @@ export function Privacy() {
     <>
       <header className="sticky top-0 z-40 border-b border-line/60 bg-night/75 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-4 sm:px-6">
-          <a href="/" className="flex items-center gap-2.5 font-extrabold tracking-[0.25em]">
+          <a href={localizePath('/')} className="flex items-center gap-2.5 font-extrabold tracking-[0.25em]">
             <Logo />
             <span className="text-sm">NOCTURNE</span>
           </a>
@@ -27,11 +27,11 @@ export function Privacy() {
 
       <main className="mx-auto max-w-3xl px-4 py-16 sm:px-6 sm:py-24">
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-accent">{t('Конфиденциальность')}</p>
-        <h1 className="mt-3 text-4xl font-extrabold tracking-tight sm:text-5xl">{t('Политика конфиденциальности')}</h1>
+        <h1 className="mt-3 text-2xl font-extrabold tracking-tight sm:text-5xl">{t('Политика конфиденциальности')}</h1>
         <p className="mt-5 text-lg text-muted">
           {t('Коротко: Nocturne не собирает о тебе никаких данных. У приложения нет серверов, аккаунтов, аналитики и рекламы. Музыка и всё, что с ней связано, остаются между твоим устройством и твоим сервером.')}
         </p>
-        <p className="mt-3 text-sm text-muted">{t('Действует с 22 октября 2026 года.')}</p>
+        <p className="mt-3 text-sm text-muted">{t('Обновлено 9 ноября 2026 года.')}</p>
 
         <Block title="Какие данные мы собираем">
           <p>
@@ -55,7 +55,7 @@ export function Privacy() {
             </li>
             <li>
               <b className="text-ink">Discord</b>{' '}
-              {t('— только на компьютере и только если ты включил статус. Название трека передаётся запущенному на том же компьютере приложению Discord, напрямую, без интернета.')}
+              {t('— только на компьютере и если ты включил статус. Информация о треке передаётся локально приложению Discord; Discord может показать её другим пользователям в твоём статусе.')}
             </li>
             <li>
               {t('Встроенное окно браузера (добавление музыки из интернета) открывает те сайты, которые ты сам в нём открываешь, и ведёт себя как обычный браузер.')}
@@ -65,7 +65,7 @@ export function Privacy() {
 
         <Block title="Что хранится на устройстве">
           <p>
-            {t('Пароль от сервера — в системном хранилище устройства: Связке ключей на Apple, Keystore на Android, менеджере учётных данных на Windows. Скачанная музыка, обложки и настройки лежат в папке приложения. Всё это исчезает вместе с приложением при удалении.')}
+            {t('Данные входа защищены системным хранилищем устройства. Импортированная и скачанная музыка, обложки и настройки хранятся локально. Чтобы удалить данные входа, отключи сервер в приложении: удаление приложения не всегда очищает системное хранилище паролей. Исходные файлы и музыка на твоём сервере остаются у тебя.')}
           </p>
         </Block>
 
@@ -82,7 +82,7 @@ export function Privacy() {
         <Block title="Связаться">
           <p>
             {t('Вопросы о приложении и о приватности — на странице поддержки:')}{' '}
-            <a className="text-accent underline-offset-4 hover:underline" href="/support">
+            <a className="text-accent underline-offset-4 hover:underline" href={localizePath('/support')}>
               nocturne.razex.online/support
             </a>
             .
@@ -92,7 +92,7 @@ export function Privacy() {
 
       <footer className="border-t border-line">
         <div className="mx-auto flex max-w-3xl flex-col items-center justify-between gap-4 px-4 py-10 text-sm text-muted sm:flex-row sm:px-6">
-          <a href="/" className="flex items-center gap-2.5">
+          <a href={localizePath('/')} className="flex items-center gap-2.5">
             <Logo size={22} />
             <span>{t('Nocturne — плеер для Navidrome')}</span>
           </a>

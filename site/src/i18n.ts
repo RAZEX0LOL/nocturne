@@ -9,6 +9,37 @@
 export type Language = 'ru' | 'en'
 
 const english: Record<string, string> = {
+  'Обновлено 9 ноября 2026 года.': 'Updated November 9, 2026.',
+  "Версия из App Store": "App Store version",
+  "Nocturne — плеер для Navidrome": "Nocturne — a player for Navidrome",
+  "Nocturne Player: музыка с Navidrome и файлы с устройства. Бесплатно на iPhone, iPad, Mac, Windows, Linux и Android. iPhone и iPad — в App Store.": "Nocturne Player: your Navidrome library and local music. Free on iPhone, iPad, Mac, Windows, Linux and Android. Available on the App Store for iPhone and iPad.",
+  "С чего начать — Nocturne": "Getting started — Nocturne",
+  "Как слушать локальную музыку без сервера или подключить Nocturne к своей медиатеке Navidrome: пошаговая инструкция.": "Play local music without a server or connect Nocturne to your own Navidrome library: a step-by-step guide.",
+  "Поддержка — Nocturne": "Support — Nocturne",
+  "Помощь с Nocturne: установка из App Store, музыка с телефона без сервера, подключение к Navidrome и воспроизведение.": "Nocturne help: App Store installation, local music without a server, connecting to Navidrome and playback.",
+  "Политика конфиденциальности — Nocturne": "Privacy policy — Nocturne",
+  "Nocturne: локальное хранение музыки и настроек, подключение к своему серверу и внешним сервисам, без рекламы и аналитики.": "Nocturne: local music and settings, connections to your server and external services, with no ads or analytics.",
+  "Скачать в App Store": "Download on the App Store",
+  "Новая версия сохраняет настройки, загрузки и вход на сервер. На iPhone и iPad обновления приходят через App Store.": "New versions keep your settings, downloads and server sign-in. On iPhone and iPad, updates arrive through the App Store.",
+  "На компьютере и Android обновления доступны в приложении: настройки, загрузки и вход сохраняются. На Android разреши установку из Nocturne, когда система попросит. Версии из App Store обновляются через App Store.": "On desktop and Android, updates are available in the app and keep your settings, downloads and sign-in. On Android, allow installation from Nocturne when prompted. App Store versions update through the App Store.",
+  "Бесплатно, без рекламы и подписок. Разработчик не собирает историю прослушиваний. О подключениях к серверу, поиске текстов и проверке обновлений — в политике конфиденциальности.": "Free, with no ads or subscriptions. The developer does not collect your listening history. See the privacy policy for details about server connections, lyrics search and update checks.",
+  "Общая медиатека и привычное управление, с интерфейсом под каждую систему.": "Your library and familiar controls, with an interface tailored to each system.",
+  "Nocturne играет файлы с устройства и музыку с сервера Navidrome. Для локальных файлов сервер не нужен. Эта инструкция — для своей сетевой медиатеки на домашнем компьютере, NAS или VPS.": "Nocturne plays files from your device and music from a Navidrome server. Local files do not need a server. This guide covers setting up your own network library on a home computer, NAS or VPS.",
+  "Для сетевой медиатеки подключи свой Navidrome на домашнем компьютере, NAS или VPS. Если сервера ещё нет, воспользуйся инструкцией:": "For a network library, connect your own Navidrome on a home computer, NAS or VPS. If you do not have a server yet, follow the guide:",
+  "Можно начать без сервера: выбери прослушивание музыки с устройства на экране входа и добавь свои файлы. Или открой «Посмотреть демоверсию», чтобы попробовать плеер на встроенных треках.": "You can start without a server: choose music from your device on the connection screen and add your own files. Or choose “See the demo” to try the player with bundled tracks.",
+  "Проверь громкость и выбранный аудиовыход, затем перезапусти трек. На Android проверь ограничения работы приложения в фоне и настройки батареи. Для серверного трека попробуй другое качество потока: сервер мог не справиться с перекодированием. Если звук снова пропадёт, напиши модель устройства, версию системы и приложения, а также продолжает ли двигаться время трека.": "Check the volume and selected audio output, then restart the track. On Android, check background activity and battery restrictions. For a server track, try a different streaming quality: the server may have failed to transcode it. If sound drops again, send your device model, OS and app versions, and whether the track timer keeps moving.",
+  "— только на компьютере и если ты включил статус. Информация о треке передаётся локально приложению Discord; Discord может показать её другим пользователям в твоём статусе.": "— only on desktop, when you enable the status. Track information is passed locally to the Discord app; Discord may show it to other users in your activity status.",
+  "Данные входа защищены системным хранилищем устройства. Импортированная и скачанная музыка, обложки и настройки хранятся локально. Чтобы удалить данные входа, отключи сервер в приложении: удаление приложения не всегда очищает системное хранилище паролей. Исходные файлы и музыка на твоём сервере остаются у тебя.": "Sign-in details are protected by the device’s secure storage. Imported and downloaded music, artwork and settings are stored locally. Disconnect the server in the app to remove its sign-in details: uninstalling an app does not always clear system password storage. Your original files and music on your server remain yours.",
+  "iOS и iPadOS 17 и новее": "iOS and iPadOS 17 or later",
+  "Открыть в App Store": "Open in the App Store",
+  "Установи Nocturne Player из App Store. Обновления приходят через App Store; TestFlight не нужен.": "Install Nocturne Player from the App Store. Updates arrive through the App Store; TestFlight is not required.",
+  "iPhone и iPad": "iPhone and iPad",
+  "или": "or",
+  "Без сервера: музыка с устройства": "No server: music from your device",
+  "На Android открой «Медиатека → На телефоне» и нажми «Файлы» или «Папка». Выбранная музыка копируется в приложение и играет без интернета. Если сервер уже подключён, отключать его не нужно.": "On Android, open “Library → On this phone” and choose “Files” or “Folder”. Selected music is copied into the app and plays offline. You do not need to disconnect an existing server.",
+  "На iPhone и iPad открой раздел музыки на устройстве и добавь файлы или папку. Можно также отправить аудиофайл через «Поделиться → Nocturne». На компьютере добавь файлы или папку в локальную медиатеку.": "On iPhone and iPad, open the on-device music section and add files or a folder. You can also send an audio file via “Share → Nocturne”. On desktop, add files or a folder to the local library.",
+  "Установить приложение": "Install the app",
+  "На iPhone и iPad Nocturne Player доступен в App Store. Для Android, Windows, Linux и Mac установщики находятся на главной странице.": "On iPhone and iPad, Nocturne Player is available on the App Store. Android, Windows, Linux and Mac installers are on the home page.",
   // Шапка и главный экран
   'Возможности': 'Features',
   'Скриншоты': 'Screenshots',
@@ -93,7 +124,6 @@ const english: Record<string, string> = {
   'Открой скачанный файл и разреши установку из браузера — это нужно один раз.':
     'Open the downloaded file and allow installs from your browser — this is needed once.',
   'Скачать APK': 'Download APK',
-  'iPhone и iPad': 'iPhone and iPad',
   'iOS 17+, бета через TestFlight': 'iOS 17+, beta through TestFlight',
   'Поставь TestFlight из App Store и открой ссылку на телефоне. Обновления придут через TestFlight.':
     'Install TestFlight from the App Store and open the link on your phone. Updates arrive through TestFlight.',
@@ -138,7 +168,6 @@ const english: Record<string, string> = {
     'Nothing. No ads, no subscriptions and no data collection: the app talks only to your server (and to LRCLIB, if you turn lyrics search on yourself).',
 
   // Подвал
-  'Nocturne — плеер для Navidrome': 'Nocturne — a player for Navidrome',
   'Сделано для своей музыки · {year}': 'Made for your own music · {year}',
 
   // Страница «С чего начать»
@@ -302,4 +331,16 @@ export function t(text: string, values?: Record<string, string | number>): strin
   const translated = language === 'en' ? (english[text] ?? text) : (russian[text] ?? text)
   if (!values) return translated
   return translated.replace(/\{(\w+)\}/g, (whole, key) => String(values[key] ?? whole))
+}
+
+/** Внутренние ссылки сохраняют язык независимо от настроек браузера и хранилища. */
+export function localizePath(path: string): string {
+  const url = new URL(path, location.origin)
+  url.searchParams.set('lang', language)
+  return url.pathname + url.search + url.hash
+}
+
+document.title = t(document.title)
+for (const meta of document.querySelectorAll<HTMLMetaElement>('meta[name="description"], meta[property="og:title"], meta[property="og:description"]')) {
+  meta.content = t(meta.content)
 }

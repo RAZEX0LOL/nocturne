@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { LanguageSwitch } from './LanguageSwitch'
 import { Logo } from './Logo'
-import { t } from './i18n'
+import { localizePath, t } from './i18n'
 
 function Block({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -17,7 +17,7 @@ export function Support() {
     <>
       <header className="sticky top-0 z-40 border-b border-line/60 bg-night/75 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-4 sm:px-6">
-          <a href="/" className="flex items-center gap-2.5 font-extrabold tracking-[0.25em]">
+          <a href={localizePath('/')} className="flex items-center gap-2.5 font-extrabold tracking-[0.25em]">
             <Logo />
             <span className="text-sm">NOCTURNE</span>
           </a>
@@ -34,15 +34,25 @@ export function Support() {
 
         <Block title="Первый запуск">
           <p>
-            {t('Приложению нужен сервер Navidrome — свой, на домашнем компьютере, NAS или VPS. Если его ещё нет, поставь за десять минут по инструкции:')}{' '}
-            <a className="text-accent underline-offset-4 hover:underline" href="/start">
+            {t('Для сетевой медиатеки подключи свой Navidrome на домашнем компьютере, NAS или VPS. Если сервера ещё нет, воспользуйся инструкцией:')}{' '}
+            <a className="text-accent underline-offset-4 hover:underline" href={localizePath('/start')}>
               {t('С чего начать')}
             </a>
             .
           </p>
           <p>
-            {t('Сервер не обязателен: на экране входа есть «Слушать музыку с этого устройства» — плеер возьмёт файлы, добавленные через «Файлы» или из интернета. И «Посмотреть демоверсию» — осмотреться, ничего не подключая.')}
+            {t('Можно начать без сервера: выбери прослушивание музыки с устройства на экране входа и добавь свои файлы. Или открой «Посмотреть демоверсию», чтобы попробовать плеер на встроенных треках.')}
           </p>
+        </Block>
+
+        <Block title="Установить приложение">
+          <p>{t('На iPhone и iPad Nocturne Player доступен в App Store. Для Android, Windows, Linux и Mac установщики находятся на главной странице.')}</p>
+          <p><a href="https://apps.apple.com/app/id6814215090" className="text-accent underline-offset-4 hover:underline">{t('Открыть в App Store')}</a> · <a href={localizePath('/#download')} className="text-accent underline-offset-4 hover:underline">{t('Все платформы')}</a></p>
+        </Block>
+
+        <Block title="Без сервера: музыка с устройства">
+          <p>{t('На Android открой «Медиатека → На телефоне» и нажми «Файлы» или «Папка». Выбранная музыка копируется в приложение и играет без интернета. Если сервер уже подключён, отключать его не нужно.')}</p>
+          <p>{t('На iPhone и iPad открой раздел музыки на устройстве и добавь файлы или папку. Можно также отправить аудиофайл через «Поделиться → Nocturne». На компьютере добавь файлы или папку в локальную медиатеку.')}</p>
         </Block>
 
         <Block title="Не подключается к серверу">
@@ -62,7 +72,7 @@ export function Support() {
 
         <Block title="Музыка не играет в фоне или пропадает звук">
           <p>
-            {t('Проверь, что приложению разрешены уведомления: без них система может остановить воспроизведение в фоне. Если трек не играет вовсе, попробуй другое качество потока в настройках — сервер мог не справиться с перекодированием.')}
+            {t('Проверь громкость и выбранный аудиовыход, затем перезапусти трек. На Android проверь ограничения работы приложения в фоне и настройки батареи. Для серверного трека попробуй другое качество потока: сервер мог не справиться с перекодированием. Если звук снова пропадёт, напиши модель устройства, версию системы и приложения, а также продолжает ли двигаться время трека.')}
           </p>
         </Block>
 
@@ -80,11 +90,11 @@ export function Support() {
 
       <footer className="border-t border-line">
         <div className="mx-auto flex max-w-3xl flex-col items-center justify-between gap-4 px-4 py-10 text-sm text-muted sm:flex-row sm:px-6">
-          <a href="/" className="flex items-center gap-2.5">
+          <a href={localizePath('/')} className="flex items-center gap-2.5">
             <Logo size={22} />
             <span>{t('Nocturne — плеер для Navidrome')}</span>
           </a>
-          <a href="/privacy" className="hover:text-ink">
+          <a href={localizePath('/privacy')} className="hover:text-ink">
             {t('Конфиденциальность')}
           </a>
         </div>

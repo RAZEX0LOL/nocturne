@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { Logo } from './Logo'
 import { LanguageSwitch } from './LanguageSwitch'
-import { t } from './i18n'
+import { localizePath, t } from './i18n'
 
 /** Блок с командой и кнопкой «Скопировать»: набирать такое руками никто не станет. */
 function Code({ children }: { children: string }) {
@@ -60,13 +60,13 @@ export function Start() {
     <>
       <header className="sticky top-0 z-40 border-b border-line/60 bg-night/75 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-4 sm:px-6">
-          <a href="/" className="flex items-center gap-2.5 font-extrabold tracking-[0.25em]">
+          <a href={localizePath('/')} className="flex items-center gap-2.5 font-extrabold tracking-[0.25em]">
             <Logo />
             <span className="text-sm">NOCTURNE</span>
           </a>
           <div className="flex items-center gap-3">
             <LanguageSwitch />
-            <a href="/#download" className="rounded-full bg-accent px-4 py-2 text-sm font-bold text-night hover:bg-[#b9a3fb]">
+            <a href={localizePath('/#download')} className="hidden min-h-11 items-center rounded-full bg-accent px-4 py-2 text-sm font-bold text-night hover:bg-[#b9a3fb] sm:inline-flex">
               {t('Скачать')}
             </a>
           </div>
@@ -77,7 +77,7 @@ export function Start() {
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-accent">{t('С чего начать')}</p>
         <h1 className="mt-3 text-4xl font-extrabold tracking-tight sm:text-5xl">{t('Свой музыкальный сервер за 10 минут')}</h1>
         <p className="mt-5 text-lg text-muted">
-          {t('Nocturne — это плеер, а музыка живёт на твоём сервере Navidrome: на домашнем компьютере, NAS или VPS. Ставится он одной командой. Ниже — весь путь от пустой папки до музыки в телефоне.')}
+          {t('Nocturne играет файлы с устройства и музыку с сервера Navidrome. Для локальных файлов сервер не нужен. Эта инструкция — для своей сетевой медиатеки на домашнем компьютере, NAS или VPS.')}
         </p>
         <p className="mt-3 text-[15px] text-muted">
           {t('Нужен компьютер, который может быть включён, когда ты слушаешь музыку, и')}{' '}
@@ -86,6 +86,12 @@ export function Start() {
           </a>
           {t('. Подойдёт и домашний ПК, и мини-компьютер, и арендованный сервер.')}
         </p>
+
+        <aside className="card mt-8 rounded-2xl p-6">
+          <h2 className="text-lg font-bold">{t('Без сервера: музыка с устройства')}</h2>
+          <p className="mt-3 text-[15px] leading-relaxed text-muted">{t('На Android открой «Медиатека → На телефоне» и нажми «Файлы» или «Папка». Выбранная музыка копируется в приложение и играет без интернета. Если сервер уже подключён, отключать его не нужно.')}</p>
+          <a href={localizePath('/support')} className="mt-3 inline-block text-sm font-semibold text-accent hover:underline">{t('Помощь с Nocturne')}</a>
+        </aside>
 
         <ol className="mt-14">
           <Step n={1} title="Создай папку и файл">
@@ -125,7 +131,7 @@ export function Start() {
 
           <Step n={4} title="Подключи Nocturne">
             <p>
-              <a className="text-accent underline-offset-4 hover:underline" href="/#download">
+              <a className="text-accent underline-offset-4 hover:underline" href={localizePath('/#download')}>
                 {t('Скачай приложение')}
               </a>{' '}
               {t('для своей системы и введи три поля: адрес сервера, логин и пароль.')}
@@ -152,7 +158,7 @@ export function Start() {
                 <a className="text-accent underline-offset-4 hover:underline" href="https://tailscale.com/">
                   Tailscale
                 </a>{' '}
-                или{' '}
+                {t('или')}{' '}
                 <a className="text-accent underline-offset-4 hover:underline" href="https://www.zerotier.com/">
                   ZeroTier
                 </a>
@@ -179,14 +185,14 @@ export function Start() {
           </p>
         </div>
 
-        <a href="/#download" className="mt-10 inline-block rounded-2xl bg-accent px-7 py-4 text-base font-bold text-night hover:bg-[#b9a3fb]">
+        <a href={localizePath('/#download')} className="mt-10 inline-block rounded-2xl bg-accent px-7 py-4 text-base font-bold text-night hover:bg-[#b9a3fb]">
           {t('Скачать Nocturne')}
         </a>
       </main>
 
       <footer className="border-t border-line">
         <div className="mx-auto flex max-w-3xl flex-col items-center justify-between gap-4 px-4 py-10 text-sm text-muted sm:flex-row sm:px-6">
-          <a href="/" className="flex items-center gap-2.5">
+          <a href={localizePath('/')} className="flex items-center gap-2.5">
             <Logo size={22} />
             <span>{t('Nocturne — плеер для Navidrome')}</span>
           </a>

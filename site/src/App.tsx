@@ -3,7 +3,7 @@ import { BASE, BUILT_VERSION, PLATFORMS, detectPlatform, downloadUrl, loadReleas
 import bundledChangelog from '../changelog.json'
 import { Logo } from './Logo'
 import { LanguageSwitch } from './LanguageSwitch'
-import { language, t } from './i18n'
+import { language, localizePath, t } from './i18n'
 
 function Section({ id, eyebrow, title, lead, children }: { id: string; eyebrow: string; title: string; lead?: string; children: ReactNode }) {
   return (
@@ -24,16 +24,16 @@ function Header() {
           <Logo />
           <span className="text-sm">NOCTURNE</span>
         </a>
-        <nav className="hidden items-center gap-8 text-sm text-muted md:flex">
+        <nav className="hidden items-center gap-8 text-sm text-muted xl:flex">
           <a href="#features" className="hover:text-ink">{t('Возможности')}</a>
           <a href="#screens" className="hover:text-ink">{t('Скриншоты')}</a>
-          <a href="/start" className="hover:text-ink">{t('С чего начать')}</a>
+          <a href={localizePath('/start')} className="hover:text-ink">{t('С чего начать')}</a>
           <a href="#download" className="hover:text-ink">{t('Скачать')}</a>
           <a href="#changelog" className="hover:text-ink">{t('Что нового')}</a>
           <a href="#faq" className="hover:text-ink">{t('Вопросы')}</a>
         </nav>
         <LanguageSwitch />
-        <a href="#download" className="rounded-full bg-accent px-4 py-2 text-sm font-bold text-night hover:bg-[#b9a3fb]">
+        <a href="#download" className="hidden min-h-11 items-center rounded-full bg-accent px-4 py-2 text-sm font-bold text-night hover:bg-[#b9a3fb] sm:inline-flex">
           {t('Скачать')}
         </a>
       </div>
@@ -49,7 +49,7 @@ function Hero({ main, release }: { main?: Platform; release: ReleaseInfo }) {
         <div className="rise mx-auto max-w-3xl text-center">
           <p className="inline-flex items-center gap-2 rounded-full border border-line bg-panel/70 px-3 py-1 text-xs font-semibold text-muted">
             <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-            {release.version ? t('Версия {version}', { version: release.version }) : 'Mac · Windows · iPhone · Android'}
+            {release.version ? t('Версия {version}', { version: release.version }) : 'Mac · Windows · Linux · iPhone · Android'}
           </p>
           <h1 className="mt-6 text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-7xl">
             {t('Твоя музыка.')}
@@ -62,7 +62,7 @@ function Hero({ main, release }: { main?: Platform; release: ReleaseInfo }) {
           <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
             {main && href ? (
               <a href={href} className="w-full rounded-2xl bg-accent px-7 py-4 text-base font-bold text-night shadow-[0_10px_40px_-10px_rgb(167_139_250/0.7)] hover:bg-[#b9a3fb] sm:w-auto">
-                {main.id === 'ios' ? t('Установить через TestFlight') : t('Скачать для {name}', { name: main.name })}
+                {main.id === 'ios' ? t('Скачать в App Store') : t('Скачать для {name}', { name: main.name })}
               </a>
             ) : (
               <a href="#download" className="w-full rounded-2xl bg-accent px-7 py-4 text-base font-bold text-night hover:bg-[#b9a3fb] sm:w-auto">
@@ -87,7 +87,6 @@ function Hero({ main, release }: { main?: Platform; release: ReleaseInfo }) {
             {/* Запись настоящего приложения: оно само «показывает себя» лучше шести скриншотов.
                 Без звука и без управления — это иллюстрация, а не плеер; poster виден, пока видео качается. */}
             <video
-              src="/shots/demo.webm"
               poster="/shots/demo-poster.webp"
               autoPlay
               muted
@@ -125,7 +124,7 @@ const FEATURES: Array<{ title: string; text: string; icon: string }> = [
   { icon: '≋', title: 'Звук под себя', text: 'Эквалайзер с пресетами, выравнивание громкости ReplayGain, скорость от 0,5× до 2× и таймер сна, который гасит звук плавно.' },
   { icon: '◐', title: 'Оформление', text: 'Тёмная, светлая и OLED-чёрная темы, цвет акцента из обложки, размер текста, форма углов — подстрой интерфейс под себя.' },
   { icon: '⌘', title: 'Родной на каждой системе', text: 'На Mac — значки SF Symbols и стекло, на Windows — Mica и медиаклавиши, на телефоне — шторка, виджеты и экран блокировки.' },
-  { icon: '↻', title: 'Обновляется сам', text: 'Новая версия ставится поверх старой: настройки, загрузки и вход на сервер остаются. На iPhone — через TestFlight.' },
+  { icon: '↻', title: 'Обновляется сам', text: 'Новая версия сохраняет настройки, загрузки и вход на сервер. На iPhone и iPad обновления приходят через App Store.' },
 ]
 
 function Features() {
@@ -163,21 +162,32 @@ function Screens({ main }: { main?: PlatformId }) {
     main === 'ios' ? 'iphone' : main === 'android' ? 'android' : 'desktop',
   )
   return (
-    <Section id="screens" eyebrow="Скриншоты" title="Один плеер — три характера" lead={t('Интерфейс подстраивается под систему, а возможности везде одинаковые.')}>
+    <Section id="screens" eyebrow="Скриншоты" title="Один плеер — три характера" lead={t('Общая медиатека и привычное управление, с интерфейсом под каждую систему.')}>
       <div role="tablist" aria-label={t('Платформа')} className="inline-flex rounded-full border border-line bg-panel p-1">
         {SCREEN_TABS.map((one) => (
           <button
             key={one.id}
+            id={`screens-tab-${one.id}`}
             role="tab"
+            aria-controls="screens-panel"
+            tabIndex={tab === one.id ? 0 : -1}
+            onKeyDown={(event) => {
+              const index = SCREEN_TABS.findIndex((item) => item.id === one.id)
+              const next = event.key === 'ArrowRight' ? (index + 1) % SCREEN_TABS.length : event.key === 'ArrowLeft' ? (index + SCREEN_TABS.length - 1) % SCREEN_TABS.length : event.key === 'Home' ? 0 : event.key === 'End' ? SCREEN_TABS.length - 1 : undefined
+              if (next === undefined) return
+              event.preventDefault()
+              setTab(SCREEN_TABS[next]!.id)
+              document.getElementById(`screens-tab-${SCREEN_TABS[next]!.id}`)?.focus()
+            }}
             aria-selected={tab === one.id}
             onClick={() => setTab(one.id)}
-            className={`rounded-full px-5 py-2 text-sm font-semibold transition ${tab === one.id ? 'bg-accent text-night' : 'text-muted hover:text-ink'}`}
+            className={`min-h-11 rounded-full px-3 py-2 text-sm sm:px-5 font-semibold transition ${tab === one.id ? 'bg-accent text-night' : 'text-muted hover:text-ink'}`}
           >
             {t(one.label)}
           </button>
         ))}
       </div>
-      <div className="mt-10">
+      <div id="screens-panel" role="tabpanel" aria-labelledby={`screens-tab-${tab}`} className="mt-10">
         {tab === 'desktop' && (
           <div className="grid gap-6 md:grid-cols-2">
             {[
@@ -250,11 +260,11 @@ function Download({ main, release }: { main?: PlatformId; release: ReleaseInfo }
                   <PlatformIcon id={platform.id} />
                 </span>
                 <div>
-                  <h3 className="text-lg font-bold">{platform.name}</h3>
+                  <h3 className="text-lg font-bold">{t(platform.name)}</h3>
                   <p className="text-sm text-muted">{t(platform.detail)}</p>
                 </div>
-                {highlighted && <span className="ml-auto shrink-0 whitespace-nowrap rounded-full bg-accent/15 px-2.5 py-1 text-xs font-semibold text-accent">{t('Твоя система')}</span>}
               </div>
+              {highlighted && <span className="mt-3 self-start rounded-full bg-accent/15 px-2.5 py-1 text-xs font-semibold text-accent">{t('Твоя система')}</span>}
               <p className="mt-4 flex-1 text-sm leading-relaxed text-muted">{t(platform.note)}</p>
               {href ? (
                 <a href={href} className={`mt-6 rounded-xl px-4 py-3 text-center text-sm font-bold ${highlighted ? 'bg-accent text-night hover:bg-[#b9a3fb]' : 'border border-line hover:border-accent/60'}`}>
@@ -265,7 +275,7 @@ function Download({ main, release }: { main?: PlatformId; release: ReleaseInfo }
                 <span className="mt-6 rounded-xl border border-dashed border-line px-4 py-3 text-center text-sm font-semibold text-muted">{t(platform.action)}</span>
               )}
               {platform.alt && (
-                <a href={`${BASE}/${platform.alt.file}`} className="mt-2 rounded-xl border border-line px-4 py-2.5 text-center text-sm font-semibold text-muted hover:border-accent/60 hover:text-ink">
+                <a href={platform.alt.href ?? `${BASE}/${platform.alt.file}`} className="mt-2 rounded-xl border border-line px-4 py-2.5 text-center text-sm font-semibold text-muted hover:border-accent/60 hover:text-ink">
                   {t(platform.alt.action)}
                 </a>
               )}
@@ -293,7 +303,7 @@ const KIND_STYLE = {
   better: 'bg-[#5eead4]/12 text-[#5eead4]',
   fix: 'bg-[#fcd34d]/12 text-[#fcd34d]',
 } as const
-const PLATFORM_LABEL: Record<PlatformId, string> = { mac: 'Mac', windows: 'Windows', linux: 'Linux', android: 'Android', ios: 'iPhone' }
+const PLATFORM_LABEL: Record<PlatformId, string> = { mac: 'Mac', windows: 'Windows', linux: 'Linux', android: 'Android', ios: 'iPhone / iPad' }
 
 const dateLabel = (date: string) =>
   new Date(`${date}T12:00:00`).toLocaleDateString(language === 'en' ? 'en-GB' : 'ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -302,7 +312,7 @@ const dateLabel = (date: string) =>
 function Changelog({ entries, main }: { entries: ChangelogEntry[]; main?: PlatformId }) {
   const [filter, setFilter] = useState<PlatformId | 'all'>('all')
   const [all, setAll] = useState(false)
-  const platforms = (['mac', 'windows', 'android', 'ios'] as PlatformId[]).filter((id) => entries.some((entry) => entry.platforms.includes(id)))
+  const platforms = (['mac', 'windows', 'linux', 'android', 'ios'] as PlatformId[]).filter((id) => entries.some((entry) => entry.platforms.includes(id)))
   const shown = entries
     .map((entry) => ({ ...entry, changes: entry.changes.filter((change) => filter === 'all' || (change.platforms ?? entry.platforms).includes(filter)) }))
     .filter((entry) => entry.changes.length)
@@ -342,10 +352,10 @@ function Changelog({ entries, main }: { entries: ChangelogEntry[]; main?: Platfo
                 {entry.changes.map((change) => (
                   <li key={change.text} className="flex gap-3 text-[15px] leading-relaxed">
                     <span className={`mt-0.5 h-fit shrink-0 rounded-md px-2 py-0.5 text-xs font-semibold ${KIND_STYLE[change.kind]}`}>{t(KIND_LABEL[change.kind])}</span>
-                    <span className="text-muted">
+                    <span className="min-w-0 text-muted">
                       {text(change.text, change.text_en)}
                       {change.platforms && filter === 'all' && (
-                        <span className="ml-1.5 whitespace-nowrap text-xs text-muted/70">· {change.platforms.map((id) => PLATFORM_LABEL[id]).join(', ')}</span>
+                        <span className="ml-1.5 text-xs text-muted/70">· {change.platforms.map((id) => PLATFORM_LABEL[id]).join(', ')}</span>
                       )}
                     </span>
                   </li>
@@ -369,16 +379,16 @@ const FAQ: Array<[string, ReactNode]> = [
     'Что такое Navidrome и зачем он нужен?',
     <>
       {t('Navidrome — бесплатный сервер для своей музыкальной коллекции: ставится на домашний компьютер, NAS или VPS и раздаёт музыку по сети. Nocturne — плеер к нему. Подойдёт и любой другой сервер с API Subsonic.')}{' '}
-      <a className="text-accent underline-offset-4 hover:underline" href="/start">
+      <a className="text-accent underline-offset-4 hover:underline" href={localizePath('/start')}>
         {t('Поставить за 10 минут')}
       </a>
     </>,
   ],
   ['Можно без сервера?', t('Да, на любой системе. На компьютере, iPhone, iPad и Android можно слушать файлы прямо с устройства: на экране входа выбери «Слушать музыку с этого устройства». Есть и демоверсия — посмотреть плеер, ничего не подключая.')],
   ['Как подключиться?', t('Открой приложение, введи адрес сервера, логин и пароль Navidrome. Пароль хранится в системном хранилище — Связке ключей, Keystore или менеджере учётных данных Windows.')],
-  ['Как приходят обновления?', t('Приложение само проверяет новую версию, скачивает её и ставит поверх — настройки, загрузки и вход остаются. На Android система один раз попросит разрешить установку из Nocturne. На iPhone обновления приходят через TestFlight.')],
+  ['Как приходят обновления?', t('На компьютере и Android обновления доступны в приложении: настройки, загрузки и вход сохраняются. На Android разреши установку из Nocturne, когда система попросит. Версии из App Store обновляются через App Store.')],
   ['Почему Windows предупреждает при первом запуске?', t('Версия для Windows пока не подписана сертификатом Microsoft, поэтому SmartScreen её не знает. Нажми «Подробнее» → «Выполнить в любом случае» — это нужно один раз. Версия для Mac подписана и проверена Apple, там предупреждений нет.')],
-  ['Сколько стоит?', t('Нисколько. Без рекламы, без подписок и без сбора данных: приложение общается только с твоим сервером (и с LRCLIB, если ты сам включишь поиск текстов).')],
+  ['Сколько стоит?', t('Бесплатно, без рекламы и подписок. Разработчик не собирает историю прослушиваний. О подключениях к серверу, поиске текстов и проверке обновлений — в политике конфиденциальности.')],
 ]
 
 function Faq() {
@@ -405,7 +415,7 @@ export function App() {
   const [release, setRelease] = useState<ReleaseInfo>({ version: BUILT_VERSION, sizes: {} })
   const [platform] = useState(detectPlatform)
   useEffect(() => {
-    loadRelease().then(setRelease, () => undefined)
+    loadRelease().then((info) => setRelease((current) => ({ ...info, version: info.version ?? current.version })), () => undefined)
   }, [])
   const main = PLATFORMS.find((one) => one.id === platform && downloadUrl(one))
   return (
@@ -425,10 +435,10 @@ export function App() {
             <Logo size={22} />
             <span>{t('Nocturne — плеер для Navidrome')}</span>
           </div>
-          <nav className="flex items-center gap-5">
-            <a href="/start" className="hover:text-ink">{t('С чего начать')}</a>
-            <a href="/support" className="hover:text-ink">{t('Поддержка')}</a>
-            <a href="/privacy" className="hover:text-ink">{t('Конфиденциальность')}</a>
+          <nav className="flex flex-wrap items-center justify-center gap-x-5 gap-y-3">
+            <a href={localizePath('/start')} className="hover:text-ink">{t('С чего начать')}</a>
+            <a href={localizePath('/support')} className="hover:text-ink">{t('Поддержка')}</a>
+            <a href={localizePath('/privacy')} className="hover:text-ink">{t('Конфиденциальность')}</a>
           </nav>
         </div>
       </footer>
