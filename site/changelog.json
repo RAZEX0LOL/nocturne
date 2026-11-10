@@ -2,6 +2,32 @@
   "$comment": "Что нового в каждой версии. Пишется при выпуске: без записи скрипты выпуска версию не опубликуют. Версия = 1.1.<число коммитов>, как номер сборки. kind: new | better | fix. platforms: mac, windows, linux, android, ios; у пункта — если он не для всех платформ версии.",
   "releases": [
     {
+      "version": "1.1.94",
+      "date": "2026-11-10",
+      "platforms": [
+        "mac"
+      ],
+      "summary": "Настольный интерфейс Mac в версии из App Store",
+      "summary_en": "A desktop Mac interface for the App Store app",
+      "changes": [
+        {
+          "kind": "new",
+          "text": "В версии Mac из App Store появились боковая панель разделов и плейлистов, таблицы треков и постоянный плеер внизу окна.",
+          "text_en": "The Mac App Store app now has a sidebar for library sections and playlists, song tables, and a persistent player at the bottom of the window."
+        },
+        {
+          "kind": "better",
+          "text": "Страницы альбомов и плейлистов адаптированы для Mac. Добавлены горячие клавиши для главной, поиска, обновления и настроек.",
+          "text_en": "Album and playlist pages are adapted for Mac. Keyboard shortcuts open Home, Search and Settings, and refresh the library."
+        },
+        {
+          "kind": "new",
+          "text": "В нижнем плеере доступны очередь, тексты песен, AirPlay и громкость приложения с учётом ReplayGain.",
+          "text_en": "The bottom player provides the queue, lyrics, AirPlay and application volume combined with ReplayGain."
+        }
+      ]
+    },
+    {
       "version": "1.1.83",
       "date": "2026-10-29",
       "platforms": [
