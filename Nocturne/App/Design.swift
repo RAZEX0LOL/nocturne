@@ -126,6 +126,91 @@ struct SongRow: View {
     }
 }
 
+#if targetEnvironment(macCatalyst)
+// В таблице кнопка воспроизведения и сердечко — отдельные элементы, без вложенных Button.
+struct MacSongTable: View {
+    let songs: [Song]
+    var remove: ((Int) -> Void)? = nil
+    var action: (Int) -> Void
+
+    var body: some View {
+        LazyVStack(spacing: 0) {
+            HStack(spacing: 14) {
+                Text("#").frame(width: 30)
+                Text(String(localized: "Название")).frame(maxWidth: .infinity, alignment: .leading)
+                Text(String(localized: "Альбом")).frame(width: 150, alignment: .leading)
+                Text(String(localized: "Время")).frame(width: 50, alignment: .trailing)
+                Color.clear.frame(width: 32, height: 1)
+                if remove != nil { Color.clear.frame(width: 32, height: 1) }
+            }.font(.system(size: 13)).foregroundStyle(Theme.secondary).padding(.horizontal, 14).frame(height: 36)
+            Divider()
+            ForEach(Array(songs.enumerated()), id: \.offset) { index, song in
+                MacSongTableRow(song: song, index: index, remove: remove.map { remove in { remove(index) } }, action: { action(index) })
+            }
+        }.background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.radius(10)))
+            .accessibilityIdentifier("mac.song-table")
+    }
+}
+
+private struct MacSongTableRow: View {
+    let song: Song
+    let index: Int
+    var remove: (() -> Void)? = nil
+    let action: () -> Void
+    @Environment(LibraryStore.self) private var library
+    @Environment(PlayerStore.self) private var player
+    @Environment(DownloadStore.self) private var downloads
+    @State private var saving = false
+
+    var body: some View {
+        let selected = player.current?.id == song.id
+        let unavailable = !player.isPlayable(song)
+        HStack(spacing: 14) {
+            Button {
+                if unavailable { player.show(String(localized: "Трек не скачан — недоступен без сети")) }
+                else { action() }
+            } label: {
+                HStack(spacing: 14) {
+                    Group {
+                        if selected { Image(systemName: "waveform").foregroundStyle(Theme.accent) }
+                        else { Text("\(index + 1)").foregroundStyle(Theme.secondary) }
+                    }.font(.system(size: 14)).frame(width: 30)
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(song.title).font(.system(size: 16, weight: .medium)).foregroundStyle(selected ? Theme.accent : Theme.primary).lineLimit(1)
+                        Text(song.artist ?? String(localized: "Неизвестный исполнитель")).font(.system(size: 13)).foregroundStyle(Theme.secondary).lineLimit(1)
+                    }.frame(maxWidth: .infinity, alignment: .leading)
+                    Text(song.album ?? "—").font(.system(size: 14)).foregroundStyle(Theme.secondary).lineLimit(1).frame(width: 150, alignment: .leading)
+                    Text(timeLabel(song.duration ?? 0)).font(.system(size: 13).monospacedDigit()).foregroundStyle(Theme.secondary).frame(width: 50, alignment: .trailing)
+                }.frame(minHeight: 54).contentShape(Rectangle())
+            }.buttonStyle(.plain)
+            Button {
+                saving = true
+                Task {
+                    do {
+                        let starred = !library.isStarred(song)
+                        try await library.setStarred(song, starred)
+                        player.updateSong(id: song.id) { $0.starred = starred ? "local" : nil }
+                    } catch { player.error = LibraryStore.message(error) }
+                    saving = false
+                }
+            } label: {
+                Image(systemName: library.isStarred(song) ? "heart.fill" : "heart").foregroundStyle(Theme.accent).frame(width: 32, height: 40)
+            }.buttonStyle(.plain).disabled(saving || library.client == nil)
+                .accessibilityLabel(library.isStarred(song) ? String(localized: "Убрать из избранного") : String(localized: "В избранное"))
+            if let remove {
+                Button(role: .destructive, action: remove) {
+                    Image(systemName: "minus.circle").foregroundStyle(Theme.secondary).frame(width: 32, height: 40)
+                }.buttonStyle(.plain).accessibilityLabel(String(localized: "Удалить из плейлиста"))
+            }
+        }
+        .padding(.horizontal, 14)
+        .background(selected ? Theme.accent.opacity(0.08) : .clear)
+        .opacity(unavailable ? 0.4 : 1)
+        .songActions([song])
+    }
+}
+#endif
+
 struct DownloadBadge: View {
     let state: DownloadStore.State?
     let downloaded: Bool

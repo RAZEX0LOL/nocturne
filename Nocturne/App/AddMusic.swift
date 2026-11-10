@@ -13,6 +13,7 @@ final class AddMusicCoordinator {
 
 /// "+" menu for toolbars: files, a whole folder, a direct link or the built-in browser.
 struct AddMusicMenu: View {
+    var showsTitle = false
     var body: some View {
         Menu {
             Button { AddMusicCoordinator.shared.request = .files } label: { Label(String(localized: "Файлы с \(Device.name)"), systemImage: "doc.badge.plus") }
@@ -21,7 +22,10 @@ struct AddMusicMenu: View {
             Button { AddMusicCoordinator.shared.request = .link } label: { Label(String(localized: "Скачать по ссылке"), systemImage: "link.badge.plus") }
             Button { AddMusicCoordinator.shared.request = .browser } label: { Label(String(localized: "Браузер"), systemImage: "safari") }
         } label: {
-            Image(systemName: "plus").foregroundStyle(Theme.primary)
+            HStack(spacing: 12) {
+                Image(systemName: "plus").foregroundStyle(Theme.primary)
+                if showsTitle { Text(String(localized: "Добавить музыку")); Spacer() }
+            }.contentShape(Rectangle())
         }.accessibilityLabel(String(localized: "Добавить музыку"))
     }
 }

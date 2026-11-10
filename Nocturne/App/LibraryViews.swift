@@ -9,7 +9,11 @@ struct HomeView: View {
             // Two columns on iPhone, more on iPad; tiles stay around 160–220 pt.
             let columns = max(2, Int((geometry.size.width - 48) / 210))
             let width = max(1, (geometry.size.width - 48 - CGFloat(columns - 1) * 12) / CGFloat(columns))
+            #if targetEnvironment(macCatalyst)
+            let carouselWidth: CGFloat = 210
+            #else
             let carouselWidth = min(max(1, (geometry.size.width - 64) / 2.4), 190)
+            #endif
             ScrollView {
                 VStack(alignment: .leading, spacing: 28) {
                     if library.isDemo {
@@ -41,12 +45,14 @@ struct HomeView: View {
                 }.padding(24)
             }.refreshable { await library.refresh() }
                 .background(Theme.background)
-                .navigationTitle(String(localized: "Главная"))
+                .navigationTitle(homeTitle)
                 .toolbar {
+                    #if !targetEnvironment(macCatalyst)
                     ToolbarItem(placement: .topBarLeading) { AddMusicMenu() }
                     ToolbarItem(placement: .topBarTrailing) {
                         Button { settings = true } label: { Image(systemName: "gearshape").foregroundStyle(Theme.primary) }.accessibilityLabel(String(localized: "Настройки"))
                     }
+                    #endif
                 }
                 .navigationDestination(for: Album.self) { AlbumDetailView(album: $0) }
         }.background(Theme.background)
@@ -54,6 +60,17 @@ struct HomeView: View {
 }
 
 extension HomeView {
+    private var homeTitle: String {
+        #if targetEnvironment(macCatalyst)
+        let hour = Calendar.current.component(.hour, from: .now)
+        if hour < 12 { return String(localized: "Доброе утро") }
+        if hour < 18 { return String(localized: "Добрый день") }
+        return String(localized: "Добрый вечер")
+        #else
+        return String(localized: "Главная")
+        #endif
+    }
+
     @ViewBuilder func homeSection(_ section: Appearance.HomeSection, width: CGFloat, columns: Int, carouselWidth: CGFloat) -> some View {
         switch section {
         case .recentlyPlayed: AlbumCarousel(title: section.title, albums: library.recentlyPlayed, width: carouselWidth)
@@ -61,6 +78,9 @@ extension HomeView {
         case .favoriteAlbums: AlbumCarousel(title: section.title, albums: library.favorites, width: carouselWidth)
         case .discover: AlbumCarousel(title: section.title, albums: library.discover, width: carouselWidth)
         case .recentlyAdded:
+            #if targetEnvironment(macCatalyst)
+            AlbumCarousel(title: section.title, albums: Array(library.albums.prefix(12)), width: carouselWidth, browseType: "newest")
+            #else
             if !library.albums.isEmpty {
                 VStack(alignment: .leading, spacing: 14) {
                     HStack {
@@ -77,6 +97,7 @@ extension HomeView {
                     }
                 }
             }
+            #endif
         case .starredSongs:
             if !library.starredSongs.isEmpty {
                 VStack(alignment: .leading, spacing: 10) {
@@ -86,9 +107,13 @@ extension HomeView {
                         NavigationLink { StarredSongsView() } label: { Text(String(localized: "Все")).foregroundStyle(Theme.accent) }
                     }
                     let songs = library.starredSongs
+                    #if targetEnvironment(macCatalyst)
+                    MacSongTable(songs: Array(songs.prefix(5))) { index in player.play(songs, at: index, client: library.client) }
+                    #else
                     ForEach(Array(songs.prefix(4).enumerated()), id: \.offset) { index, song in
                         SongRow(song: song) { player.play(songs, at: index, client: library.client) }
                     }
+                    #endif
                 }
             }
         }
@@ -99,10 +124,19 @@ struct AlbumCarousel: View {
     let title: String
     let albums: [Album]
     let width: CGFloat
+    var browseType: String? = nil
     var body: some View {
         if !albums.isEmpty {
             VStack(alignment: .leading, spacing: 14) {
-                Text(title).font(.title2.bold())
+                HStack {
+                    Text(title).font(.title2.bold())
+                    Spacer()
+                    if let browseType {
+                        NavigationLink { AlbumListPage(title: String(localized: "Все альбомы"), type: browseType) } label: {
+                            Label(String(localized: "Все альбомы"), systemImage: "chevron.right").font(.subheadline).foregroundStyle(Theme.secondary)
+                        }.buttonStyle(.plain)
+                    }
+                }
                 ScrollView(.horizontal, showsIndicators: false) {
                     LazyHStack(alignment: .top, spacing: 16) {
                         ForEach(albums) { album in
@@ -116,6 +150,7 @@ struct AlbumCarousel: View {
 }
 
 struct LibraryView: View {
+    var categoryOverride: Category? = nil
     enum Category: String, CaseIterable {
         case device, downloads = "Загрузки", albums = "Альбомы", artists = "Артисты", playlists = "Плейлисты",
              songs = "Любимое", radio = "Радио", genres = "Жанры"
@@ -137,7 +172,16 @@ struct LibraryView: View {
         if library.isOffline { return [.device, .downloads, .songs, .playlists] }
         return Category.allCases
     }
-    private var current: Category { categories.contains(category) ? category : categories[0] }
+    private var current: Category {
+        let selected = categoryOverride ?? category
+        return categories.contains(selected) ? selected : categories[0]
+    }
+    private var pageTitle: String {
+        guard categoryOverride != nil else { return String(localized: "Медиатека") }
+        if current == .device { return String(localized: "На компьютере") }
+        if current == .songs { return String(localized: "Избранное") }
+        return current.title
+    }
     @Environment(DownloadStore.self) private var downloads
     /// Track counts on the phone-storage chips, so it's obvious where the music is.
     private func count(for item: Category) -> Int? {
@@ -170,6 +214,7 @@ struct LibraryView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
+                if categoryOverride == nil {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
                         ForEach(categories, id: \.self) { item in
@@ -187,6 +232,7 @@ struct LibraryView: View {
                         }
                     }
                 }.scrollClipDisabled()
+                }
                 switch current {
                 case .device: DeviceLibraryView()
                 case .albums: AlbumBrowser(type: sort.rawValue).id(sort)
@@ -199,7 +245,7 @@ struct LibraryView: View {
                 }
                 if let error = library.error, !library.isOffline { Text(error).foregroundStyle(Theme.secondary) }
             }.padding(24)
-        }.background(Theme.background).navigationTitle(String(localized: "Медиатека"))
+        }.background(Theme.background).navigationTitle(pageTitle)
             .refreshable { await library.refresh() }
             .navigationDestination(for: Album.self) { AlbumDetailView(album: $0) }
             .toolbar {
@@ -286,11 +332,15 @@ struct LibraryView: View {
             ContentUnavailableView(String(localized: "Любимых треков нет"), systemImage: "heart", description: Text(String(localized: "Отмечай треки сердцем в плеере или через долгое нажатие.")))
         } else {
             PlayButtons(songs: songs)
+            #if targetEnvironment(macCatalyst)
+            MacSongTable(songs: songs) { index in player.play(songs, at: index, client: library.client) }
+            #else
             LazyVStack(spacing: 12) {
                 ForEach(Array(songs.enumerated()), id: \.offset) { index, song in
                     SongRow(song: song) { player.play(songs, at: index, client: library.client) }
                 }
             }
+            #endif
         }
     }
 }
@@ -343,11 +393,15 @@ struct DownloadsList: View {
             Text(String(localized: "\(songs.count) треков · \(ByteCountFormatter.string(fromByteCount: Int64(downloads.totalSize), countStyle: .file))"))
                 .font(.caption).foregroundStyle(Theme.secondary)
             PlayButtons(songs: songs)
+            #if targetEnvironment(macCatalyst)
+            MacSongTable(songs: songs) { index in player.play(songs, at: index, client: library.client) }
+            #else
             LazyVStack(spacing: 12) {
                 ForEach(Array(songs.enumerated()), id: \.offset) { index, song in
                     SongRow(song: song) { player.play(songs, at: index, client: library.client) }
                 }
             }
+            #endif
         }
     }
 }
@@ -474,11 +528,15 @@ struct StarredSongsView: View {
         ScrollView {
             VStack(spacing: 18) {
                 PlayButtons(songs: songs)
+                #if targetEnvironment(macCatalyst)
+                MacSongTable(songs: songs) { index in player.play(songs, at: index, client: library.client) }
+                #else
                 LazyVStack(spacing: 12) {
                     ForEach(Array(songs.enumerated()), id: \.offset) { index, song in
                         SongRow(song: song) { player.play(songs, at: index, client: library.client) }
                     }
                 }
+                #endif
             }.padding(24)
         }.background(Theme.background).navigationTitle(String(localized: "Любимые треки")).navigationBarTitleDisplayMode(.inline)
     }
@@ -531,6 +589,18 @@ struct AlbumDetailView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
+                #if targetEnvironment(macCatalyst)
+                HStack(alignment: .bottom, spacing: 28) {
+                    Cover(id: album.coverArt, size: 220).shadow(color: .black.opacity(0.15), radius: 20, y: 8)
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text(album.name).font(.system(size: 34, weight: .bold)).lineLimit(3)
+                        Text(album.artist ?? String(localized: "Неизвестный исполнитель")).foregroundStyle(Theme.accent)
+                        Text([album.year.map(String.init), album.songCount.map { String(localized: "Треков: \($0)") }].compactMap { $0 }.joined(separator: " · "))
+                            .font(.subheadline).foregroundStyle(Theme.secondary)
+                        PlayButtons(songs: songs).frame(maxWidth: 380).padding(.top, 8)
+                    }.frame(maxWidth: .infinity, alignment: .leading)
+                }.frame(maxWidth: .infinity, alignment: .leading).padding(.top, 12)
+                #else
                 Cover(id: album.coverArt, size: 260).shadow(color: Theme.accent.opacity(0.1), radius: 35, y: 10).padding(.top, 18)
                 VStack(spacing: 8) {
                     Text(album.name).font(.title2.bold()).multilineTextAlignment(.center)
@@ -539,6 +609,7 @@ struct AlbumDetailView: View {
                         .font(.caption).foregroundStyle(Theme.secondary)
                 }
                 PlayButtons(songs: songs)
+                #endif
                 if let notes, !notes.isEmpty {
                     Text(notes).font(.callout).foregroundStyle(Theme.secondary).lineLimit(notesExpanded ? nil : 3)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -550,11 +621,15 @@ struct AlbumDetailView: View {
                     Text(error).foregroundStyle(Theme.secondary)
                     Button(String(localized: "Повторить")) { Task { await load() } }
                 }
+                #if targetEnvironment(macCatalyst)
+                MacSongTable(songs: songs) { index in player.play(songs, at: index, client: library.client) }
+                #else
                 LazyVStack(spacing: 12) {
                     ForEach(Array(songs.enumerated()), id: \.offset) { index, song in
                         SongRow(song: song) { player.play(songs, at: index, client: library.client) }
                     }
                 }
+                #endif
             }.padding(24)
         }.background(Theme.background).navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -678,6 +753,26 @@ struct PlaylistDetailView: View {
     @State private var loading = true
     @State private var confirmDelete = false
     var body: some View {
+        Group {
+        #if targetEnvironment(macCatalyst)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                HStack(alignment: .bottom, spacing: 28) {
+                    Cover(id: playlist.coverArt, size: 200)
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text(playlist.name).font(.system(size: 34, weight: .bold)).lineLimit(3)
+                        Text(String(localized: "Треков: \(songs.count)")).font(.subheadline).foregroundStyle(Theme.secondary)
+                        PlayButtons(songs: songs).frame(maxWidth: 380)
+                    }.frame(maxWidth: .infinity, alignment: .leading)
+                }
+                if loading { ProgressView().frame(maxWidth: .infinity) }
+                if let error { Text(error).foregroundStyle(Theme.secondary) }
+                MacSongTable(songs: songs, remove: { index in remove(IndexSet(integer: index)) }) { index in
+                    player.play(songs, at: index, client: library.client)
+                }
+            }.padding(24)
+        }
+        #else
         List {
             Section {
                 VStack(spacing: 14) {
@@ -695,7 +790,9 @@ struct PlaylistDetailView: View {
             }
             .onDelete { offsets in remove(offsets) }
         }
-        .listStyle(.plain).scrollContentBackground(.hidden).background(Theme.background)
+        .listStyle(.plain).scrollContentBackground(.hidden)
+        #endif
+        }.background(Theme.background)
         .navigationTitle(playlist.name).navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -797,9 +894,13 @@ struct SearchView: View {
                     }
                     if show(.songs), let songs = result.song, !songs.isEmpty {
                         Text(String(localized: "Треки")).font(.title2.bold())
+                        #if targetEnvironment(macCatalyst)
+                        MacSongTable(songs: songs) { index in player.play(songs, at: index, client: library.client) }
+                        #else
                         ForEach(Array(songs.enumerated()), id: \.offset) { index, song in
                             SongRow(song: song) { player.play(songs, at: index, client: library.client) }
                         }
+                        #endif
                     }
                 }
             }.padding(24)

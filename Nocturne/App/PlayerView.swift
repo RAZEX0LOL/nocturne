@@ -36,6 +36,129 @@ struct MiniPlayer: View {
     }
 }
 
+#if targetEnvironment(macCatalyst)
+struct MacPlayerBar: View {
+    let open: () -> Void
+    @Environment(PlayerStore.self) private var player
+    @Environment(LibraryStore.self) private var library
+    @Environment(DownloadStore.self) private var downloads
+    @State private var scrubbing = false
+    @State private var position = 0.0
+    @State private var saving = false
+    @State private var panel: Panel?
+    enum Panel: String, Identifiable { case queue, lyrics; var id: String { rawValue } }
+
+    var body: some View {
+        GeometryReader { geometry in
+            HStack(spacing: 24) {
+                track.frame(width: geometry.size.width * 0.27)
+                transport.frame(maxWidth: .infinity)
+                utilities.frame(width: geometry.size.width * 0.23)
+            }.frame(maxHeight: .infinity)
+        }
+        .frame(height: 110).padding(.horizontal, 20)
+        .background(Theme.surface)
+        .foregroundStyle(Theme.primary)
+        .buttonStyle(.plain)
+        .sheet(item: $panel) { which in
+            Group {
+                switch which {
+                case .queue: QueueView()
+                case .lyrics: LyricsView()
+                }
+            }.frame(minWidth: 650, minHeight: 600).appStores(library, player, downloads)
+        }
+    }
+
+    private var track: some View {
+        HStack(spacing: 12) {
+            Button(action: open) {
+                HStack(spacing: 12) {
+                    Cover(id: player.current?.coverArt, size: 64)
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text(player.current?.title ?? String(localized: "Ничего не играет"))
+                            .font(.system(size: 16, weight: .semibold)).lineLimit(1)
+                        Text(player.current?.artist ?? "").font(.system(size: 14)).foregroundStyle(Theme.secondary).lineLimit(1)
+                    }
+                    Spacer(minLength: 0)
+                }.contentShape(Rectangle())
+            }.disabled(player.current == nil).accessibilityLabel(String(localized: "Открыть плеер"))
+                .accessibilityIdentifier("player.open")
+            Button {
+                guard let song = player.current else { return }
+                saving = true
+                Task {
+                    do {
+                        let starred = !library.isStarred(song)
+                        try await library.setStarred(song, starred)
+                        player.updateSong(id: song.id) { $0.starred = starred ? "local" : nil }
+                    } catch { player.error = LibraryStore.message(error) }
+                    saving = false
+                }
+            } label: {
+                Image(systemName: player.current.map { library.isStarred($0) } == true ? "heart.fill" : "heart")
+                    .foregroundStyle(Theme.accent).frame(width: 30, height: 36)
+            }.disabled(player.current == nil || library.client == nil || saving)
+                .accessibilityLabel(player.current.map { library.isStarred($0) } == true ? String(localized: "Убрать из избранного") : String(localized: "В избранное"))
+        }
+    }
+
+    private var transport: some View {
+        VStack(spacing: 5) {
+            HStack(spacing: 22) {
+                Button { player.shuffle.toggle() } label: {
+                    Image(systemName: "shuffle").foregroundStyle(player.shuffle ? Theme.accent : Theme.secondary)
+                }.accessibilityLabel(player.shuffle ? String(localized: "Выключить перемешивание") : String(localized: "Перемешивать"))
+                Button { player.previous() } label: { Image(systemName: "backward.end.fill") }
+                    .accessibilityLabel(String(localized: "Предыдущий трек"))
+                Button { player.toggle() } label: {
+                    ZStack {
+                        Circle().fill(Theme.accent).frame(width: 48, height: 48)
+                        if player.isBuffering { ProgressView().tint(Theme.onAccent) }
+                        else { Image(systemName: player.isPlaying ? "pause.fill" : "play.fill").foregroundStyle(Theme.onAccent) }
+                    }
+                }.accessibilityLabel(player.isPlaying ? String(localized: "Пауза") : String(localized: "Воспроизвести"))
+                    .accessibilityIdentifier("player.toggle")
+                Button { player.advance() } label: { Image(systemName: "forward.end.fill") }
+                    .accessibilityLabel(String(localized: "Следующий трек")).accessibilityIdentifier("player.next")
+                Button { player.cycleRepeat() } label: {
+                    Image(systemName: player.repeatMode == .one ? "repeat.1" : "repeat")
+                        .foregroundStyle(player.repeatMode == .off ? Theme.secondary : Theme.accent)
+                }.accessibilityLabel(player.repeatMode == .off ? String(localized: "Повтор выключен") : player.repeatMode == .one ? String(localized: "Повтор одного трека") : String(localized: "Повтор всей очереди"))
+            }.font(.system(size: 20))
+            HStack(spacing: 10) {
+                Text(timeLabel(scrubbing ? position : player.elapsed)).frame(width: 42, alignment: .trailing)
+                    .accessibilityIdentifier("player.elapsed")
+                Slider(value: Binding(get: { scrubbing ? position : min(player.elapsed, max(player.duration, 1)) }, set: { position = $0 }), in: 0...max(player.duration, 1)) { editing in
+                    if editing { position = player.elapsed }
+                    scrubbing = editing
+                    if !editing { player.seek(position) }
+                }.disabled(player.isLive).accessibilityLabel(String(localized: "Позиция воспроизведения"))
+                Text(player.isLive ? String(localized: "ПРЯМОЙ ЭФИР") : timeLabel(player.duration)).frame(minWidth: 42, alignment: .leading)
+            }.font(.system(size: 12).monospacedDigit()).foregroundStyle(Theme.secondary)
+        }.disabled(player.current == nil)
+    }
+
+    private var utilities: some View {
+        VStack(alignment: .trailing, spacing: 8) {
+            HStack(spacing: 14) {
+                SpeedMenu()
+                Button { panel = .lyrics } label: { Image(systemName: "quote.bubble") }
+                    .accessibilityLabel(String(localized: "Текст песни")).disabled(player.current == nil)
+                Button { panel = .queue } label: { Image(systemName: "list.bullet") }
+                    .accessibilityLabel(String(localized: "Очередь")).accessibilityIdentifier("mac.queue")
+                RoutePicker().frame(width: 30, height: 30).accessibilityLabel(String(localized: "Выбрать аудиоустройство"))
+            }.font(.system(size: 18))
+            HStack(spacing: 8) {
+                Image(systemName: player.outputVolume == 0 ? "speaker.slash" : "speaker.wave.2").foregroundStyle(Theme.secondary)
+                Slider(value: Binding(get: { player.outputVolume }, set: { player.outputVolume = $0 }), in: 0...1)
+                    .accessibilityLabel(String(localized: "Громкость"))
+            }.frame(maxWidth: 180)
+        }
+    }
+}
+#endif
+
 struct PlayerView: View {
     @Environment(PlayerStore.self) private var player
     @Environment(LibraryStore.self) private var library

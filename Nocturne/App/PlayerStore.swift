@@ -14,6 +14,12 @@ final class PlayerStore {
     private(set) var isBuffering = false
     private(set) var elapsed: Double = 0
     private(set) var duration: Double = 0
+    #if targetEnvironment(macCatalyst)
+    // На Mac меняем громкость только приложения, не системную громкость macOS.
+    var outputVolume: Double = 1 {
+        didSet { applyReplayGain() }
+    }
+    #endif
     var error: String?
     /// Short confirmation shown as a toast ("Добавлено в очередь").
     var notice: String?
@@ -727,7 +733,13 @@ final class PlayerStore {
     private func applyReplayGain() {
         let saved = UserDefaults.standard.string(forKey: PlaybackSettings.replayGainKey).flatMap(ReplayGainMode.init) ?? .off
         let mode = saved.resolved(songs: queue.items.map(\.song), index: queue.position, shuffled: queue.shuffle)
-        player.volume = current.map { mode.volume(for: $0) } ?? 1
+        let gain = current.map { mode.volume(for: $0) } ?? 1
+        #if targetEnvironment(macCatalyst)
+        // ReplayGain и ползунок должны перемножаться, иначе смена трека сбрасывает громкость.
+        player.volume = gain * Float(min(1, max(0, outputVolume)))
+        #else
+        player.volume = gain
+        #endif
     }
 
     /// Mirrors the current track into the App Group so the widget can show it.

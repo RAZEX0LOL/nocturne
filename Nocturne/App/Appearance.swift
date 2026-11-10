@@ -169,12 +169,20 @@ enum Theme {
     static func radius(_ value: CGFloat) -> CGFloat { value * appearance.corners.scale }
 
     static var background: Color {
-        isOLED ? .black : dynamic(dark: UIColor(red: 0.055, green: 0.055, blue: 0.075, alpha: 1),
+        #if targetEnvironment(macCatalyst)
+        return isOLED ? .black : dynamic(dark: UIColor(white: 0.12, alpha: 1), light: UIColor(white: 0.97, alpha: 1))
+        #else
+        return isOLED ? .black : dynamic(dark: UIColor(red: 0.055, green: 0.055, blue: 0.075, alpha: 1),
                                   light: UIColor(red: 0.965, green: 0.96, blue: 0.975, alpha: 1))
+        #endif
     }
     static var surface: Color {
-        dynamic(dark: isOLED ? UIColor(white: 0.09, alpha: 1) : UIColor(red: 0.105, green: 0.105, blue: 0.135, alpha: 1),
+        #if targetEnvironment(macCatalyst)
+        return dynamic(dark: UIColor(white: isOLED ? 0.07 : 0.15, alpha: 1), light: .white)
+        #else
+        return dynamic(dark: isOLED ? UIColor(white: 0.09, alpha: 1) : UIColor(red: 0.105, green: 0.105, blue: 0.135, alpha: 1),
                 light: .white)
+        #endif
     }
     static let primary = dynamic(dark: .white, light: UIColor(red: 0.08, green: 0.08, blue: 0.1, alpha: 1))
     static let secondary = dynamic(dark: UIColor(red: 0.61, green: 0.61, blue: 0.68, alpha: 1),

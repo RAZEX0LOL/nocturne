@@ -28,11 +28,18 @@ struct RootView: View {
     @State private var settings = false
     @State private var fullPlayer = false
     @State private var selectedTab = 0
+    #if targetEnvironment(macCatalyst)
+    @State private var macSection = MacSection.home
+    #endif
     @Environment(\.scenePhase) private var scenePhase
     var body: some View {
         @Bindable var player = player
         Group {
             if library.isConnected || library.isDemo || library.onDeviceOnly {
+                Group {
+                #if targetEnvironment(macCatalyst)
+                MacLibraryShell(section: $macSection, settings: $settings, openPlayer: { fullPlayer = true })
+                #else
                 TabView(selection: $selectedTab) {
                     NavigationStack { HomeView(settings: $settings) }
                         .safeAreaInset(edge: .bottom, spacing: 0) { miniPlayer }
@@ -44,12 +51,18 @@ struct RootView: View {
                         .safeAreaInset(edge: .bottom, spacing: 0) { miniPlayer }
                         .tabItem { Label(String(localized: "Поиск"), systemImage: "magnifyingglass") }.tag(2)
                 }
+                #endif
+                }
                 .task { await library.refresh() }
                 .safeAreaInset(edge: .top, spacing: 0) {
                     if !player.network.isOnline {
                         Button {
                             UserDefaults.standard.set(LibraryView.Category.downloads.rawValue, forKey: "library.category")
+                            #if targetEnvironment(macCatalyst)
+                            macSection = .library(.downloads)
+                            #else
                             selectedTab = 1
+                            #endif
                         } label: {
                             Label(downloads.items.isEmpty ? String(localized: "Нет сети") : String(localized: "Нет сети · открыть загрузки"), systemImage: "wifi.slash")
                                 .font(.footnote.weight(.medium)).frame(maxWidth: .infinity).padding(.vertical, 6)
@@ -146,6 +159,149 @@ struct RootView: View {
         }
     }
 }
+
+
+#if targetEnvironment(macCatalyst)
+// Отдельная оболочка Mac использует те же экраны и хранилища, что и iPhone.
+// Навигация по разделам не должна пересоздавать аудиодвижок или плеер.
+enum MacSection: Hashable {
+    case home, search, library(LibraryView.Category), playlist(String)
+}
+
+struct MacLibraryShell: View {
+    @Binding var section: MacSection
+    @Binding var settings: Bool
+    let openPlayer: () -> Void
+    @Environment(LibraryStore.self) private var library
+    @Environment(PlayerStore.self) private var player
+    @State private var path = NavigationPath()
+    @State private var creatingPlaylist = false
+    @State private var playlistName = ""
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 0) {
+                sidebar.frame(width: 270)
+                Divider()
+                NavigationStack(path: $path) {
+                    Group {
+                        switch section {
+                        case .home: HomeView(settings: $settings)
+                        case .search: SearchView()
+                        case .library(let category): LibraryView(categoryOverride: category)
+                        case .playlist(let id):
+                            if let playlist = library.playlists.first(where: { $0.id == id }) {
+                                PlaylistDetailView(playlist: playlist)
+                            } else {
+                                ContentUnavailableView(String(localized: "Плейлистов пока нет"), systemImage: "music.note.list")
+                            }
+                        }
+                    }
+                }.id(section)
+            }
+            Divider()
+            MacPlayerBar(open: openPlayer)
+        }
+        .background(Theme.background)
+        .onChange(of: section) { _, _ in path = NavigationPath() }
+        .onChange(of: library.playlists.map(\.id)) { _, ids in
+            if case .playlist(let id) = section, !ids.contains(id) { section = .library(.playlists) }
+        }
+        .task {
+            for scene in UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }) {
+                scene.sizeRestrictions?.minimumSize = CGSize(width: 1000, height: 700)
+            }
+        }
+        .alert(String(localized: "Новый плейлист"), isPresented: $creatingPlaylist) {
+            TextField(String(localized: "Название"), text: $playlistName)
+            Button(String(localized: "Создать")) {
+                let name = playlistName.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !name.isEmpty else { return }
+                Task {
+                    do { try await library.createPlaylist(name: name, songs: []) }
+                    catch { player.error = LibraryStore.message(error) }
+                }
+            }
+            Button(String(localized: "Отмена"), role: .cancel) {}
+        }
+    }
+
+    private var sidebar: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 12) {
+                Button { if !path.isEmpty { path.removeLast() } } label: {
+                    Image(systemName: "chevron.left").frame(width: 28, height: 36)
+                }.disabled(path.isEmpty).accessibilityLabel(String(localized: "Назад"))
+                Text("NOCTURNE PLAYER").font(.system(size: 12, weight: .bold)).tracking(2).foregroundStyle(Theme.secondary)
+                Spacer(minLength: 0)
+            }.padding(.horizontal, 10).padding(.top, 8).padding(.bottom, 10)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 3) {
+                    navigationButton(.home, String(localized: "Главная"), "house", id: "home")
+                        .keyboardShortcut("1", modifiers: .command)
+                    navigationButton(.search, String(localized: "Поиск"), "magnifyingglass", id: "search")
+                        .keyboardShortcut("f", modifiers: .command)
+                    navigationButton(.library(.device), String(localized: "На компьютере"), "desktopcomputer", id: "device")
+                    if library.client != nil || library.isDemo {
+                        navigationButton(.library(.downloads), String(localized: "Загрузки"), "arrow.down.circle", id: "downloads")
+                        if !library.isOffline {
+                            navigationButton(.library(.albums), String(localized: "Альбомы"), "square.stack", id: "albums")
+                            navigationButton(.library(.artists), String(localized: "Артисты"), "person.2", id: "artists")
+                        }
+                        navigationButton(.library(.playlists), String(localized: "Плейлисты"), "music.note.list", id: "playlists")
+                        navigationButton(.library(.songs), String(localized: "Избранное"), "heart", id: "favorites")
+                        if !library.isOffline {
+                            navigationButton(.library(.genres), String(localized: "Жанры"), "guitars", id: "genres")
+                            navigationButton(.library(.radio), String(localized: "Радио"), "antenna.radiowaves.left.and.right", id: "radio")
+                        }
+                        HStack {
+                            Text(String(localized: "Плейлисты")).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.secondary)
+                            Spacer()
+                            Button { playlistName = ""; creatingPlaylist = true } label: {
+                                Image(systemName: "plus").frame(width: 30, height: 30)
+                            }.disabled(!library.isConnected || library.isOffline)
+                                .accessibilityLabel(String(localized: "Новый плейлист"))
+                        }.padding(.horizontal, 14).padding(.top, 22).padding(.bottom, 6)
+                        ForEach(library.playlists) { playlist in
+                            navigationButton(.playlist(playlist.id), playlist.name, "music.note.list", id: "playlist.\(playlist.id)")
+                        }
+                    }
+                }.padding(.horizontal, 8)
+            }
+            VStack(spacing: 3) {
+                AddMusicMenu(showsTitle: true).padding(.horizontal, 14).padding(.vertical, 8)
+                Button { Task { await library.refresh() } } label: {
+                    sidebarLabel(String(localized: "Обновить"), "arrow.clockwise")
+                }.disabled(library.isLoading).keyboardShortcut("r", modifiers: .command)
+                Button { settings = true } label: {
+                    sidebarLabel(String(localized: "Настройки"), "gearshape")
+                }.keyboardShortcut(",", modifiers: .command).accessibilityIdentifier("mac.settings")
+            }.padding(8)
+        }
+        .font(.system(size: 17))
+        .buttonStyle(.plain)
+        .foregroundStyle(Theme.primary)
+        .background(Theme.surface.opacity(0.65))
+    }
+
+    private func sidebarLabel(_ title: String, _ icon: String) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon).foregroundStyle(Theme.accent).frame(width: 22)
+            Text(title).lineLimit(1)
+            Spacer(minLength: 0)
+        }.padding(.horizontal, 14).frame(minHeight: 36).contentShape(Rectangle())
+    }
+
+    private func navigationButton(_ destination: MacSection, _ title: String, _ icon: String, id: String) -> some View {
+        Button { section = destination } label: {
+            sidebarLabel(title, icon)
+                .background(section == destination ? Theme.primary.opacity(0.1) : .clear, in: RoundedRectangle(cornerRadius: 6))
+        }
+        .accessibilityAddTraits(section == destination ? .isSelected : [])
+        .accessibilityIdentifier("mac.sidebar.\(id)")
+    }
+}
+#endif
 
 struct ConnectionView: View {
     let isInitial: Bool

@@ -81,11 +81,15 @@ struct DeviceAlbumView: View {
                     Text(String(localized: "Треков: \(album.songs.count)")).font(.caption).foregroundStyle(Theme.secondary)
                 }
                 PlayButtons(songs: album.songs)
+                #if targetEnvironment(macCatalyst)
+                MacSongTable(songs: album.songs) { index in player.play(album.songs, at: index, client: library.client) }
+                #else
                 LazyVStack(spacing: 12) {
                     ForEach(Array(album.songs.enumerated()), id: \.offset) { index, song in
                         SongRow(song: song) { player.play(album.songs, at: index, client: library.client) }
                     }
                 }
+                #endif
             }.padding(24)
         }.background(Theme.background).navigationBarTitleDisplayMode(.inline)
     }
